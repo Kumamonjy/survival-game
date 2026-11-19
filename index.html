@@ -899,6 +899,7 @@ DATA.TERRAIN = {
   stonebox:{ name:'石头物资箱', icon:'📦', moveCost:1, walk:true,  desc:'清除障碍后留下：走上拾取 1 个石块和 0-2 金属' },
   ruin:   { name:'废墟',  icon:'🧱', moveCost:0, walk:false, desc:'阻挡通行' },
   crate:  { name:'物资箱', icon:'🧰', moveCost:1, walk:true,  desc:'走上即拾取随机物资' },
+  pcrate: { name:'精品物资箱', icon:'🎁', moveCost:1, walk:true, desc:'走上即开启：90% 获得双倍物资，10% 获得特殊饰品（熊熊/兔兔）' },
   barrel: { name:'油桶', icon:'🛢️', moveCost:0, walk:false, desc:'受任何攻击即爆炸：对周围 1 圈（8 格）所有单位造成 100 点伤害（结算防御）并附加燃烧 5 回合，可连锁引爆' },
 };
 
@@ -2605,7 +2606,7 @@ const UI = {
         <div class="wiki-p">
         · 每名角色有 <b>5 个装备位</b>（武器 / 头盔 / 衣服 / 鞋子 / 饰品）+ <b>1 个道具位</b>（消耗品）。角色初始<b>没有装备</b>，需要建造工坊制造后穿戴<br>
         · <b>工坊</b>（营地建筑，250 💰 建造）：消耗 <b>金币 / 木材 / 布料 / 金属</b> 制造装备——飞镖 8💰+2⚙️、石块 12💰+3⚙️、护腕 5💰+3🧵、水瓶 20💰+1⚙️+1🧵、保温杯 35💰+2⚙️+1🧵、木棍 20💰+5🪵、弹弓 20💰+3🪵+1🧵、木弓 40💰+5🪵+3🧵、长枪 60💰+4🪵+3⚙️；新档背包自带 2 布衣、2 布鞋、2 石块可先穿<br>
-        · <b>特殊饰品</b>：熊熊 🧸（暴击率 +5% / 暴伤 +10%）、兔兔 🐰（体力 +15 / 防御 +5）——无法通过工坊制造，获取途径将在后续版本开放<br>
+        · <b>特殊饰品</b>：熊熊 🧸（暴击率 +5% / 暴伤 +10%）、兔兔 🐰（体力 +15 / 防御 +5）——无法通过工坊制造，只能从探险地图上的<b>精品物资箱</b>开启获得（10% 概率）<br>
         · <b>装备升级</b>：每件装备独立升级，每级属性加成 +20%（基于初始值，血/体/攻/防），最高 +5；费用 = 制造成本 × (当前级+1)<br>
         · <b>装备分解</b>：分解背包中不需要的装备，返还 50% 制造成本（向上取整）；穿戴中的装备需先卸下再分解<br>
         · <b>道具（消耗品）</b>：不提供属性加成、不可升级；每人在人物信息「道具」格携带（同类最多 3 个，占用背包）；战斗中使用道具技能后消耗 1 个，用完即失效<br>
@@ -2672,7 +2673,7 @@ const UI = {
     const secTerrain = `
       <div class="wiki-sec panel"><h4>🗺️ 地形说明</h4>
         <table class="wiki-table"><tr><th>地形</th><th>效果</th></tr>${terRows}</table>
-        <div class="wiki-p" style="margin-top:6px">🧰 <b>物资箱</b>：走上即拾取随机物资。战斗结算时保留全部已拾取物资。</div>
+        <div class="wiki-p" style="margin-top:6px">🧰 <b>物资箱</b>：走上即拾取随机物资。战斗结算时保留全部已拾取物资。<br>🎁 <b>精品物资箱</b>：每局战斗在地图最上方三行随机出现一处，走上即开启——90% 获得双倍物资，10% 获得特殊饰品（熊熊/兔兔）。</div>
         <div class="wiki-p" style="margin-top:6px">🪨→📦 <b>石头物资箱</b>：清除瓦砾障碍后原地留下，走上拾取 <b>石块×1</b>（入背包）+ <b>金属 0-2</b>。</div>
         <div class="wiki-p" style="margin-top:6px">🧱 <b>废墟翻找</b>：站在废墟旁点击攻击选择废墟（消耗 1 次攻击），每处限翻 1 次，随机获得 1-2 种物资（金币/食物/金属/布料/药物）。</div>
       </div>`;
@@ -2966,6 +2967,11 @@ const Battle = {
     const Z = DATA.ZONES.find(z=>z.id===zone.id) || zone;
     const tm = Z.terrain || { water:8, rubble:11, ruin:9, crate:5, barrel:4 };
     scatter('water', tm.water); scatter('rubble', tm.rubble); scatter('ruin', tm.ruin); scatter('crate', tm.crate); scatter('barrel', tm.barrel);
+    // 精品物资箱：每局 1 个，固定出现在地图最上方三行（0-2）的随机空地
+    for (let tries=0; tries<50; tries++) {
+      const r = rnd(0,2), c = rnd(0,Battle.COLS-1);
+      if (b.terrain[r][c]==='plain') { b.terrain[r][c]='pcrate'; break; }
+    }
     for (let r=0;r<Battle.ROWS;r++) for (let c=0;c<Battle.COLS;c++) if (b.terrain[r][c]==='ruin') b.ruins[r+','+c] = 1;   // 每处废墟可翻找 1 次
 
     // 我方出生（底部）：必须落在可通行且无人的格子，否则就近寻找
@@ -3180,6 +3186,7 @@ const Battle = {
       if (t==='barrel') inner += '<span class="terr">🛢️</span>';
       if (t==='ruin') inner += `<span class="terr">🧱${b.ruins[r+','+c]!==undefined?'<i style="font-size:9px;color:#e0a080;font-style:normal">'+b.ruins[r+','+c]+'</i>':''}</span>`;
       if (t==='crate') inner += '<span class="terr">🧰</span>';
+      if (t==='pcrate') inner += '<span class="terr">🎁</span>';
       if (u) {
         inner += `<div class="unit ${u.side} ${u===b.selected?'selected-unit':''} ${u._acting?'acting-unit':''} ${u.isDefending?'defending':''} ${(u.side==='ally'&&u.hasAttacked&&u.hasMoved)?'acted':''}" onclick="Battle.cellClick(${r},${c})">
           ${u.icon}${(u.sts&&Object.keys(u.sts).length)?`<div class="psn">${Object.keys(u.sts).map(k=>DATA.STATUSES[k].icon).join('')}</div>`:''}<div class="uhp"><div style="width:${Math.max(0,Math.round(u.hp/u.maxHp*100))}%"></div></div>
@@ -3539,6 +3546,24 @@ const Battle = {
         const kName = {gold:'金币',med:'药物',metal:'金属',food:'食物',fabric:'布料',wood:'木材'}[k]||k;
         Battle.log(`🧰 ${u.name} 拾取物资箱：${UI.resIcon(k)} ${kName} ×${amt}`, 'good');
         Battle.subtitle(`🧰 拾获 ${UI.resIcon(k)}×${amt}`);
+      }
+    }
+    // 开启精品物资箱：90% 双倍物资 / 10% 特殊饰品（熊熊/兔兔入背包）
+    if (b.terrain[r][c]==='pcrate') {
+      b.terrain[r][c] = 'plain';
+      if (Math.random() < 0.1) {
+        const spId = pick(['bear','bunny']), sp = DATA.EQUIPS[spId];
+        Game.addEquip(spId, 1);
+        Battle.log(`🎁 ${u.name} 开启精品物资箱：获得特殊饰品 ${sp.icon} ${sp.name}（已放入背包）！`, 'crit');
+        Battle.subtitle(`🎁 获得特殊饰品 ${sp.icon} ${sp.name}！`);
+      } else {
+        const keys = ['gold','med','metal','food','fabric','wood'];
+        const k = pick(keys);
+        const amt = (k==='gold' ? rnd(2,7) : rnd(1, k==='med'||k==='metal'||k==='fabric'||k==='wood'?2:3)) * 2;   // 普通物资箱的两倍
+        b.loot[k] += amt;
+        const kName = {gold:'金币',med:'药物',metal:'金属',food:'食物',fabric:'布料',wood:'木材'}[k]||k;
+        Battle.log(`🎁 ${u.name} 开启精品物资箱：${UI.resIcon(k)} ${kName} ×${amt}（双倍物资）`, 'good');
+        Battle.subtitle(`🎁 拾获 ${UI.resIcon(k)}×${amt}（双倍）`);
       }
     }
     // 拾取石头物资箱：石块×1（入背包）+ 金属 0-2
