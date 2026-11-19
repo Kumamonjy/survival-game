@@ -47,7 +47,7 @@ const [s1, s2] = g.chars;
   assert(u.atk===baseAtk+5 && u.def===baseDef+13 && u.maxHp===baseHp+55 && u.maxStamina===baseSt+10, 'T4b mkAlly 属性含装备加成（石块无属性）');
   assert(u.skills.some(sk=>sk.name==='投掷石头' && sk.equipSkill), 'T4c 装备技能进入技能列表');
   const baseSkills = (DATA.CLASSES[s1.cls].skills || [DATA.CLASSES[s1.cls].skill]);
-  assert(u.skills.length===baseSkills.length+1, 'T4d 技能数 = 职业+1 装备技能');
+  assert(u.skills.length===baseSkills.length+2, 'T4d 技能数 = 职业 + 木棍「棍棒打击」+ 石块「投掷石头」（V111 木棍自带技能）');
 
   // ===== T5 装备技能实战（投掷石头 3 格 50%） =====
   const foe = Battle.mkZombie('walker', 5, 8, 1);   // 距离3
