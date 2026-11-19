@@ -1361,7 +1361,7 @@ const Game = {
     inst.lv = lv+1;
     for (const c of g.chars) { if (!c.dead && c.equip && Object.values(c.equip).some(eq=>eq && eq.uid===inst.uid)) { c.hp=Math.min(Game.effHp(c),c.hp); c.stamina=Math.min(Game.effSt(c),c.stamina); } }
     Game.saveToSlot(Game.currentSlot, true);
-    const cstr = Object.entries(cost).map(([k,v])=>UI.resIcon(k)+'×'+v).join('　');
+    const cstr = UI.fmtMats(cost);
     UI.toast(`⬆️ ${e.icon} ${e.name} 升级到 +${lv+1}（花费 ${cstr}）`);
     UI.openUpgradeModal();
   },
@@ -1404,7 +1404,7 @@ const Game = {
     Object.entries(back).forEach(([k,v])=>{ g.res[k]=(g.res[k]||0)+v; });
     Game.removeEquipInst(uid);
     Game.saveToSlot(Game.currentSlot, true);
-    const bstr = Object.entries(back).map(([k,v])=>UI.resIcon(k)+'×'+v).join('　');
+    const bstr = UI.fmtMats(back);
     UI.toast(`♻️ 分解 ${e.icon} ${e.name}，返还 ${bstr}`);
     UI.openSalvageModal();
   },
@@ -2287,7 +2287,7 @@ const UI = {
           <button class="btn primary small" ${ok?'':'disabled'} onclick="Game.carryItem('${cid}','${id}')">携带</button>
         </div>`;
       }).join('')}
-      <div class="row" style="margin-top:12px"><button class="btn" style="width:100%" onclick="UI.closeModal()">关闭</button></div>`);
+      ${UI.closeRow()}`);
   },
 
   openCraftModal() {
@@ -2301,7 +2301,7 @@ const UI = {
       ${DATA.RECIPES.map(r=>{
         const e = DATA.EQUIPS[r.id];
         const cost = Game.craftCost(r.id);
-        const costStr = Object.entries(cost).map(([k,v])=>`${UI.resIcon(k)}×${v}`).join('　') + `　⚡×${r.stamina||0}`;
+        const costStr = UI.fmtMats(cost) + `　⚡×${r.stamina||0}`;
         const chk = Game.canProduce(r.id);          // 统一判定：建筑/工匠/体力/材料
         const ok = chk.ok, why = chk.why||'';
         return `<div class="char-card" style="align-items:center;margin-top:8px">
@@ -2314,7 +2314,7 @@ const UI = {
           <button class="btn primary small" ${ok?'':'disabled'} onclick="Game.craft('${r.id}')">${e.consumable?'制造 ×1':'制造'}</button>
         </div>`;
       }).join('')}
-      <div class="row" style="margin-top:12px"><button class="btn" style="width:100%" onclick="UI.closeModal()">关闭</button></div>`);
+      ${UI.closeRow()}`);
   },
   openUpgradeModal() {
     const g = Game.g;
@@ -2329,8 +2329,8 @@ const UI = {
             const lv = inst.lv||0;
             const full = lv>=5;
             const cost = !full ? Game.craftCost(inst.id, lv) : null;
-            const ok = cost && Object.entries(cost).every(([k,v])=>(g.res[k]||0) >= v);
-            const costStr = cost ? Object.entries(cost).map(([k,v])=>`${UI.resIcon(k)}×${v}`).join('　') : '';
+            const ok = cost && !Game.costLackText(cost);
+            const costStr = cost ? UI.fmtMats(cost) : '';
             return `<div class="char-card" style="align-items:center;margin-top:8px">
               <div style="font-size:22px">${e.icon}</div>
               <div style="flex:1;min-width:0">
@@ -2342,7 +2342,7 @@ const UI = {
             </div>`;
           }).join('')
         : '<div class="wiki-p" style="color:var(--txt2)">没有可升级的装备</div>'}
-      <div class="row" style="margin-top:12px"><button class="btn" style="width:100%" onclick="UI.closeModal()">关闭</button></div>`);
+      ${UI.closeRow()}`);
   },
   openSalvageModal() {
     const g = Game.g;
@@ -2353,7 +2353,7 @@ const UI = {
         ? insts.map(inst=>{
             const e = DATA.EQUIPS[inst.id];
             const r = DATA.RECIPES.find(x=>x.id===inst.id);
-            const back = r ? Object.entries(r.cost).map(([k,v])=>`${UI.resIcon(k)}×${Math.ceil(v*0.5)}`).join('　') : '';
+            const back = r ? UI.fmtMats(Object.fromEntries(Object.entries(r.cost).map(([k,v])=>[k,Math.ceil(v*0.5)]))) : '';
             return `<div class="char-card" style="align-items:center;margin-top:8px">
               <div style="font-size:22px">${e.icon}</div>
               <div style="flex:1;min-width:0">
@@ -2364,7 +2364,7 @@ const UI = {
             </div>`;
           }).join('')
         : '<div class="wiki-p" style="color:var(--txt2)">背包里没有可分解的装备</div>'}
-      <div class="row" style="margin-top:12px"><button class="btn" style="width:100%" onclick="UI.closeModal()">关闭</button></div>`);
+      ${UI.closeRow()}`);
   },
 
   /* ---- 晚餐分配弹窗（粮食不足时） ---- */
@@ -2486,7 +2486,7 @@ const UI = {
           <div class="row" style="flex-wrap:wrap;margin-top:3px">${UI.talentTags(c, true)}</div>
           <div class="hpbar ${hpPct<35?'low':''}"><div style="width:${hpPct}%"></div></div>
           <div class="stbar"><div style="width:${stPct}%"></div></div>
-          <div class="wiki-p" style="margin-top:4px">❤️ ${c.hp}/${eHp}　⚡ ${c.stamina}/${eSt}　📈 经验 ${c.exp}/${Game.expNeed(c.level)}</div>
+          <div class="wiki-p" style="margin-top:4px">${UI.statLine(c)}</div>
           <div class="attr-grid">
             <div class="attr-cell"><b>🗡️ ${eAtk}</b><span>攻击${eAtk>c.atk?` <i style="color:var(--green2);font-style:normal">+${eAtk-c.atk}</i>`:''}</span></div>
             <div class="attr-cell"><b>🛡️ ${eDef}</b><span>防御${eDef>c.def?` <i style="color:var(--green2);font-style:normal">+${eDef-c.def}</i>`:''}</span></div>
@@ -2519,7 +2519,7 @@ const UI = {
       ${insts.length
         ? insts.map(inst=>{ const e=DATA.EQUIPS[inst.id]; const lv=inst.lv?' +'+inst.lv:''; return `<div class="loot-line" style="cursor:pointer" onclick="Game.equipChar('${cid}','${slot}','${inst.uid}');UI.closeModal()"><span>${e.icon} ${e.name}${lv}</span><b>${e.desc}</b></div>`; }).join('')
         : '<div class="wiki-p" style="color:var(--txt2)">背包中没有可穿戴的该部位装备（探险胜利有概率获得装备掉落）</div>'}
-      <div class="row" style="margin-top:12px"><button class="btn" style="width:100%" onclick="UI.closeModal()">关闭</button></div>`);
+      ${UI.closeRow()}`);
   },
   /* ---- 招募广播 ---- */
   openRecruit() { Recruit.ensureCandidates(); UI.renderRecruit(); UI.showScreen('scr-recruit'); },
@@ -2568,6 +2568,12 @@ const UI = {
     UI.showScreen('scr-zones');
   },
   resIcon(k){ return {gold:'💰',med:'💊',metal:'⚙️',food:'🍞',fabric:'🧵',wood:'🪵'}[k]||k; },
+  /* 共享渲染片段：材料清单 / 弹窗关闭行 / 角色属性行（全属性 full=true 含攻击防御射程移速暴击） */
+  fmtMats(mats, sep){ return Object.entries(mats||{}).map(([k,v])=>`${UI.resIcon(k)}×${v}`).join(sep||'　'); },
+  closeRow(){ return '<div class="row" style="margin-top:12px"><button class="btn" style="width:100%" onclick="UI.closeModal()">关闭</button></div>'; },
+  statLine(c, full){ return full
+    ? `❤️ ${c.hp}/${Game.effHp(c)}　⚡ ${c.stamina}/${Game.effSt(c)}　🗡️${Game.effAtk(c)} 🛡️${Game.effDef(c)} 🎯${Game.effRange(c)} 👟${c.move}　✨${Game.effCrit(c)}% 💥${Game.effCritDmg(c)}%`
+    : `❤️ ${c.hp}/${Game.effHp(c)}　⚡ ${c.stamina}/${Game.effSt(c)}　📈 经验 ${c.exp}/${Game.expNeed(c.level)}`; },
 
   /* ---- 出战编队 ---- */
   teamZone: null, teamSelected: [],
@@ -2597,7 +2603,7 @@ const UI = {
         <div class="avatar ${C.color}">${c.av||C.icon}<span class="lvl">Lv.${c.level}</span></div>
         <div style="flex:1">
           <div class="row"><b>${c.name}</b><span class="tag">${C.name}</span>${onDuty?'<span class="tag yellow">🍳 厨房当值</span>':''}${c.injured?'<span class="tag red">重伤</span>':''}</div>
-          <div class="wiki-p">❤️ ${c.hp}/${Game.effHp(c)}　⚡ ${c.stamina}/${Game.effSt(c)}　🗡️${Game.effAtk(c)} 🛡️${Game.effDef(c)} 🎯${Game.effRange(c)} 👟${c.move}　✨${Game.effCrit(c)}% 💥${Game.effCritDmg(c)}%</div>
+          <div class="wiki-p">${UI.statLine(c, true)}</div>
           ${(C.skills||[C.skill].filter(Boolean)).map(sk=>`<div class="wiki-p"><span class="tag blue">${sk.name}</span>${sk.range!==undefined&&sk.range!==c.range?`<span class="tag yellow">技能射程 ${sk.range}</span>`:''}</div>`).join('')}
           <div class="row" style="flex-wrap:wrap;margin-top:3px">${UI.talentTags(c)}</div>
         </div>
@@ -3411,7 +3417,7 @@ const Battle = {
     const b = Battle.b;
     const html = b.log.map(e=>`<div class="log-entry"><div class="log-turn">回合 ${e.turn}</div>${e.msgs.map(x=>`<div class="log-msg ${x.c}">· ${x.m}</div>`).join('')}</div>`).join('')
       || '<div class="wiki-p">暂无战斗记录</div>';
-    UI.modal(`<h3>📜 战斗记录</h3>${html}<div class="row" style="margin-top:10px"><button class="btn" onclick="UI.closeModal()">关闭</button></div>`);
+    UI.modal(`<h3>📜 战斗记录</h3>${html}${UI.closeRow()}`);
   },
   subtitle(text) {
     const el = document.getElementById('battle-subtitle');
@@ -3542,7 +3548,7 @@ const Battle = {
         <div class="skill-desc">${sk.desc||''}</div>
       </div>`;
     }).join('');
-    UI.modal(`<h3>✨ ${u.name} · 技能列表</h3>${rows}<div class="row" style="margin-top:10px"><button class="btn" onclick="UI.closeModal()">关闭</button></div>`);
+    UI.modal(`<h3>✨ ${u.name} · 技能列表</h3>${rows}${UI.closeRow()}`);
   },
   pickSkill(i) {
     const b = Battle.b, u = b.selected;

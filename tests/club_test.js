@@ -1,19 +1,6 @@
 /* V111 棍棒（atk+15 近战）+ 木棍/棍棒共用技能「棍棒打击」（1格 140%，15⚡ CD3） */
-const fs = require('fs');
-const html = fs.readFileSync('/workspace/index.html', 'utf8');
-const scripts = html.match(/<script>([\s\S]*?)<\/script>/g);
-let code = scripts[scripts.length - 1].replace(/^<script>/, '').replace(/<\/script>\s*$/, '');
-const bootIdx = code.lastIndexOf("Game.renderHome();\n  window.addEventListener('resize'");
-code = code.slice(0, bootIdx) + "window.__T = { Game, Battle, UI, DATA };\n})();";
-const elems = {};
-function mkEl(){ return { innerHTML:'', textContent:'', style:{ setProperty(){} }, disabled:false, scrollTop:0, value:'', dataset:{}, children:[], className:'', classList:{toggle(){},add(){},remove(){},contains:()=>false}, setAttribute(){}, removeAttribute(){}, appendChild(c){this.children.push(c);return c;}, remove(){}, addEventListener(){}, focus(){}, blur(){}, querySelector(){return null;}, querySelectorAll(){return [];}, getBoundingClientRect(){return{width:400,height:700,top:0,left:0};} }; }
-global.document = { getElementById:id=>elems[id]||(elems[id]=mkEl()), querySelector:()=>mkEl(), querySelectorAll:()=>[], addEventListener(){}, createElement:()=>mkEl(), body:mkEl() };
-global.window = { addEventListener(){}, location:{search:''}, scrollTo(){}, innerWidth:400, innerHeight:700 };
-global.localStorage = { getItem:()=>null, setItem(){}, removeItem(){} };
-global.navigator = { userAgent:'node' };
-eval(code);
-const assert=(c,n)=>console.log(c?'PASS '+n:'FAIL '+n);
-const { Game, Battle, UI, DATA } = window.__T;
+const { setup, assert } = require('./_helper.js');
+const { Game, Battle, UI, Recruit, DATA, elems, html, store } = setup();
 Game.g = Game.newGame(); Game.currentSlot = 1;
 const g = Game.g;
 { const sm = Game.createChar('civilian','工匠甲'); sm.stamina = 9999; sm.injured = false;
@@ -34,8 +21,8 @@ g.res.gold = 500; g.res.wood = 30; g.res.metal = 30; g.res.fabric = 30;
   const inst = (g.bagInst||[]).find(e=>e.id==='club');
   assert(inst && inst.lv===0, 'T2b 棍棒打造入包');
 
-  // T3 属性链：effAtk +15，射程 1
-  const s1 = g.chars.find(c=>c.cls==='civilian' && c.name!=='工匠甲') || g.chars[0];
+  // T3 属性链：effAtk +15，射程 1（固定近战角色，避免随机职业全远程导致兜底失败）
+  const s1 = Game.createChar('civilian','持棒者'); s1.stamina = 9999; g.chars.push(s1);
   Game.equipChar(s1.id, 'weapon', inst.uid);
   assert(Game.effAtk(s1)===s1.atk+15, 'T3a 装备棍棒 effAtk +15');
   assert(Game.effRange(s1)===1, 'T3b 射程 1');

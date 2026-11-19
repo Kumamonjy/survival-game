@@ -1,19 +1,6 @@
 /* V110 工坊当值系统：指派工匠才能打造 / 打造耗工匠体力 / 梯度 5~25 / 冲突与迁移 */
-const fs = require('fs');
-const html = fs.readFileSync('/workspace/index.html', 'utf8');
-const scripts = html.match(/<script>([\s\S]*?)<\/script>/g);
-let code = scripts[scripts.length - 1].replace(/^<script>/, '').replace(/<\/script>\s*$/, '');
-const bootIdx = code.lastIndexOf("Game.renderHome();\n  window.addEventListener('resize'");
-code = code.slice(0, bootIdx) + "window.__T = { Game, Battle, UI, DATA };\n})();";
-const elems = {};
-function mkEl(){ return { innerHTML:'', textContent:'', style:{ setProperty(){} }, disabled:false, scrollTop:0, value:'', dataset:{}, children:[], className:'', classList:{toggle(){},add(){},remove(){},contains:()=>false}, setAttribute(){}, removeAttribute(){}, appendChild(c){this.children.push(c);return c;}, remove(){}, addEventListener(){}, focus(){}, blur(){}, querySelector(){return null;}, querySelectorAll(){return [];}, getBoundingClientRect(){return{width:400,height:700,top:0,left:0};} }; }
-global.document = { getElementById:id=>elems[id]||(elems[id]=mkEl()), querySelector:()=>mkEl(), querySelectorAll:()=>[], addEventListener(){}, createElement:()=>mkEl(), body:mkEl() };
-global.window = { addEventListener(){}, location:{search:''}, scrollTo(){}, innerWidth:400, innerHeight:700 };
-global.localStorage = { getItem:()=>null, setItem(){}, removeItem(){} };
-global.navigator = { userAgent:'node' };
-eval(code);
-const assert=(c,n)=>console.log(c?'PASS '+n:'FAIL '+n);
-const { Game, Battle, UI, DATA } = window.__T;
+const { setup, assert } = require('./_helper.js');
+const { Game, Battle, UI, Recruit, DATA, elems, html, store } = setup();
 Game.g = Game.newGame(); Game.currentSlot = 1;
 const g = Game.g;
 g.workshopLv = 1;
@@ -64,7 +51,7 @@ g.res.gold = 500; g.res.metal = 20; g.res.fabric = 20; g.res.wood = 20;
   assert(g.workshopChef===smith.id && g.kitchenChef===cook.id, 'T6 已当值厨师不能同时当工匠');
 
   // T7 旧档迁移：applySave 源码含 workshopChef 迁移行
-  assert(code.includes("if (Game.g.workshopChef === undefined) Game.g.workshopChef = null;"), 'T7 旧档迁移补 workshopChef=null（源码级）');
+  assert(html.includes("if (Game.g.workshopChef === undefined) Game.g.workshopChef = null;"), 'T7 旧档迁移补 workshopChef=null（源码级）');
 
   // T8 打造弹窗：显示工匠与 ⚡ 成本
   Game.craft('dart'); Game.craft('dart'); Game.craft('dart'); Game.craft('dart'); Game.craft('dart');

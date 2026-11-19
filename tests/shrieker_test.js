@@ -1,20 +1,6 @@
 /* V94 尖啸者：受伤尖啸召唤 2 只游荡丧尸（周围2格随机空格），CD5，满血不叫 */
-const fs = require('fs');
-const html = fs.readFileSync('/workspace/index.html', 'utf8');
-const scripts = html.match(/<script>([\s\S]*?)<\/script>/g);
-let code = scripts[scripts.length - 1].replace(/^<script>/, '').replace(/<\/script>\s*$/, '');
-const bootIdx = code.lastIndexOf("Game.renderHome();\n  window.addEventListener('resize'");
-code = code.slice(0, bootIdx) + "window.__T = { Game, Battle, UI, DATA };\n})();";
-const elems = {};
-function mkEl(){ return { innerHTML:'', textContent:'', style:{ setProperty(){} }, disabled:false, scrollTop:0, value:'', dataset:{}, children:[], offsetWidth:36, className:'', classList:{ s:new Set(), add(c){this.s.add(c);}, remove(c){this.s.delete(c);}, contains(c){return this.s.has(c);} }, setAttribute(){}, removeAttribute(){}, appendChild(c){this.children.push(c);return c;}, remove(){}, addEventListener(){}, focus(){}, blur(){}, querySelector(){return null;}, querySelectorAll(){return [];}, getBoundingClientRect(){return{width:400,height:700,top:0,left:0,bottom:700};} }; }
-global.document = { getElementById:id=>elems[id]||(elems[id]=mkEl()), querySelector:()=>mkEl(), querySelectorAll:()=>[], addEventListener(){}, createElement:()=>mkEl(), body:mkEl() };
-global.window = { addEventListener(){}, location:{search:''}, scrollTo(){}, innerWidth:400, innerHeight:700 };
-global.localStorage = { getItem:()=>null, setItem(){}, removeItem(){} };
-global.navigator = { userAgent:'node' };
-global.getComputedStyle = () => ({ getPropertyValue:()=>'' });
-eval(code);
-const assert=(c,n)=>console.log(c?'PASS '+n:'FAIL '+n);
-const { Game, Battle, UI, DATA } = window.__T;
+const { setup, assert } = require('./_helper.js');
+const { Game, Battle, UI, Recruit, DATA, elems, html, store } = setup();
 Game.g = Game.newGame(); Game.currentSlot = 1;
 const g = Game.g;
 

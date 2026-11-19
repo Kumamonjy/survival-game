@@ -1,20 +1,6 @@
 /* V101 新资源「木材」🪵：新档初始化 / 旧档迁移 / 区域产出 / 物资箱与废墟拾取 / 资源栏与百科展示 */
-const fs = require('fs');
-const html = fs.readFileSync('/workspace/index.html', 'utf8');
-const scripts = html.match(/<script>([\s\S]*?)<\/script>/g);
-let code = scripts[scripts.length - 1].replace(/^<script>/, '').replace(/<\/script>\s*$/, '');
-const bootIdx = code.lastIndexOf("Game.renderHome();\n  window.addEventListener('resize'");
-code = code.slice(0, bootIdx) + "window.__T = { Game, UI, DATA, Battle };\n})();";
-const elems = {};
-function mkEl(){ return { innerHTML:'', textContent:'', style:{ setProperty(){} }, disabled:false, scrollTop:0, value:'', dataset:{}, children:[], className:'', classList:{toggle(){},add(){},remove(){},contains:()=>false}, setAttribute(){}, removeAttribute(){}, appendChild(c){this.children.push(c);return c;}, remove(){}, addEventListener(){}, focus(){}, blur(){}, querySelector(){return null;}, querySelectorAll(){return [];}, getBoundingClientRect(){return{width:400,height:700,top:0,left:0};} }; }
-global.document = { getElementById:id=>elems[id]||(elems[id]=mkEl()), querySelector:()=>mkEl(), querySelectorAll:()=>[], addEventListener(){}, createElement:()=>mkEl(), body:mkEl() };
-global.window = { addEventListener(){}, location:{search:''}, scrollTo(){}, innerWidth:400, innerHeight:700 };
-let store = {};
-global.localStorage = { getItem:k=>store[k]||null, setItem:(k,v)=>{store[k]=v;}, removeItem:k=>{delete store[k];} };
-global.navigator = { userAgent:'node' };
-eval(code);
-const assert=(c,n)=>console.log(c?'PASS '+n:'FAIL '+n);
-const { Game, UI, DATA, Battle } = window.__T;
+const { setup, assert } = require('./_helper.js');
+const { Game, Battle, UI, Recruit, DATA, elems, html, store } = setup();
 Game.g = Game.newGame(); Game.currentSlot = 1;
 let g = Game.g;
 

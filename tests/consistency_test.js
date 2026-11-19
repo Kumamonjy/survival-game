@@ -1,19 +1,6 @@
 /* V52 属性一致性：出战/指派/晚餐/招募 各界面统一走 eff* 函数，与人物信息页一致 */
-const fs = require('fs');
-const html = fs.readFileSync('/workspace/index.html', 'utf8');
-const scripts = html.match(/<script>([\s\S]*?)<\/script>/g);
-let code = scripts[scripts.length - 1].replace(/^<script>/, '').replace(/<\/script>\s*$/, '');
-const bootIdx = code.lastIndexOf("Game.renderHome();\n  window.addEventListener('resize'");
-code = code.slice(0, bootIdx) + "window.__T = { Game, Battle, UI, Recruit, DATA };\n})();";
-const elems = {};
-function mkEl(){ return { innerHTML:'', textContent:'', style:{ setProperty(){}, cssText:'' }, disabled:false, scrollTop:0, value:'', dataset:{}, children:[], className:'', classList:{ set:new Set(), toggle(k){}, add(k){this.set.add(k);}, remove(k){this.set.delete(k);}, contains(k){return this.set.has(k);} }, setAttribute(){}, removeAttribute(){}, appendChild(c){this.children.push(c);return c;}, remove(){}, addEventListener(){}, focus(){}, blur(){}, querySelector(){return null;}, querySelectorAll(){return [];}, getBoundingClientRect(){return{width:400,height:700,top:0,left:0};} }; }
-global.document = { getElementById:id=>elems[id]||(elems[id]=mkEl()), querySelector:()=>mkEl(), querySelectorAll:()=>[], addEventListener(){}, createElement:()=>mkEl(), body:mkEl() };
-global.window = { addEventListener(){}, location:{search:''}, scrollTo(){}, innerWidth:400, innerHeight:700 };
-global.localStorage = { getItem:()=>null, setItem(){}, removeItem(){} };
-global.navigator = { userAgent:'node' };
-eval(code);
-const assert=(c,n)=>console.log(c?'PASS '+n:'FAIL '+n);
-const { Game, UI, Recruit } = window.__T;
+const { setup, assert } = require('./_helper.js');
+const { Game, Battle, UI, Recruit, DATA, elems, html, store } = setup();
 Game.g = Game.newGame(); Game.currentSlot = 1;
 const g = Game.g;
 const [s1, s2] = g.chars;
