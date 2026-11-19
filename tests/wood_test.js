@@ -20,7 +20,7 @@ let g = Game.g;
 
 (async () => {
   // T1 新档初始化
-  assert(g.res.wood===0, 'T1a 新档木材初始 0');
+  assert(g.res.wood===3, 'T1a 新档木材初始 3');
   assert(UI.resIcon('wood')==='🪵', 'T1b resIcon 木材 🪵');
 
   // T2 区域产出：factory/street 副产出含木材，其余区域不含
@@ -40,6 +40,7 @@ let g = Game.g;
   Game.g = Game.newGame(); Game.currentSlot = 1; g = Game.g;
 
   // T4 资源入库 + 主界面资源栏渲染
+  g.res.wood = 0;
   Game.addRes('wood', 7);
   assert(g.res.wood===7, 'T4a addRes 木材 +7');
   UI.renderHome();

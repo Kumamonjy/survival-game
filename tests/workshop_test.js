@@ -19,7 +19,7 @@ const g = Game.g;
 
 (async () => {
   // ===== T1 布料资源初始化 =====
-  assert(typeof g.res.fabric === 'number' && g.res.fabric === 0, 'T1a 新档布料初始 0');
+  assert(typeof g.res.fabric === 'number' && g.res.fabric === 3, 'T1a 新档布料初始 3');
   assert(DATA.ZONES[0].sub.fabric && DATA.ZONES[0].sub.fabric[0]>=2, 'T1b 废弃超市奖励含布料');
   assert(DATA.ZONES.every(z=>z.sub.fabric || z.main.fabric), 'T1c 五个区域均有布料产出');
 
