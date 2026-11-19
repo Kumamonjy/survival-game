@@ -79,7 +79,7 @@ const g = Game.g;
   UI.openVisitors();
   const mh = Object.values(elems).map(e=>e.innerHTML).join('');
   assert(mh.includes('流动商人') && mh.includes('流浪者'), 'T9b 弹窗含双访客面板');
-  assert(mh.includes('卖给商人') && mh.includes('买下'), 'T9c 商人回收/出售报价渲染正常');
+  assert(mh.includes('卖出') && mh.includes('买入') && mh.includes('招募消耗'), 'T9c 按钮文案：卖出/买入/招募消耗（两行式）');
 
   console.log('--- done ---');
   process.exit(0);

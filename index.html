@@ -2050,16 +2050,16 @@ const UI = {
       const resName = r => ({metal:'金属',food:'食物',wood:'木材',fabric:'布料',med:'药物'})[r]||r;
       const rowBuy = m.buy.done
         ? `<div class="loot-line"><span>回收报价：${UI.resIcon(m.buy.res)} ${resName(m.buy.res)} ×${m.buy.amt}</span><span class="tag green">已成交</span></div>`
-        : `<div class="loot-line"><div style="flex:1;min-width:0"><div>回收报价：${UI.resIcon(m.buy.res)} ${resName(m.buy.res)} ×${m.buy.amt}</div><div style="font-size:11px;color:var(--txt2);margin-top:2px">你的库存 ${g.res[m.buy.res]||0}</div></div><button class="btn small primary" ${((g.res[m.buy.res]||0)<m.buy.amt)?'disabled':''} onclick="Game.tradeMerchant('buy')">卖给商人 +${m.buy.gold}${UI.resIcon('gold')}</button></div>`;
+        : `<div class="loot-line"><div style="flex:1;min-width:0"><div>回收报价：${UI.resIcon(m.buy.res)} ${resName(m.buy.res)} ×${m.buy.amt}</div><div style="font-size:11px;color:var(--txt2);margin-top:2px">你的库存 ${g.res[m.buy.res]||0}</div></div><button class="btn small primary" ${((g.res[m.buy.res]||0)<m.buy.amt)?'disabled':''} onclick="Game.tradeMerchant('buy')">卖出<br>+${m.buy.gold}${UI.resIcon('gold')}</button></div>`;
       const rowSell = m.sell.done
         ? `<div class="loot-line"><span>出售报价：${UI.resIcon(m.sell.res)} ${resName(m.sell.res)} ×${m.sell.amt}</span><span class="tag green">已成交</span></div>`
-        : `<div class="loot-line"><span>出售报价：${UI.resIcon(m.sell.res)} ${resName(m.sell.res)} ×${m.sell.amt}</span><button class="btn small" ${(g.res.gold<m.sell.gold)?'disabled':''} onclick="Game.tradeMerchant('sell')">买下 -${m.sell.gold}${UI.resIcon('gold')}</button></div>`;
+        : `<div class="loot-line"><span>出售报价：${UI.resIcon(m.sell.res)} ${resName(m.sell.res)} ×${m.sell.amt}</span><button class="btn small" ${(g.res.gold<m.sell.gold)?'disabled':''} onclick="Game.tradeMerchant('sell')">买入<br>-${m.sell.gold}${UI.resIcon('gold')}</button></div>`;
       const w = v.wanderer;
       const C = DATA.CLASSES[w.cls];
       const RC = DATA.VISITOR.recruitCost;
       const wBtn = w.recruited
         ? '<span class="tag green">已加入队伍</span>'
-        : `<button class="btn small primary" ${(g.res.gold<RC.gold||g.res.food<RC.food)?'disabled':''} onclick="Game.recruitWanderer()">招募 -${RC.gold}${UI.resIcon('gold')} -${RC.food}${UI.resIcon('food')}</button>`;
+        : `<button class="btn small primary" ${(g.res.gold<RC.gold||g.res.food<RC.food)?'disabled':''} onclick="Game.recruitWanderer()">招募消耗<br>-${RC.gold}${UI.resIcon('gold')} -${RC.food}${UI.resIcon('food')}</button>`;
       body = `
       <div class="panel"><h3>🧳 流动商人</h3>${rowBuy}${rowSell}
         <div class="wiki-p" style="margin-top:6px;color:var(--txt2)">每日报价各限成交一次；次日商人与流浪者都会换新（无法付费重刷）</div></div>
