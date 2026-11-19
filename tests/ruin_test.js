@@ -49,7 +49,7 @@ const g = Game.g;
   const kinds = Object.values(gain).filter(v=>v>0).length;
   assert(kinds>=1 && kinds<=2, `T2b 获得 1-2 种物资（${kinds} 种）`);
   const totalGain = Object.values(gain).reduce((a,x)=>a+x,0);
-  assert(totalGain>=1 && totalGain<=8, `T2c 物资量在池范围内（合计 ${totalGain}）`);
+  assert(totalGain>=1 && totalGain<=10, `T2c 物资量在池范围内（合计 ${totalGain}，上限 gold7+food3=10）`);
   assert(b.ruins['4,5']===0 && me.hasAttacked===true, 'T2d 次数清零、消耗攻击');
   const subT = elems['battle-subtitle'] ? elems['battle-subtitle'].innerHTML : '';
   assert(subT.includes('翻找废墟：') && (subT.includes('💰')||subT.includes('🍞')||subT.includes('⚙️')||subT.includes('🧵')||subT.includes('💊')||subT.includes('🪵')), `T2e 字幕显示获得物资（${subT}）`);
