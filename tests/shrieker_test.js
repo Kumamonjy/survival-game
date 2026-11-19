@@ -33,7 +33,7 @@ const g = Game.g;
   const u = Battle.mkAlly(c, 5, 5);
   const sh = Battle.mkZombie('shrieker', 5, 9, 2);
   Battle.b = { units:[u, sh], selected:u, terrain:Array.from({length:Battle.ROWS},()=>Array.from({length:Battle.COLS},()=>'plain')),
-    mode:null, turn:1, phase:'enemy', weather:'sunny', stats:{}, log:[], logEl:null, loot:{gold:0,med:0,metal:0,food:0,fabric:0}, ruins:{}, over:false, subtitleT:null, zLevel:2, speed:1, zone:DATA.ZONES[0], doubledReward:false, pendingSkill:null, targetMode:null };
+    mode:null, turn:1, phase:'enemy', weather:'sunny', stats:{}, log:[], logEl:null, loot:{gold:0,med:0,metal:0,food:0,fabric:0,wood:0}, ruins:{}, over:false, subtitleT:null, zLevel:2, speed:1, zone:DATA.ZONES[0], doubledReward:false, pendingSkill:null, targetMode:null };
   sh.hp = sh.maxHp - 50;   // 受伤 → 满足尖啸条件
   await Battle.zombieAct(sh);
   const spawned = Battle.b.units.filter(x=>x.side==='enemy' && x!==sh && x.zombieType==='walker');

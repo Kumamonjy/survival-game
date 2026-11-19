@@ -54,7 +54,7 @@ assert(stAtk.atk===12, `T3b 弓 +1 攻 = round(10×1.2)=12（${stAtk.atk}）`);
 Game.equipChar(soldier.id, 'weapon', bow1.uid);   // soldier 穿木弓（lv1）
 const u = Battle.mkAlly(soldier, 5, 5);
 Battle.b = { units:[u], selected:u, terrain:Array.from({length:Battle.ROWS},()=>Array.from({length:Battle.COLS},()=>'plain')),
-  mode:null, turn:1, phase:'player', weather:'sunny', stats:{}, log:[], logEl:null, loot:{gold:0,med:0,metal:0,food:0,fabric:0}, ruins:{}, over:false, subtitleT:null, zLevel:1, speed:1, zone:DATA.ZONES[0], doubledReward:false };
+  mode:null, turn:1, phase:'player', weather:'sunny', stats:{}, log:[], logEl:null, loot:{gold:0,med:0,metal:0,food:0,fabric:0,wood:0}, ruins:{}, over:false, subtitleT:null, zLevel:1, speed:1, zone:DATA.ZONES[0], doubledReward:false };
 assert(u.range===3, 'T4a mkAlly 射程 3（武器加成生效）');
 const foe = Battle.mkZombie('walker', 5, 8, 1);  // 距离 3
 Battle.b.units.push(foe);

@@ -33,7 +33,7 @@ const g = Game.g;
   g.chars.push(c);
   const u = Battle.mkAlly(c, 5, 5);
   Battle.b = { units:[u], selected:u, terrain:Array.from({length:Battle.ROWS},()=>Array.from({length:Battle.COLS},()=>'plain')),
-    mode:null, turn:1, phase:'player', weather:'sunny', stats:{}, log:[], logEl:null, loot:{gold:0,med:0,metal:0,food:0,fabric:0}, ruins:{}, over:false, subtitleT:null, zLevel:1, speed:1, zone:DATA.ZONES[0], doubledReward:false, pendingSkill:null, targetMode:null };
+    mode:null, turn:1, phase:'player', weather:'sunny', stats:{}, log:[], logEl:null, loot:{gold:0,med:0,metal:0,food:0,fabric:0,wood:0}, ruins:{}, over:false, subtitleT:null, zLevel:1, speed:1, zone:DATA.ZONES[0], doubledReward:false, pendingSkill:null, targetMode:null };
   Battle.b.terrain[5][5] = 'barrel';
   u.def = 10; u.hp = u.maxHp;   // 用户例子：def 10 → 受 90
   const mk = (r,col)=>{ const z = Battle.mkZombie('walker', r, col, 1); z.def = 10; Battle.b.units.push(z); return z; };

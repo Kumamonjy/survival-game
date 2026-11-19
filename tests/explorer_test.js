@@ -34,7 +34,7 @@ assert(ex.range===1 && ex.move===3, 'T2b 射程/移速生效');
   // T3 战斗移速 3：reachable 覆盖曼哈顿距离 3 格
   const u = Battle.mkAlly(ex, 6, 6);
   Battle.b = { units:[u], selected:u, terrain:Array.from({length:Battle.ROWS},()=>Array.from({length:Battle.COLS},()=>'plain')),
-    mode:null, turn:1, phase:'player', weather:'sunny', stats:{}, log:[], logEl:null, loot:{gold:0,med:0,metal:0,food:0,fabric:0}, ruins:{}, over:false, subtitleT:null, zLevel:1, speed:1, zone:DATA.ZONES[0], doubledReward:false };
+    mode:null, turn:1, phase:'player', weather:'sunny', stats:{}, log:[], logEl:null, loot:{gold:0,med:0,metal:0,food:0,fabric:0,wood:0}, ruins:{}, over:false, subtitleT:null, zLevel:1, speed:1, zone:DATA.ZONES[0], doubledReward:false };
   const reach = Battle.reachable(u);
   assert(reach['3,6']===3 && reach['6,3']===3 && reach['6,9']===3 && reach['5,5']===2, 'T3 移速 3：直线 3 格可达（穿平原）');
 

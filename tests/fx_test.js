@@ -30,7 +30,7 @@ const g = Game.g;
   assert(html.includes("await Battle.fxProjectile(att, def"), 'T1h 远程普攻走弹道');
 
   // T2 构造战斗：AI 行动高亮标记生命周期
-  const b = { units:[], selected:null, terrain:Array.from({length:Battle.ROWS},()=>Array.from({length:Battle.COLS},()=>'plain')), moveSet:null, targetSet:null, mode:null, turn:1, phase:'enemy', weather:'sunny', stats:{}, log:[], logEl:null, loot:{gold:0,med:0,metal:0,food:0,fabric:0}, ruins:{}, over:false, subtitleT:null, zLevel:1, speed:1, zone:DATA.ZONES[0], doubledReward:false, pendingSkill:null, targetMode:null };
+  const b = { units:[], selected:null, terrain:Array.from({length:Battle.ROWS},()=>Array.from({length:Battle.COLS},()=>'plain')), moveSet:null, targetSet:null, mode:null, turn:1, phase:'enemy', weather:'sunny', stats:{}, log:[], logEl:null, loot:{gold:0,med:0,metal:0,food:0,fabric:0,wood:0}, ruins:{}, over:false, subtitleT:null, zLevel:1, speed:1, zone:DATA.ZONES[0], doubledReward:false, pendingSkill:null, targetMode:null };
   Battle.b = b;
   const ally = Battle.mkAlly(Game.createChar('soldier','兵',false), 5, 5);
   const zom = Battle.mkZombie('walker', 5, 6, 1);

@@ -50,7 +50,7 @@ const g = Game.g;
   // ===== T2 技能暴击：百分比技能走 calcDamage 共用通道 =====
   const u = Battle.mkAlly(c, 5, 5);
   Battle.b = { units:[u], selected:u, terrain:Array.from({length:Battle.ROWS},()=>Array.from({length:Battle.COLS},()=>'plain')),
-    mode:null, turn:1, phase:'player', weather:'sunny', stats:{}, log:[], logEl:null, loot:{gold:0,med:0,metal:0,food:0,fabric:0}, ruins:{}, over:false, subtitleT:null, zLevel:1, speed:1, zone:DATA.ZONES[0], doubledReward:false };
+    mode:null, turn:1, phase:'player', weather:'sunny', stats:{}, log:[], logEl:null, loot:{gold:0,med:0,metal:0,food:0,fabric:0,wood:0}, ruins:{}, over:false, subtitleT:null, zLevel:1, speed:1, zone:DATA.ZONES[0], doubledReward:false };
   const mkFoe = (col)=>{ const f = Battle.mkZombie('walker', 5, col, 1); f.hp = f.maxHp; Battle.b.units.push(f); return f; };
 
   // T2a 必暴（critRate 100）：穿刺 100% 伤害 = round((atk-def)×critDmg/100)
