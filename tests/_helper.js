@@ -15,7 +15,7 @@ function setup() {
   const store = {};   // localStorage 后备存储（存档类测试用）
   function mkEl() {
     return { innerHTML:'', textContent:'', style:{ setProperty(){}, cssText:'' }, disabled:false,
-      scrollTop:0, scrollLeft:0, offsetWidth:36, value:'', dataset:{}, children:[], className:'',
+      scrollTop:0, scrollLeft:0, offsetWidth:36, offsetHeight:36, offsetLeft:0, offsetTop:0, value:'', dataset:{}, children:[], className:'',
       classList:{ s:new Set(), add(c){this.s.add(c);}, remove(c){this.s.delete(c);}, contains(c){return this.s.has(c);}, toggle(){} },
       setAttribute(){}, removeAttribute(){}, appendChild(c){this.children.push(c);return c;}, remove(){},
       addEventListener(){}, focus(){}, blur(){},

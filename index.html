@@ -255,7 +255,7 @@ button:disabled { opacity:.45; cursor:not-allowed; }
 .map-wrap { flex:1; overflow:auto; display:flex; align-items:center; justify-content:center; padding:6px; -webkit-overflow-scrolling:touch; }
 #battle-map {
   display:grid; gap:2px; background:rgba(0,0,0,.25); padding:4px; border-radius:8px;
-  border:1px solid var(--line); touch-action:manipulation;
+  border:1px solid var(--line); touch-action:manipulation; position:relative;
 }
 .cell {
   position:relative; width:var(--cs,40px); height:var(--cs,40px);
@@ -3474,20 +3474,21 @@ const Battle = {
     el.classList.add('lunge');
     setTimeout(()=>el.classList.remove('lunge'), 250);
   },
-  /* 远程弹道：小弹丸从攻击者格心飞向目标格心（180ms），可 await 对齐受击节奏 */
+  /* 远程弹道：小弹丸从攻击者格心飞向目标格心（180ms），可 await 对齐受击节奏
+   * 用首尾格子的 offsetLeft/offsetTop 精确计算（自动含 grid gap 与地图 padding，不依赖常量） */
   async fxProjectile(att, def, icon) {
     const map = document.getElementById('battle-map');
-    if (!map || !map.children.length) return;
-    let cs = 36;
-    try { const v = parseFloat(getComputedStyle(map).getPropertyValue('--cs')); if (v>0) cs = v; } catch(e) {}
+    const c1 = map && map.children[att.row*Battle.COLS + att.col];
+    const c2 = map && map.children[def.row*Battle.COLS + def.col];
+    if (!c1 || !c2) return;
     const p = document.createElement('div');
     p.className = 'projectile';
     p.textContent = icon || '✦';
-    p.style.left = (att.col*cs + cs/2 - 7) + 'px';
-    p.style.top = (att.row*cs + cs/2 - 9) + 'px';
+    p.style.left = ((c1.offsetLeft||0) + (c1.offsetWidth||0)/2 - 7) + 'px';
+    p.style.top = ((c1.offsetTop||0) + (c1.offsetHeight||0)/2 - 9) + 'px';
     map.appendChild(p);
     void p.offsetWidth;   // 强制回流后再触发过渡
-    p.style.transform = `translate(${(def.col-att.col)*cs}px, ${(def.row-att.row)*cs}px)`;
+    p.style.transform = `translate(${(c2.offsetLeft||0)-(c1.offsetLeft||0)}px, ${(c2.offsetTop||0)-(c1.offsetTop||0)}px)`;
     await Battle.sleep(190);
     p.remove();
   },
@@ -3992,16 +3993,13 @@ const Battle = {
     const b = Battle.b;
     const got = Battle.rawDamage(def, dmg, att);   // 实际生效的伤害（不超量计算）
     if (def.hp <= 0) Battle.stat(att, 'kill', 1);
-    Battle.floatDmg(def.row, def.col, '-'+dmg, crit?'#ffd24d':'#ff8a70', crit);
-    Battle.fxAt(def.row, def.col, crit?'crit-shake':'hit-shake', crit?300:250);   // 受击抖动+红闪
-    Battle.fxAt(def.row, def.col, 'hit-white', 300);   // sangshi 风格白色闪白叠加
     /* sangshi 风格完整句子字幕：我方【张三】使用技能【奋力一击】，对敌方【丧尸】造成 35 点伤害 */
     const sideOf = u => u.side==='ally' ? '我方' : '敌方';
     const act = skillName ? `使用技能【${skillName}】` : '攻击';
     const sent = `${sideOf(att)}【${att.name}】${act}，对${sideOf(def)}【${def.name}】造成 ${dmg} 点伤害${crit?'（暴击）':''}`;
     Battle.log(`${att.icon} ${sent}${crit?' 💥':''}`, crit?'crit':'');
     Battle.subtitle(crit ? `💥 ${sent}` : sent);
-    Battle.renderMap(); Battle.renderPanels();
+    Battle.renderMap(); Battle.renderPanels();   // 血条/伤情更新
     // 丧尸死亡
     if (def.side==='enemy' && def.hp<=0) {
       Battle.killEnemy(def);
@@ -4011,7 +4009,11 @@ const Battle = {
     if (def.side==='ally' && def.hp<=0) {
       Battle.downAlly(def, '倒下了', `🩸 ${def.name} 重伤倒地！`);
     }
-    Battle.renderMap(); Battle.renderPanels();
+    Battle.renderMap(); Battle.renderPanels();   // 死亡清理后定稿 DOM
+    /* 受击特效挂到定稿后的节点（renderMap 重建 innerHTML 会连类带飘字一起清掉，先挂会被冲掉） */
+    Battle.floatDmg(def.row, def.col, '-'+dmg, crit?'#ffd24d':'#ff8a70', crit);
+    Battle.fxAt(def.row, def.col, crit?'crit-shake':'hit-shake', crit?300:250);   // 受击抖动+红闪
+    Battle.fxAt(def.row, def.col, 'hit-white', 300);   // sangshi 风格白色闪白叠加
     await Battle.sleep(320);
   },
 

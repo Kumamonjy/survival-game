@@ -14,6 +14,8 @@ const g = Game.g;
   assert(html.includes("fxAt(u.row, u.col, 'cast-glow', 400)"), 'T1f execSkill 挂 cast-glow');
   assert(html.includes("fxAt(def.row, def.col, 'hit-white', 300)"), 'T1g applyDamage 挂 hit-white');
   assert(html.includes("await Battle.fxProjectile(att, def"), 'T1h 远程普攻走弹道');
+  assert(/#battle-map \{[^}]*position:relative/.test(html), 'T1i 地图容器 position:relative（弹道定位基准）');
+  assert(html.includes("c1.offsetLeft") && html.includes("c2.offsetLeft"), 'T1j 弹道用首尾格子 offsetLeft 精确计算（含 gap/padding）');
 
   // T2 构造战斗：AI 行动高亮标记生命周期
   const b = { units:[], selected:null, terrain:Array.from({length:Battle.ROWS},()=>Array.from({length:Battle.COLS},()=>'plain')), moveSet:null, targetSet:null, mode:null, turn:1, phase:'enemy', weather:'sunny', stats:{}, log:[], logEl:null, loot:{gold:0,med:0,metal:0,food:0,fabric:0,wood:0}, ruins:{}, over:false, subtitleT:null, zLevel:1, speed:1, zone:DATA.ZONES[0], doubledReward:false, pendingSkill:null, targetMode:null };
@@ -44,6 +46,17 @@ const g = Game.g;
   a3.stamina = 100;
   await Battle.aiAct(a3, b.units.filter(x=>x.side==='enemy'&&x.hp>0));
   assert(a3.isDefending===true && a3._acting !== true, 'T5 代打休息后 _acting 清除');
+
+  // T6 受击特效挂载时序：applyDamage 内特效必须位于最后一次 renderMap 之后（否则被 DOM 重建冲掉）
+  {
+    const ad = html.slice(html.indexOf('async applyDamage'), html.indexOf('async doAttack'));
+    const lastRm = ad.lastIndexOf('Battle.renderMap()');
+    assert(lastRm > -1
+      && ad.indexOf('Battle.floatDmg') > lastRm
+      && ad.indexOf("crit-shake':'hit-shake'") > lastRm
+      && ad.indexOf("'hit-white', 300") > lastRm,
+      'T6 飘字/抖动/白闪均在最终 renderMap 之后挂载');
+  }
 
   console.log('--- done ---');
   process.exit(0);
