@@ -2261,9 +2261,7 @@ const UI = {
       const chef = g.kitchenChef ? g.chars.find(c=>c.id===g.kitchenChef && !c.dead) : null;
       const canCook = chef && !chef.injured && chef.stamina>=10 && g.res.food>=1;
       CARDS.kitchen = () => cardShell('🍳', '厨房', lv, true,
-        `指派厨师当值，每天结算时产出食物。当值厨师每天消耗 ${K.workCost}⚡ 体力（体力不足或重伤则当天停产），<b>不影响探险出战</b>。<br>
-          产出：Lv.1→4 · Lv.2→8 · Lv.3→12 · Lv.4→16 · Lv.5→20 份/天<br>
-          <b>烤面包</b>：点击按钮可让当值厨师消耗 1 份食物 + 10⚡ 体力，烤 1 个面包放入背包（可让人在战斗中携带食用恢复体力）。`,
+        `指派厨师当值，每日产出食物（Lv.1~5 → 4~20 份），厨师每天耗 ${K.workCost}⚡；可烤面包（1🍞+10⚡）。`,
         lv === 0
           ? buildRow(K, 'Game.buildKitchen()', '建造厨房')
           : upRow(lv, K, 'Game.upgradeKitchen()', `<span class="tag yellow">每日产出 ${K.out(lv)} 🍞</span>`)
@@ -2278,7 +2276,7 @@ const UI = {
       const beds = (g.dormBeds||[]).filter(id=>g.chars.some(c=>c.id===id&&!c.dead));
       const bedNames = beds.map(id=>{ const c=g.chars.find(c=>c.id===id&&!c.dead); return c?c.name:null; }).filter(Boolean);
       CARDS.dorm = () => cardShell('🛏️', '寝室', dlv, true,
-        `每级 1 个床位。入住成员每天结算时<b>额外恢复 ${Dm.regenAmt} 体力 + ${Dm.regenAmt} 生命</b>（独立于晚餐——没吃到饭也生效；重伤者睡满自愈）。入住<b>不影响出战</b>，床位随时免费换人。`,
+        `每级 1 个床位，入住者每日额外 +${Dm.regenAmt}⚡+${Dm.regenAmt}❤️（重伤睡满自愈），不影响出战。`,
         dlv === 0
           ? buildRow(Dm, 'Game.buildDorm()', '建造寝室')
           : upRow(dlv, Dm, 'Game.upgradeDorm()', `<span class="tag yellow">床位 ${beds.length}/${dlv}</span>`)
@@ -2290,7 +2288,7 @@ const UI = {
       const slots = (g.gymSlots||[]).filter(id=>g.chars.some(c=>c.id===id&&!c.dead));
       const gymNames = slots.map(id=>{ const c=g.chars.find(c=>c.id===id&&!c.dead); if(!c) return null; const stop=c.injured||c.stamina<Dg.staminaCost; return c.name+(stop?'（停训）':''); }).filter(Boolean);
       CARDS.gym = () => cardShell('🏋️', '健身房', glv, true,
-        `每级 1 个训练位。被指派成员每天结算时<b>消耗 ${Dg.staminaCost} 体力、获得 ${Dg.expAmt} 经验</b>（与战斗经验叠加，可快速练级）。<b>不影响出战</b>，可与寝室床位叠加（寝室恢复恰好对冲训练消耗）；<b>重伤或体力不足 ${Dg.staminaCost} 的成员无法指派</b>，指派后变重伤 / 体力耗尽的当天自动停训。`,
+        `每级 1 个训练位，训练者每日 -${Dg.staminaCost}⚡ 换 +${Dg.expAmt} 经验，不影响出战（重伤或体力不足自动停训）。`,
         glv === 0
           ? buildRow(Dg, 'Game.buildGym()', '建造健身房')
           : upRow(glv, Dg, 'Game.upgradeGym()', `<span class="tag yellow">训练位 ${slots.length}/${glv}</span>`)
@@ -2301,8 +2299,7 @@ const UI = {
       const flv = g.farmLv;
       const fw = g.farmWorker ? g.chars.find(c=>c.id===g.farmWorker && !c.dead) : null;
       CARDS.farm = () => cardShell('🌾', '农场', flv, true,
-        `指派<b>任意职业</b>成员耕作，每天结算时产出食物。当值成员每天消耗 ${F.workCost}⚡ 体力（体力不足或重伤则当天停产），<b>不影响探险出战</b>，随时免费换人。<br>
-          产出：Lv.1→2 · Lv.2→4 · Lv.3→6 · Lv.4→8 · Lv.5→10 份/天`,
+        `指派任意职业耕作（每日 -${F.workCost}⚡），Lv.1~5 每日产出 2~10 份食物。`,
         flv === 0
           ? buildRow(F, 'Game.buildFarm()', '建造农场')
           : upRow(flv, F, 'Game.upgradeFarm()', `<span class="tag yellow">每日产出 ${F.out(flv)} 🍞</span>`)
@@ -2326,7 +2323,7 @@ const UI = {
             + (sci ? `<div class="wiki-p" style="margin-top:8px">🔬 实验员：<b>${sci.name}</b>（⚡ ${sci.stamina}/${sci.maxStamina}${sci.injured?'，重伤停产':''}）</div>` : '');
         }
         return cardShell('🧪', '实验室', g.labLv, false,
-          `指派<b>科学家</b>当值后，可生产道具「<b>解毒针</b>」💉：每生产 1 支消耗 <b>15⚡ 体力 + 15💰 + 1⚙️金属 + 3💊药物</b>，还可生产「<b>止痛药</b>」💊（10⚡ + 2💊 + 10💰）与「<b>急救丸</b>」⛑️（15⚡ + 2💊 + 20💰，回 60 血并解除重伤，医院也可生产）。成品放入背包（道具格携带，≤3 个）。当值<b>不影响出战</b>，随时免费换人。`,
+          `指派科学家当值，生产解毒针 / 止痛药 / 急救丸，成品入背包。`,
           labBody);
       };
 
@@ -2348,7 +2345,7 @@ const UI = {
             + (doc ? `<div class="wiki-p" style="margin-top:8px">⚕️ 医务员：<b>${doc.name}</b>（⚡ ${doc.stamina}/${doc.maxStamina}${doc.injured?'，重伤停产':''}）</div>` : '');
         }
         return cardShell('🏥', '医院', g.hospitalLv, false,
-          `指派<b>医生或护士</b>当值后，可生产「<b>绷带</b>」🩹（10⚡ + 2🧵 + 1💊，回 25 血并解除流血）、「<b>止痛药</b>」💊（10⚡ + 2💊 + 10💰，回 40 血）与「<b>急救丸</b>」⛑️（15⚡ + 2💊 + 20💰，回 60 血，营地中使用可解除重伤；止痛药/急救丸实验室也可生产），成品放入背包（道具格携带，≤3 个）。当值<b>不影响出战</b>，随时免费换人。`,
+          `指派医生或护士当值，生产绷带 / 止痛药 / 急救丸，成品入背包。`,
           hospBody);
       };
 
@@ -2373,7 +2370,7 @@ const UI = {
         ${upRow(wlv, W, "Game.upgradeBuilding('workshop')", wlv>1?`<span class="tag yellow">材料 -${(wlv-1)*10}%</span>`:'')}
         <div class="wiki-p" style="font-size:12px;color:var(--txt2);margin-top:8px">打造需工匠当值并消耗其体力（消耗品 5⚡ ~ 长枪 25⚡）。升级：每级属性加成 +20%（最高 +5），费用 = 制造成本 × (当前级+1)；分解：返还 50% 成本（向上取整）。工坊每升一级，制造与升级装备的材料消耗 -10%（向上取整）。</div>`;
         return cardShell('🏭', '工坊', wlv, wlv>0,
-          `${W.desc}<br>材料来源：金币/金属来自各区域产出，<b>木材</b>主要在旧钢铁工厂、商业街废墟搜集（物资箱也会随机掉落），<b>布料</b>主要在废弃超市、商业街废墟搜集（物资箱也会随机掉落）。`,
+          `消耗金币/木材/布料/金属制造装备；每升一级材料消耗 -10%。`,
           wBody);
       };
     }
