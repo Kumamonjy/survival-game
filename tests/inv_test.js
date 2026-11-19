@@ -1,10 +1,10 @@
-/* V73 物资仓库 · 每日食物消耗预估 */
+/* V109 仓库改版：资源栏去文字 / 物品模块（已穿戴+卸下、背包装备+穿戴、道具+携带） */
 const fs = require('fs');
 const html = fs.readFileSync('/workspace/index.html', 'utf8');
 const scripts = html.match(/<script>([\s\S]*?)<\/script>/g);
 let code = scripts[scripts.length - 1].replace(/^<script>/, '').replace(/<\/script>\s*$/, '');
 const bootIdx = code.lastIndexOf("Game.renderHome();\n  window.addEventListener('resize'");
-code = code.slice(0, bootIdx) + "window.__T = { Game, UI, DATA };\n})();";
+code = code.slice(0, bootIdx) + "window.__T = { Game, Battle, UI, DATA };\n})();";
 const elems = {};
 function mkEl(){ return { innerHTML:'', textContent:'', style:{ setProperty(){} }, disabled:false, scrollTop:0, value:'', dataset:{}, children:[], className:'', classList:{toggle(){},add(){},remove(){},contains:()=>false}, setAttribute(){}, removeAttribute(){}, appendChild(c){this.children.push(c);return c;}, remove(){}, addEventListener(){}, focus(){}, blur(){}, querySelector(){return null;}, querySelectorAll(){return [];}, getBoundingClientRect(){return{width:400,height:700,top:0,left:0};} }; }
 global.document = { getElementById:id=>elems[id]||(elems[id]=mkEl()), querySelector:()=>mkEl(), querySelectorAll:()=>[], addEventListener(){}, createElement:()=>mkEl(), body:mkEl() };
@@ -13,46 +13,50 @@ global.localStorage = { getItem:()=>null, setItem(){}, removeItem(){} };
 global.navigator = { userAgent:'node' };
 eval(code);
 const assert=(c,n)=>console.log(c?'PASS '+n:'FAIL '+n);
-const { Game, UI, DATA } = window.__T;
+const { Game, Battle, UI, DATA } = window.__T;
 Game.g = Game.newGame(); Game.currentSlot = 1;
 const g = Game.g;
-g.chars = [];   // 清初始随机阵容，构造可控队伍
 
-(() => {
-  // ===== T1 预估行渲染（2 平民 + 1 军人 = 1+1+3 = 5 份/天） =====
-  const c1 = Game.createChar('civilian', '甲'), c2 = Game.createChar('civilian', '乙'), s1 = Game.createChar('soldier', '丙');
-  [c1,c2,s1].forEach(c=>{ c.talents=[]; c.gluttonTalent=false; c.frugalTalent=false; Game.applyTalents(c); Game.recalc(c); g.chars.push(c); });
-  g.res.food = 12;
+(async () => {
+  // T1 主界面资源栏不再显示文字标签
+  UI.renderHome();
+  const resBar = html.match(/<div class="res-bar">[\s\S]*?<\/div>\s*<\/div>/);
+  assert(resBar && !resBar[0].includes('<small>'), 'T1 资源栏仅图标+数字（无文字标签）');
+  assert(elems['res-gold'] && elems['res-wood'], 'T1b 资源栏数值元素正常渲染');
+
+  // T2 物品模块：新档自带布衣/布鞋（背包装备）与石块（背包道具）
+  UI.openInv();
+  const inv = elems['inv-list'].innerHTML;
+  assert(inv.includes('物品模块') && inv.includes('背包装备'), 'T2a 物品模块分区渲染');
+  assert(inv.includes('布衣') && inv.includes('布鞋') && inv.includes('穿戴'), 'T2b 背包装备带穿戴按钮');
+  assert(inv.includes('石块') && inv.includes('携带'), 'T2c 背包道具带携带按钮');
+
+  // T3 穿戴流程：addEquip 木弓 → invPickChar 弹窗 → invEquipTo 上身
+  Game.addEquip('bow', 1);
   UI.renderInv();
-  let inv = elems['inv-list'].innerHTML;
-  assert(inv.includes('每日消耗预估') && inv.includes('5 份食物'), 'T1 预估行渲染（demand 5 = 1+1+3）');
-  assert(!inv.includes('×平民') && !inv.includes('×军人'), 'T2 预估行不含职业分项（只显示每日总消耗）');
-  assert(inv.includes('可支撑约 <b style="color:var(--yellow)">2</b> 天'), 'T3 存粮 12 可支撑 floor(12/5)=2 天');
-
-  // ===== T4 存粮不足一天警示 =====
-  g.res.food = 3;
+  const uid = g.bagInst.find(e=>e.id==='bow').uid;
+  const c1 = g.chars[0];
+  UI.invPickChar(uid);   // 弹窗（内容写入 modal 容器，流程可用性由下一步验证）
+  UI.invEquipTo(c1.id, uid);
+  assert(c1.equip.weapon && c1.equip.weapon.id==='bow' && c1.equip.weapon.uid===uid, 'T3a 仓库一键穿戴成功');
+  assert(!(g.bagInst||[]).some(e=>e.uid===uid), 'T3b 装备离开背包');
   UI.renderInv();
-  inv = elems['inv-list'].innerHTML;
-  assert(inv.includes('存粮不足一天'), 'T4 存粮 3 < 需求 5 触发警示');
+  assert(elems['inv-list'].innerHTML.includes('穿戴中') && elems['inv-list'].innerHTML.includes(c1.name), 'T3c 已穿戴行显示穿戴者');
 
-  // ===== T5 天赋修正标注 =====
-  g.res.food = 12;
-  c1.gluttonTalent = true;
+  // T4 卸下流程：equipChar(null) 回包
+  Game.equipChar(c1.id, 'weapon', null);
+  assert((g.bagInst||[]).some(e=>e.uid===uid) && !c1.equip.weapon, 'T4 卸下后放回背包');
   UI.renderInv();
-  inv = elems['inv-list'].innerHTML;
-  assert(inv.includes('6 份食物') && inv.includes('已含贪吃/节俭修正'), 'T5 贪吃 +1 后 demand 6 且标注修正');
-  c1.gluttonTalent = false;
+  assert(!elems['inv-list'].innerHTML.includes(c1.name + ' 穿戴中'), 'T4b 仓库同步更新');
 
-  // ===== T6 死亡成员不计入 =====
-  s1.dead = true;
+  // T5 道具携带/放回流程
+  UI.invCarryTo(c1.id, 'stone');
+  assert(c1.item && c1.item.id==='stone' && c1.item.count===1, 'T5a 仓库一键携带道具');
   UI.renderInv();
-  inv = elems['inv-list'].innerHTML;
-  assert(inv.includes('2 份食物') && inv.includes('2 人'), 'T6 死亡军人不计入（demand 5→2，队伍 3→2 人）');
-  s1.dead = false;
-
-  // ===== T7 职业食量清单已删除（指引到职业图鉴），保留实际消耗预估 =====
-  assert(!inv.includes('音乐家 2') && !inv.includes('军人 3'), 'T7 物资页不再列出职业食量清单');
+  assert(elems['inv-list'].innerHTML.includes('携带中'), 'T5b 携带中分区显示');
+  Game.uncarryItem(c1.id, false);
+  assert(!c1.item && (g.bag.stone||0)>=1, 'T5c 放回背包');
 
   console.log('--- done ---');
   process.exit(0);
-})();
+})().catch(e=>{ console.log('TEST ERROR', e); process.exit(1); });

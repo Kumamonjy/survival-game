@@ -438,12 +438,12 @@ button:disabled { opacity:.45; cursor:not-allowed; }
         <span class="weather" id="home-weather">☀️ 晴朗</span>
       </div>
       <div class="res-bar">
-        <div class="res-item"><span class="ic">💰</span><span id="res-gold">0</span><small>金币</small></div>
-        <div class="res-item"><span class="ic">💊</span><span id="res-med">0</span><small>药物</small></div>
-        <div class="res-item"><span class="ic">⚙️</span><span id="res-metal">0</span><small>金属</small></div>
-        <div class="res-item"><span class="ic">🍞</span><span id="res-food">0</span><small>食物</small></div>
-        <div class="res-item"><span class="ic">🧵</span><span id="res-fabric">0</span><small>布料</small></div>
-        <div class="res-item"><span class="ic">🪵</span><span id="res-wood">0</span><small>木材</small></div>
+        <div class="res-item"><span class="ic">💰</span><span id="res-gold">0</span></div>
+        <div class="res-item"><span class="ic">💊</span><span id="res-med">0</span></div>
+        <div class="res-item"><span class="ic">⚙️</span><span id="res-metal">0</span></div>
+        <div class="res-item"><span class="ic">🍞</span><span id="res-food">0</span></div>
+        <div class="res-item"><span class="ic">🧵</span><span id="res-fabric">0</span></div>
+        <div class="res-item"><span class="ic">🪵</span><span id="res-wood">0</span></div>
       </div>
     </div>
     <div class="base-scene">
@@ -461,7 +461,7 @@ button:disabled { opacity:.45; cursor:not-allowed; }
       <div class="func-btn" onclick="UI.openChars()"><div class="ic">🧍</div><div><div class="t">人物信息</div><div class="d" id="fb-chars">查看幸存者队伍</div></div><span class="badge" id="badge-injured"></span></div>
       <div class="func-btn" onclick="UI.openRecruit()"><div class="ic">📡</div><div><div class="t">招募广播</div><div class="d">寻找幸存者加入</div></div></div>
       <div class="func-btn" onclick="UI.openZones()"><div class="ic">🧭</div><div><div class="t">外出探险</div><div class="d">搜索物资区域</div></div></div>
-      <div class="func-btn" onclick="UI.openInv()"><div class="ic">📦</div><div><div class="t">物资仓库</div><div class="d">管理四类物资</div></div></div>
+      <div class="func-btn" onclick="UI.openInv()"><div class="ic">📦</div><div><div class="t">物资仓库</div><div class="d">物资与物品管理</div></div></div>
       <div class="func-btn" onclick="UI.openDuty()"><div class="ic">👷</div><div><div class="t">职务指派</div><div class="d" id="fb-duty">人员分配</div></div></div>
       <div class="func-btn" onclick="UI.openWiki()"><div class="ic">📚</div><div><div class="t">游戏百科</div><div class="d">图鉴与规则说明</div></div></div>
       <div class="func-btn" onclick="UI.openBuild()"><div class="ic">🏠</div><div><div class="t">营地建筑</div><div class="d" id="fb-build">建造升级建筑</div></div></div>
@@ -2543,9 +2543,76 @@ const UI = {
 
   /* ---- 物资仓库 ---- */
   openInv() { UI.renderInv(); UI.showScreen('scr-inv'); },
+  /* 物品模块：从背包装备选择穿戴者 */
+  invEquipTo(cid, uid) {
+    const g = Game.g;
+    const inst = (g.bagInst||[]).find(e=>e.uid===uid);
+    if (!inst) { UI.toast('该装备已不在背包'); UI.renderInv(); return; }
+    Game.equipChar(cid, DATA.EQUIPS[inst.id].slot, uid);
+    UI.closeModal();
+    UI.renderInv();
+  },
+  /* 物品模块：从背包消耗品选择携带者 */
+  invCarryTo(cid, itemId) {
+    Game.carryItem(cid, itemId);
+    UI.closeModal();
+    UI.renderInv();
+  },
+  invPickChar(uid) {
+    const g = Game.g;
+    const inst = (g.bagInst||[]).find(e=>e.uid===uid);
+    if (!inst) { UI.toast('该装备已不在背包'); UI.renderInv(); return; }
+    const E = DATA.EQUIPS[inst.id], S = DATA.SLOTS.find(s=>s.id===E.slot);
+    const alive = g.chars.filter(c=>!c.dead);
+    if (!alive.length) { UI.toast('队伍中没有可穿戴的成员'); return; }
+    UI.modal(`<h3>👔 穿戴 · ${E.icon} ${E.name}${inst.lv?' +'+inst.lv:''}</h3>
+      <div class="wiki-p" style="font-size:12px;color:var(--txt2)">选择要穿上「${S.name}」的角色（替换时原装备自动放回背包）</div>
+      ${alive.map(c=>{ const cur = c.equip && c.equip[E.slot], curE = cur && DATA.EQUIPS[typeof cur==='object'?cur.id:cur];
+        return `<div class="loot-line" style="cursor:pointer" onclick="UI.invEquipTo('${c.id}','${uid}')">
+          <span>${c.av||DATA.CLASSES[c.cls].icon} ${c.name}<span style="color:var(--txt2);font-size:12px">　当前：${curE?curE.icon+' '+curE.name+(cur.lv?' +'+cur.lv:''):'空'}</span></span><b>穿上</b></div>`; }).join('')}
+      <div class="row" style="margin-top:12px"><button class="btn" style="width:100%" onclick="UI.closeModal()">取消</button></div>`);
+  },
+  invPickCarry(itemId) {
+    const g = Game.g;
+    const E = DATA.EQUIPS[itemId];
+    const alive = g.chars.filter(c=>!c.dead);
+    if (!alive.length) { UI.toast('队伍中没有可携带的成员'); return; }
+    UI.modal(`<h3>🎒 携带 · ${E.icon} ${E.name}</h3>
+      <div class="wiki-p" style="font-size:12px;color:var(--txt2)">选择携带该道具的角色（每人同类最多 3 个）</div>
+      ${alive.map(c=>`<div class="loot-line" style="cursor:pointer" onclick="UI.invCarryTo('${c.id}','${itemId}')">
+        <span>${c.av||DATA.CLASSES[c.cls].icon} ${c.name}<span style="color:var(--txt2);font-size:12px">　当前：${c.item?DATA.EQUIPS[c.item.id].name+' ×'+c.item.count:'无'}</span></span><b>携带</b></div>`).join('')}
+      <div class="row" style="margin-top:12px"><button class="btn" style="width:100%" onclick="UI.closeModal()">取消</button></div>`);
+  },
   renderInv() {
     const g = Game.g;
     const medNote = g.chars.some(c=>c.cls==='doctor'&&!c.dead) ? '<span class="tag blue">队内有医生 · 治疗消耗减半优惠已激活</span>' : '';
+    /* 物品模块：已穿戴 / 背包装备 / 携带中道具 / 背包道具 */
+    const slotCn = s => UI.slotCn(s);
+    const wornRows = [];
+    g.chars.forEach(c=>{ if(c.dead||!c.equip) return;
+      Object.entries(c.equip).forEach(([slot,eq])=>{ if(eq && typeof eq==='object' && eq.id && DATA.EQUIPS[eq.id]) wornRows.push({c, slot, eq}); });
+    });
+    const bagRows = (g.bagInst||[]).filter(e=>DATA.EQUIPS[e.id] && !DATA.EQUIPS[e.id].consumable)
+      .sort((a,b)=>a.id===b.id?(a.lv||0)-(b.lv||0):a.id.localeCompare(b.id));
+    const carriedRows = []; g.chars.forEach(c=>{ if(!c.dead && c.item && c.item.count>0) carriedRows.push({c, it:c.item}); });
+    const itemBagRows = Object.keys(DATA.EQUIPS).filter(id=>DATA.EQUIPS[id].consumable && (g.bag[id]||0)>0);
+    const itemPanel = `
+      <div class="panel"><h3>🎒 物品模块（装备与道具）</h3>
+        <div class="wiki-p" style="font-size:12px;color:var(--txt2)">已穿戴的装备可一键卸下放回背包；背包中的装备点击「穿戴」选择角色（替换时原装备自动回包）；道具为消耗品，每人同类最多携带 3 个。</div>
+        ${wornRows.length?`<div class="wiki-p" style="margin-top:8px">👕 <b>已穿戴（${wornRows.length}）</b></div>`:''}
+        ${wornRows.map(({c,slot,eq})=>{ const e=DATA.EQUIPS[eq.id], lv=eq.lv?' +'+eq.lv:'';
+          return `<div class="loot-line"><span>${e.icon} ${e.name}${lv} <span class="tag blue">${slotCn(slot)}</span> <span class="tag yellow">👤 ${c.name} 穿戴中</span></span><button class="btn small" onclick="Game.equipChar('${c.id}','${slot}',null);UI.renderInv()">卸下</button></div>`; }).join('')}
+        ${bagRows.length?`<div class="wiki-p" style="margin-top:8px">🧳 <b>背包装备（${bagRows.length}）</b></div>`:''}
+        ${bagRows.map(inst=>{ const e=DATA.EQUIPS[inst.id], lv=inst.lv?' +'+inst.lv:'';
+          return `<div class="loot-line"><span>${e.icon} ${e.name}${lv} <span class="tag blue">${slotCn(e.slot)}</span> <span style="color:var(--txt2);font-size:12px">${e.desc}</span></span><button class="btn primary small" onclick="UI.invPickChar('${inst.uid}')">穿戴</button></div>`; }).join('')}
+        ${carriedRows.length?`<div class="wiki-p" style="margin-top:8px">🎒 <b>携带中道具（${carriedRows.length}）</b></div>`:''}
+        ${carriedRows.map(({c,it})=>{ const e=DATA.EQUIPS[it.id];
+          return `<div class="loot-line"><span>${e.icon} ${e.name} ×${it.count} <span class="tag yellow">👤 ${c.name} 携带中</span></span><button class="btn small" onclick="Game.uncarryItem('${c.id}',false);UI.renderInv()">放回 1</button></div>`; }).join('')}
+        ${itemBagRows.length?`<div class="wiki-p" style="margin-top:8px">📦 <b>背包道具（${itemBagRows.length} 类）</b></div>`:''}
+        ${itemBagRows.map(id=>{ const e=DATA.EQUIPS[id];
+          return `<div class="loot-line"><span>${e.icon} ${e.name} ×${g.bag[id]} <span style="color:var(--txt2);font-size:12px">${e.skill?('自带技能 · '+e.skill.name):(e.desc||'')}</span></span><button class="btn primary small" onclick="UI.invPickCarry('${id}')">携带</button></div>`; }).join('')}
+        ${(!wornRows.length && !bagRows.length && !carriedRows.length && !itemBagRows.length)?'<div class="wiki-p" style="color:var(--txt2);margin-top:8px">暂无物品——建造工坊制造装备，或外出探险获取（胜利有概率掉落装备）</div>':''}
+      </div>`;
     document.getElementById('inv-list').innerHTML = `
       <div class="panel"><h3>📦 当前物资</h3>${medNote}
         <div class="attr-grid" style="grid-template-columns:repeat(2,1fr);margin-top:8px">
@@ -2557,6 +2624,7 @@ const UI = {
           <div class="attr-cell"><b>🪵 ${g.res.wood||0}</b><span>木材（建筑/打造材料）</span></div>
         </div>
       </div>
+      ${itemPanel}
       <div class="panel"><h3>💊 药物使用说明</h3>
         <div class="wiki-p">· 在<b>人物信息</b>页对受伤成员使用：1 份药物恢复 60 生命${g.chars.some(c=>c.cls==='doctor'&&!c.dead)?'（队内有医生：<b>1 份药物可治疗重伤</b>）':''}<br>· 治疗重伤成员：需要 ${g.chars.some(c=>c.cls==='doctor'&&!c.dead)?'1':'2'} 份药物<br>· 药物主要在<b>市中心医院</b>区域获得</div>
       </div>
