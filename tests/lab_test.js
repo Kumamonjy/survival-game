@@ -76,14 +76,14 @@ function mkB(units){
   const me = Battle.mkAlly(sci, 5, 5);
   const hurt = Battle.mkAlly(s1, 5, 4);
   hurt.hp = hurt.maxHp - 80;
-  hurt.sts = { poison:{ t:3 }, bleed:{ t:3 }, strong:{ t:2 } };
+  hurt.sts = { poison:{ t:3 }, burn:{ t:3 }, strong:{ t:2 } };
   Battle.b = mkB([me, hurt]);
   Battle.b.pendingSkill = DATA.EQUIPS.antidote.skill;
   const hp0 = hurt.hp;
   await Battle.doHeal(me, hurt);
   assert(hurt.hp === hp0 + 50, `T7a 恢复 50 生命（+${hurt.hp-hp0}）`);
   assert(!hurt.sts.poison, 'T7b 中毒解除');
-  assert(hurt.sts.bleed, 'T7c 流血保留（只解中毒）');
+  assert(hurt.sts.burn, 'T7c 燃烧保留（只解中毒）');
   assert(hurt.sts.strong, 'T7d 增益保留');
   const bagAfter = g.bagInst.filter(x=>x.id==='antidote').length;
 

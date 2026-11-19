@@ -460,7 +460,7 @@ button:disabled { opacity:.45; cursor:not-allowed; }
     <div class="func-grid">
       <div class="func-btn" onclick="UI.openChars()"><div class="ic">🧍</div><div><div class="t">人物信息</div><div class="d" id="fb-chars">查看幸存者队伍</div></div><span class="badge" id="badge-injured"></span></div>
       <div class="func-btn" onclick="UI.openRecruit()"><div class="ic">📡</div><div><div class="t">招募广播</div><div class="d">寻找幸存者加入</div></div></div>
-      <div class="func-btn" onclick="UI.openVisitors()"><div class="ic">🚶</div><div><div class="t">家园访客</div><div class="d" id="fb-visitor">商人与流浪者</div></div><span class="badge" id="badge-visitor"></span></div>
+      <div class="func-btn" onclick="UI.openVisitors()"><div class="ic">🚶</div><div><div class="t">家园访客</div><div class="d">商人与流浪者</div></div></div>
       <div class="func-btn" onclick="UI.openZones()"><div class="ic">🧭</div><div><div class="t">外出探险</div><div class="d">搜索物资区域</div></div></div>
       <div class="func-btn" onclick="UI.openInv()"><div class="ic">📦</div><div><div class="t">物资仓库</div><div class="d">物资与物品管理</div></div></div>
       <div class="func-btn" onclick="UI.openDuty()"><div class="ic">👷</div><div><div class="t">职务指派</div><div class="d" id="fb-duty">人员分配</div></div></div>
@@ -1078,15 +1078,12 @@ const DUTY_WORK = {
 };
 
 /* 战斗状态系统：持续时间由施加的技能决定 */
+/* 战斗状态系统：持续时间由施加方传入（技能/丧尸攻击），同名刷新、不同状态共存
+   仅收录实际会触发的 4 种：中毒（注射毒药5/毒气5/自爆波及3）、燃烧（油桶5）、强力（近身格斗等2）、眩晕（麻醉飞镖2） */
 DATA.STATUSES = {
   poison: { name:'中毒', icon:'☠️', color:'#9be26e', dmgPct:0.10, bad:true, desc:'每回合损失 10% 生命值' },
-  bleed:  { name:'流血', icon:'🩸', color:'#ff8a70', dmgPct:0.06, bad:true, desc:'每次行动损失 6% 生命值' },
   burn:   { name:'燃烧', icon:'🔥', color:'#ffb347', dmgPct:0.08, bad:true, desc:'每回合损失 8% 生命值和体力值' },
-  weak:   { name:'虚弱', icon:'🥀', color:'#b08cd0', atkMod:-0.20, bad:true, desc:'攻击力降低 20%' },
-  heal:   { name:'治愈', icon:'💚', color:'#8fd08f', healPct:0.05, desc:'每回合恢复 5% 生命值' },
-  regen:  { name:'调息', icon:'🌀', color:'#7fc4e0', regenPct:0.05, desc:'每回合恢复 5% 体力值' },
   strong: { name:'强力', icon:'💪', color:'#f2c14e', atkMod:0.20, desc:'攻击力提升 20%' },
-  lame:   { name:'瘸腿', icon:'🦽', color:'#d0d0d0', moveMod:-1, bad:true, desc:'移动速度降低 1' },
   stun:   { name:'眩晕', icon:'💫', color:'#e8d06a', bad:true, desc:'无法行动' },
 };
 
@@ -1434,33 +1431,34 @@ const Game = {
     return supply;
   },
   /* ===== 家园访客：每天随过夜刷新一次（新档/旧档迁移也生成），无付费重刷 =====
-     merchant.buy  = 回收报价（玩家卖资源换金币，统一 2.5 金币/份）
-     merchant.sell = 出售报价（玩家花金币买资源，统一 3 金币/份）
+     merchant.buys = 回收报价×2（玩家卖资源换金币，统一 2.5 金币/份）
+     merchant.sell = 出售报价×1（玩家花金币买资源，统一 3 金币/份），三笔报价物资互不相同
      wanderer      = 预生成的完整角色（不进队伍），招募价 150金+20食物 */
   rollVisitors(target) {
     const g = target || Game.g;
     const V = DATA.VISITOR;
     const pool = Object.keys(V.amt);
-    const pickRes = ex => { const p = pool.filter(r=>r!==ex); return p[Math.floor(Math.random()*p.length)]; };
+    const pickRes = ex => { const p = pool.filter(r=>!ex.includes(r)); return p[Math.floor(Math.random()*p.length)]; };
     const mkOffer = (res, buySide) => {
       const [a,b] = V.amt[res];
       const amt = a + Math.floor(Math.random()*(b-a+1));
       const gold = Math.max(1, Math.round(amt * (buySide ? V.buyPrice : V.sellPrice)));
       return { res, amt, gold, done:false };
     };
-    const rb = pickRes(null), rs = pickRes(rb);   // 回收/出售不同物资
+    const rb1 = pickRes([]), rb2 = pickRes([rb1]), rs = pickRes([rb1, rb2]);   // 三笔报价物资互不相同
     const wanderer = Game.createChar(pick(Object.keys(DATA.CLASSES)));
     wanderer.recruited = false;
-    g.visitors = { day:g.day, merchant:{ buy:mkOffer(rb,true), sell:mkOffer(rs,false) }, wanderer };
+    g.visitors = { day:g.day, merchant:{ buys:[mkOffer(rb1,true), mkOffer(rb2,true)], sell:mkOffer(rs,false) }, wanderer };
   },
-  /* 商人交易：kind='buy' 玩家卖资源（回收）/ 'sell' 玩家买资源；每日报价各限成交一笔 */
-  tradeMerchant(kind) {
+  /* 商人交易：kind='buys'（idx 0/1）玩家卖资源（回收）/ 'sell' 玩家买资源；每日报价各限成交一笔 */
+  tradeMerchant(kind, idx) {
     const g = Game.g;
     const m = g.visitors && g.visitors.merchant;
     if (!m) { UI.toast('今天没有商人到访'); return; }
-    const o = m[kind];
+    const o = kind === 'sell' ? m.sell : m.buys[idx];
+    if (!o) return;
     if (o.done) { UI.toast('这笔生意今天已经成交了'); return; }
-    if (kind === 'buy') {
+    if (kind !== 'sell') {
       if ((g.res[o.res]||0) < o.amt) { UI.toast('物资不足，无法回收'); return; }
       g.res[o.res] -= o.amt;
       g.res.gold += o.gold;
@@ -2009,17 +2007,6 @@ const UI = {
     badge.style.display = injured ? 'flex' : 'none';
     badge.textContent = injured;
     document.getElementById('fb-chars').textContent = `${g.chars.filter(c=>!c.dead).length} 名幸存者` + (injured?` / ${injured} 人重伤`:'');
-    // 家园访客：待处理项徽标（商人报价×2 + 流浪者招募）
-    let vn = 0;
-    if (g.visitors) {
-      if (!g.visitors.merchant.buy.done) vn++;
-      if (!g.visitors.merchant.sell.done) vn++;
-      if (g.visitors.wanderer && !g.visitors.wanderer.recruited) vn++;
-    }
-    const bv = document.getElementById('badge-visitor');
-    if (bv) { bv.style.display = vn ? 'flex' : 'none'; bv.textContent = vn; }
-    const fbv = document.getElementById('fb-visitor');
-    if (fbv) fbv.textContent = vn ? `商人与流浪者 · ${vn} 项待处理` : '商人与流浪者 · 今日已处理完';
     // 场景：雨天遮罩
     const scene = document.querySelector('.base-scene');
     scene.style.filter = g.weather==='rain' ? 'brightness(.72) saturate(.8)' : (g.weather==='fog' ? 'brightness(.8) contrast(.85)' : '');
@@ -2048,9 +2035,9 @@ const UI = {
     } else {
       const m = v.merchant;
       const resName = r => ({metal:'金属',food:'食物',wood:'木材',fabric:'布料',med:'药物'})[r]||r;
-      const rowBuy = m.buy.done
-        ? `<div class="loot-line"><span>回收报价：${UI.resIcon(m.buy.res)} ${resName(m.buy.res)} ×${m.buy.amt}</span><span class="tag green">已成交</span></div>`
-        : `<div class="loot-line"><div style="flex:1;min-width:0"><div>回收报价：${UI.resIcon(m.buy.res)} ${resName(m.buy.res)} ×${m.buy.amt}</div><div style="font-size:11px;color:var(--txt2);margin-top:2px">你的库存 ${g.res[m.buy.res]||0}</div></div><button class="btn small primary" ${((g.res[m.buy.res]||0)<m.buy.amt)?'disabled':''} onclick="Game.tradeMerchant('buy')">卖出<br>+${m.buy.gold}${UI.resIcon('gold')}</button></div>`;
+      const rowBuy = o => o.done
+        ? `<div class="loot-line"><span>回收报价：${UI.resIcon(o.res)} ${resName(o.res)} ×${o.amt}</span><span class="tag green">已成交</span></div>`
+        : `<div class="loot-line"><div style="flex:1;min-width:0"><div>回收报价：${UI.resIcon(o.res)} ${resName(o.res)} ×${o.amt}</div><div style="font-size:11px;color:var(--txt2);margin-top:2px">你的库存 ${g.res[o.res]||0}</div></div><button class="btn small primary" ${((g.res[o.res]||0)<o.amt)?'disabled':''} onclick="Game.tradeMerchant('buys',${m.buys.indexOf(o)})">卖出<br>+${o.gold}${UI.resIcon('gold')}</button></div>`;
       const rowSell = m.sell.done
         ? `<div class="loot-line"><span>出售报价：${UI.resIcon(m.sell.res)} ${resName(m.sell.res)} ×${m.sell.amt}</span><span class="tag green">已成交</span></div>`
         : `<div class="loot-line"><span>出售报价：${UI.resIcon(m.sell.res)} ${resName(m.sell.res)} ×${m.sell.amt}</span><button class="btn small" ${(g.res.gold<m.sell.gold)?'disabled':''} onclick="Game.tradeMerchant('sell')">买入<br>-${m.sell.gold}${UI.resIcon('gold')}</button></div>`;
@@ -2061,8 +2048,8 @@ const UI = {
         ? '<span class="tag green">已加入队伍</span>'
         : `<button class="btn small primary" ${(g.res.gold<RC.gold||g.res.food<RC.food)?'disabled':''} onclick="Game.recruitWanderer()">招募消耗<br>-${RC.gold}${UI.resIcon('gold')} -${RC.food}${UI.resIcon('food')}</button>`;
       body = `
-      <div class="panel"><h3>🧳 流动商人</h3>${rowBuy}${rowSell}
-        <div class="wiki-p" style="margin-top:6px;color:var(--txt2)">每日报价各限成交一次；次日商人与流浪者都会换新（无法付费重刷）</div></div>
+      <div class="panel"><h3>🧳 流动商人</h3>${m.buys.map(rowBuy).join('')}${rowSell}
+        <div class="wiki-p" style="margin-top:6px;color:var(--txt2)">每天回收两种、出售一种物资，各限成交一次；次日商人与流浪者都会换新（无法付费重刷）</div></div>
       <div class="panel"><h3>🧍 流浪者</h3>
         <div class="loot-line"><span>${w.av||C.icon} ${w.name} <span class="tag">${C.name}</span> Lv.${w.level}</span>${wBtn}</div>
         ${!w.recruited?`<div class="wiki-p" style="margin-top:6px">${UI.talentTags(w, true)}</div><div class="wiki-p" style="margin-top:4px">${UI.statLine(w, true)}</div>`:''}
@@ -2864,53 +2851,34 @@ const UI = {
       </div>`;
     const secLoop = `
       <div class="wiki-sec panel"><h4>🔄 生存循环</h4>
-        <div class="wiki-p">
-        · <b>体力</b>：外出探险每人消耗 15 点；吃到晚饭时恢复 50 点<br>
-        · <b>时间</b>：探险不过夜；点击主界面「进入下一天」才结算晚餐、恢复与建筑产出，同一天可多次探索<br>
-        · <b>生命恢复</b>：吃到晚饭时每天 +50 生命（重伤者回满后<b>自动解除重伤</b>，急救丸可立即治愈）<br>
-        · <b>食物</b>：每天每名成员按职业消耗食物——<b>平民 1 / 科学家 1 / 厨师·格斗家·猎人·医生·运动员 2 / 军人 3</b>（贪吃天赋额外 +1，节俭天赋 −1）；<b>粮食不够全营吃时，会弹出晚餐分配让你勾选谁吃</b>——吃到的人恢复 50 体力+50 生命，没吃到的人不会掉血、不会饿死，但当天什么都不恢复<br>
-        · <b>急救丸</b>：恢复 60 生命；对重伤成员使用可解除重伤（医院/实验室生产，战斗中也可对 1 格内友方使用）<br>
-        · <b>布料</b>：工坊制造布系装备的材料，主要来自超市/商业街区域奖励与物资箱<br>
-        · <b>家园访客</b>：每天到访一位<b>流动商人</b>与一位<b>流浪者</b>——商人回收一种物资（换金币）并出售一种物资（花金币），每日报价各限成交一次；流浪者职业天赋随机，花 150 金币 + 20 食物可招募。访客随过夜刷新，<b>无法付费重刷</b><br>
-        · <b>天数</b>：时间由主界面「进入下一天」推进——过夜时刷新天气、结算晚餐与建筑产出；同一天可多次探索
-        </div>
+        <table class="wiki-table">
+          <tr><th>项目</th><th>规则</th></tr>
+          <tr><td><b>⚡ 体力</b></td><td>外出探险每人消耗 15；吃到晚饭恢复 50</td></tr>
+          <tr><td><b>⏳ 时间</b></td><td>探险不过夜；「进入下一天」过夜才结算晚餐、恢复、建筑产出，并刷新天气与家园访客；同一天可多次探索</td></tr>
+          <tr><td><b>❤️ 生命</b></td><td>吃到晚饭每天 +50（重伤者回满自动解除重伤）；急救丸可立即回 60 并解重伤</td></tr>
+          <tr><td><b>🍞 食物</b></td><td>每名成员按职业日耗（见「🧍 职业」页表格；贪吃 +1 / 节俭 −1）；不够全营吃时弹晚餐分配勾选谁吃——吃到 +50⚡+50❤️，没吃到当天不恢复（不会饿死）</td></tr>
+          <tr><td><b>🚶 家园访客</b></td><td>每天一位流动商人（回收 2 种物资换金币、出售 1 种物资，各限成交一次）+ 一位流浪者（150💰+20🍞 招募）；随过夜刷新，无法付费重刷</td></tr>
+          <tr><td><b>🏥 医院</b></td><td>建造后指派医生/护士当值可生产绷带、止痛药、急救丸（配方见「🧰 装备」页）</td></tr>
+        </table>
       </div>`;
     const secBuild = `
       <div class="wiki-sec panel"><h4>🧰 装备与工坊</h4>
         <div class="wiki-p">
-        · 每名角色有 <b>5 个装备位</b>（武器 / 头盔 / 衣服 / 鞋子 / 饰品）+ <b>1 个道具位</b>（消耗品）。角色初始<b>没有装备</b>，需要建造工坊制造后穿戴<br>
-        · <b>工坊</b>（营地建筑，250 💰 建造）：消耗 <b>金币 / 木材 / 布料 / 金属</b> 制造装备——飞镖 8💰+2⚙️、石块 12💰+3⚙️、护腕 5💰+3🧵、水瓶 20💰+1⚙️+1🧵、保温杯 35💰+2⚙️+1🧵、木棍 20💰+5🪵、弹弓 20💰+3🪵+1🧵、木弓 40💰+5🪵+3🧵、长枪 60💰+4🪵+3⚙️；新档背包自带 2 布衣、2 布鞋、2 石块可先穿<br>
-        · <b>特殊饰品</b>：熊熊 🧸（暴击率 +5% / 暴伤 +10%）、兔兔 🐰（体力 +15 / 防御 +5）——无法通过工坊制造，只能从探险地图上的<b>精品物资箱</b>开启获得（10% 概率）<br>
-        · <b>装备升级</b>：每件装备独立升级，每级属性加成 +20%（基于初始值，血/体/攻/防），最高 +5；费用 = 制造成本 × (当前级+1)<br>
-        · <b>装备分解</b>：分解背包中不需要的装备，返还 50% 制造成本（向上取整）；穿戴中的装备需先卸下再分解<br>
-        · <b>道具（消耗品）</b>：不提供属性加成、不可升级；每人在人物信息「道具」格携带（同类最多 3 个，占用背包）；战斗中使用道具技能后消耗 1 个，用完即失效<br>
-        · 造好的装备放入<b>背包</b>，在人物信息中点击装备格位穿卸（更换时旧装备自动放回背包）<br>
-        · <b>布料</b>主要在废弃超市、商业街废墟搜集，物资箱也会随机掉落；金属来自工厂/基地/商业街<br>
-        · 部分装备自带主动技能（如「石块」的<b>投掷石头</b>：消耗 10 体力，对 3 格内一名敌人造成 50% 攻击力的伤害），战斗中与职业技能一同使用；道具（如<b>石块</b>）是消耗品：使用技能后消耗 1 个、不可升级、不提供属性，先在人物信息「道具」格携带（≤3 个）<br>
-        · 装备来源：工坊制造 + <b>探险胜利 20% 概率掉落</b><br>
-        · 卸下装备时生命 / 体力若超过当前上限会自动截断
+        · 每名角色 <b>5 个装备位</b>（武器/头盔/衣服/鞋子/饰品）+ <b>1 个道具位</b>；初始无装备，工坊制造后到人物信息点击格位穿卸，探险胜利 20% 掉落装备；新档背包自带 2 布衣、2 布鞋、2 石块<br>
+        · 全部配方成本、升级（+20%/级，最高 +5）与分解（返 50%）规则见「🧰 装备」页表格<br>
+        · 材料来源：金属——工厂/基地/商业街；木材——林场类区域；布料——超市/商业街与物资箱；药物——医院/商业街
         </div>
       </div>
       <div class="wiki-sec panel"><h4>🏠 营地建筑</h4>
-        <div class="wiki-p">
-        · <b>厨房</b>：200 💰 建造，之后每 200 💰 升一级，最高 Lv.5<br>
-        · 产出：Lv.1→4 / Lv.2→8 / Lv.3→12 / Lv.4→16 / Lv.5→20 份食物，每日结算时入账<br>
-        · 必须指派<b>厨师职业</b>当值才产出；当值厨师每天消耗 50 ⚡ 体力，体力不足则当天停产<br>
-        · <b>烤面包</b>：厨房界面点「🥖 烤面包」，当值厨师消耗 1 份食物 + 10⚡，烤 1 个面包入背包（人物信息「道具」格携带≤3 个，战斗中使用恢复 20 体力）<br>
-        · <b>生产解毒针</b>：实验室界面点「💉 生产解毒针」，当值科学家消耗 15⚡ + 15💰 + 1⚙️金属 + 3💊药物，制 1 支解毒针入背包（携带≤3 个，战斗中为 1 格内友方恢复 50 生命并解除中毒）<br>
-        · 当值厨师不能参与探险出战；换人 / 撤职随时免费<br>
-        · <b>寝室</b>：150 💰 建造，之后每 150 💰 升一级，最高 Lv.5，每级 1 个床位<br>
-        · 入住成员每天结算时<b>额外恢复 50 体力 + 50 生命</b>（与晚餐恢复叠加；独立生效——没吃到饭也恢复；重伤者睡满自愈）<br>
-        · 入住<b>不影响探险出战</b>，床位随时免费换人，同一成员只能占一个床位<br>
-        · <b>健身房</b>：200 💰 建造，之后每 200 💰 升一级，最高 Lv.5，每级 1 个训练位<br>
-        · 被指派成员每天结算时<b>消耗 50 体力、获得 40 经验</b>（可与战斗经验叠加，快速练级）<br>
-        · <b>重伤或体力不足 50 的成员无法指派</b>；指派后变重伤 / 体力耗尽的当天自动停训<br>
-        · <b>农场</b>：150 💰 建造，之后每 150 💰 升一级，最高 Lv.5<br>
-        · 指派<b>任意职业</b>成员耕作，每天结算时<b>消耗 50 体力、产出 2×等级 份食物</b>（Lv.1→2 / Lv.2→4 / Lv.3→6 / Lv.4→8 / Lv.5→10）<br>
-        · 农场当值<b>不影响探险出战</b>，随时免费换人；体力不足或重伤的成员当天自动停产（指派需体力 ≥50 且未重伤）<br>
-        · 训练<b>不影响探险出战</b>，可与寝室床位叠加（寝室 +50⚡ 恰好对冲训练 -50⚡），训练位随时免费换人<br>
-        · <b>实验室</b>：200 💰 建造（不可升级），指派<b>科学家</b>当值后可生产解毒针（见「装备与道具」节的「生产解毒针」），当值不影响出战
-        </div>
+        <table class="wiki-table"><tr><th>建筑</th><th>建造/升级（💰）</th><th>产出</th><th>当值与要点</th></tr>
+          <tr><td><b>🍳 厨房</b></td><td>200 建造 / 每 200 升级，Lv.5 封顶</td><td>每日 +4/8/12/16/20 份食物</td><td>厨师当值（-50⚡/天），体力不足停产；可烤面包（1🍞+10⚡）</td></tr>
+          <tr><td><b>🛏️ 寝室</b></td><td>150 建造 / 每 150 升级，每级 1 床位</td><td>入住者每日额外 +50⚡+50❤️（与晚饭叠加，重伤睡满自愈）</td><td>不影响出战；床位免费换人</td></tr>
+          <tr><td><b>🏋️ 健身房</b></td><td>200 建造 / 每 200 升级，每级 1 训练位</td><td>训练者每日 -50⚡、+40 经验</td><td>需体力≥50 且未重伤；不影响出战</td></tr>
+          <tr><td><b>🌱 农场</b></td><td>150 建造 / 每 150 升级，Lv.5 封顶</td><td>每日 +2×等级 份食物</td><td>任意职业当值（-50⚡/天）；不影响出战</td></tr>
+          <tr><td><b>🏥 医院</b></td><td>180 建造（不可升级）</td><td>生产绷带/止痛药/急救丸</td><td>医生或护士当值；不影响出战</td></tr>
+          <tr><td><b>🧪 实验室</b></td><td>200 建造（不可升级）</td><td>生产解毒针/止痛药/急救丸</td><td>科学家当值；不影响出战</td></tr>
+        </table>
+        <div class="wiki-p" style="margin-top:6px">建筑产出于每日过夜结算；换人/撤职随时免费。装备详情见「🧰 装备」页。</div>
       </div>`;
     const secSave = `
       <div class="wiki-sec panel"><h4>💾 存档说明</h4>
@@ -2919,12 +2887,12 @@ const UI = {
     const secCls = `
       <div class="wiki-sec panel"><h4>🧍 职业基础属性（Lv.1）</h4>
         <table class="wiki-table"><tr><th>职业</th><th>生命</th><th>攻击</th><th>防御</th><th>射程</th><th>移速</th><th>暴击率</th><th>体力</th><th>招募价</th></tr>${clsRows}</table>
-        <div class="wiki-p" style="margin-top:6px">每次升级：<b>生命 / 攻击 / 防御 / 体力</b> 提升各自基础值的 <b>10%</b>（射程、移速、暴击不变），升级时立刻回复成长部分的生命与体力。<br>经验获取：按击败的丧尸类型结算，<b>出战全员每人获得全额经验</b>——游荡丧尸 15 / 丧尸犬 15 / 肥胖丧尸 20 / 长舌丧尸 20 / 自爆丧尸 20 / 毒气丧尸 25 / 凶猛丧尸 25 / 暴君 60；探险失败经验减半，撤离按实际击败数计；<b>重伤成员只获得 50%（向上取整）</b>；营地事件也可能带来经验。<b>升级所需经验从 100 起，每级递增 30</b>——Lv.1→2 需 100，Lv.2→3 需 130，Lv.3→4 需 160，以此类推。招募角色还会随机获得 1~3 个天赋（互不重复，最多 3 个，可能为负面）。</div>
+        <div class="wiki-p" style="margin-top:6px">每次升级：<b>生命 / 攻击 / 防御 / 体力</b> 提升各自基础值的 <b>10%</b>（射程、移速、暴击不变），升级时立刻回复成长部分。经验按击败的丧尸类型结算（见「🧟 敌人」页经验列）：<b>出战全员每人全额</b>，探险失败减半、撤离按实际击败数计，<b>重伤成员仅 50%</b>（向上取整）。升级所需经验 100 起每级 +30。招募角色随机附带 1~3 个天赋（见「🍀 天赋」页）。</div>
       </div>`;
     const secSkill = `
       <div class="wiki-sec panel"><h4>⚗️ 食物消耗与专属技能</h4>
         <table class="wiki-table"><tr><th>职业</th><th>日耗食物</th><th>专属技能（冷却3回合）</th></tr>${skillRows}</table>
-        <div class="wiki-p" style="margin-top:6px">技能在战斗中使用，消耗体力并有 3 回合冷却。点「技能」会打开技能列表——<b>医生、护士、厨师、猎人、军人、格斗家和科学家都拥有两个职业技能</b>：医生「急救」2 格内强力治疗（150% 攻击力）、「医务护理」贴身护理（与护士共用同一技能）；护士「注射毒药」造成固定伤害并让丧尸中毒（每回合毒发扣血，5 回合后自动消退，再次注射可刷新）；厨师「泼火锅汤」向一个方向泼出 3 格直线汤水、「美味料理」为 1 格内友方恢复 15 点体力；猎人「百步穿杨」可贯穿一条直线上最多 4 格的所有敌人、「精准射击」可越障狙杀 4 格内的单个敌人（150% 伤害）；军人「火力压制」可打到 3 格外的敌人、「近身格斗」贴身重击（150% 伤害）并让自己进入强力状态 2 回合；格斗家「横扫千军」可重创周围 1 格内（曼哈顿距离，十字四向）的所有敌人，同样拥有「近身格斗」；科学家「特种医疗」治疗 1 格内友方（含自己，100% 攻击力）并净化所有负面状态、「麻醉飞镖」对 2 格内敌人造成 110% 伤害并使其眩晕 2 回合（无法行动）。</div>
+        <div class="wiki-p" style="margin-top:6px">技能在战斗中使用，消耗体力并有 3 回合冷却；各技能的效果、消耗与射程已列于上表。医生、护士、厨师、猎人、军人、格斗家、科学家拥有两个职业技能。</div>
       </div>`;
     const secTalent = `
       <div class="wiki-sec panel"><h4>🍀 天赋一览</h4>
@@ -2951,18 +2919,24 @@ const UI = {
         <div class="wiki-p" style="margin-top:6px">🪨→📦 <b>石头物资箱</b>：清除瓦砾障碍后原地留下，走上拾取 <b>石块×1</b>（入背包）+ <b>金属 0-2</b>。</div>
         <div class="wiki-p" style="margin-top:6px">🧱 <b>废墟翻找</b>：站在废墟旁点击攻击选择废墟（消耗 1 次攻击），每处限翻 1 次，随机获得 1-2 种物资（金币/食物/金属/布料/药物）。</div>
       </div>`;
-    const statusRows = Object.values(DATA.STATUSES).map(S=>{
-      const when = { '中毒':'每回合结束','流血':'每次行动后','燃烧':'每回合结束','虚弱':'持续生效','治愈':'每回合结束','调息':'每回合结束','强力':'持续生效','瘸腿':'持续生效','眩晕':'被眩晕的回合（无法行动）' }[S.name]||'';
-      return `<tr><td><span style="color:${S.color}">${S.icon} ${S.name}</span></td><td>${S.desc}</td><td>${when}</td></tr>`;
-    }).join('');
+    /* 状态来源与持续时间由施加方写死，此处与代码逐一对应（audit: V121） */
+    const STATUS_SRC = {
+      poison:'护士「注射毒药」5 回合 · 毒气丧尸毒气 5 回合 · 自爆丧尸爆炸波及 3 回合',
+      burn:'油桶爆炸波及 5 回合',
+      strong:'「近身格斗」「狂暴撕咬」命中后自身 2 回合',
+      stun:'科学家「麻醉飞镖」2 回合',
+    };
+    const STATUS_WHEN = { poison:'每回合结束', burn:'每回合结束', strong:'持续生效', stun:'被眩晕的回合（无法行动）' };
+    const statusRows = Object.entries(DATA.STATUSES).map(([k,S])=>
+      `<tr><td><span style="color:${S.color}">${S.icon} ${S.name}</span></td><td>${S.desc}</td><td>${STATUS_SRC[k]}</td><td>${STATUS_WHEN[k]}</td></tr>`
+    ).join('');
     const secStatus = `
       <div class="wiki-sec panel"><h4>🧪 战斗状态</h4>
-        <table class="wiki-table"><tr><th>状态</th><th>效果</th><th>触发时机</th></tr>${statusRows}</table>
-        <div class="wiki-p" style="margin-top:6px">· 状态的<b>持续时间由施加的技能决定</b>（如护士「注射毒药」造成 5 回合中毒）<br>
+        <table class="wiki-table"><tr><th>状态</th><th>效果</th><th>来源与持续</th><th>结算时机</th></tr>${statusRows}</table>
+        <div class="wiki-p" style="margin-top:6px">· 状态持续时间由<b>施加方</b>（职业技能 / 丧尸攻击 / 爆炸）决定，见上表「来源与持续」列<br>
         · 同名状态再次命中只会<b>刷新</b>持续时间；不同状态可以共存<br>
-        · 中毒/燃烧/治愈/调息在<b>每回合结束</b>时统一结算（双方行动完毕后）；流血在<b>每次行动</b>（移动、攻击、技能、休息）后结算<br>
-        · 状态伤害<b>无视防御</b>；中毒/燃烧/流血造成的击杀与伤害都归属施加者<br>
-        · 单位头顶会显示状态图标，点选单位可在信息栏查看剩余回合数</div>
+        · 状态伤害<b>无视防御</b>，中毒/燃烧造成的击杀与伤害归属施加者<br>
+        · 单位头顶显示状态图标，点选单位可在信息栏查看剩余回合数</div>
       </div>`;
     const secZombie = `
       <div class="wiki-sec panel"><h4>🧟 丧尸图鉴</h4>
@@ -2993,15 +2967,19 @@ const UI = {
     const TABS = [
       { id:'play',   name:'📖 玩法' },
       { id:'cls',    name:'🧍 职业' },
+      { id:'talent', name:'🍀 天赋' },
       { id:'equip',  name:'🧰 装备' },
       { id:'fight',  name:'⚔️ 战斗' },
+      { id:'status', name:'🧪 状态' },
       { id:'enemy',  name:'🧟 敌人' },
     ];
     const groups = {
-      play:   secGoal + secLoop + secBuild + secTalent + secSave,
+      play:   secGoal + secLoop + secBuild + secSave,
       cls:    secCls + secSkill,
+      talent: secTalent,
       equip:  secEquip,
-      fight:  secFight + secTerrain + secStatus,
+      fight:  secFight + secTerrain,
+      status: secStatus,
       enemy:  secZombie,
     };
     const tab = UI.wikiTab || 'play';
@@ -3346,7 +3324,6 @@ const Battle = {
     let a = u.atk;
     if (u.sts) {
       if (u.sts.strong) a = Math.round(a * (1 + DATA.STATUSES.strong.atkMod));
-      if (u.sts.weak) a = Math.max(1, Math.round(a * (1 + DATA.STATUSES.weak.atkMod)));
     }
     return Math.max(1, a);
   },
@@ -3357,7 +3334,6 @@ const Battle = {
   },
   effMove(u){
     let m = u.move;
-    if (u.sts && u.sts.lame) m += DATA.STATUSES.lame.moveMod;   // 瘸腿 -1
     if (u.side==='enemy' && Game.g.weather==='rain') m -= 1;
     return Math.max(1, m);
   },
@@ -3511,8 +3487,8 @@ const Battle = {
       <div class="u-stats">
         <span>❤️<b>${u.hp}/${u.maxHp}</b></span>
         ${u.side==='ally'?`<span>⚡<b>${u.stamina}/${u.maxStamina}</b></span>`:''}
-        <span>🗡️<b>${Battle.effAtk(u)}${(u.sts&&(u.sts.strong||u.sts.weak))?'*':''}</b></span><span>🛡️<b>${u.def}</b></span>
-        <span>👟<b>${Battle.effMove(u)}${(u.sts&&u.sts.lame)?'*':''}</b></span><span>🎯<b>${Battle.effRange(u)}</b></span>
+        <span>🗡️<b>${Battle.effAtk(u)}${(u.sts&&u.sts.strong)?'*':''}</b></span><span>🛡️<b>${u.def}</b></span>
+        <span>👟<b>${Battle.effMove(u)}</b></span><span>🎯<b>${Battle.effRange(u)}</b></span>
       </div>
       ${(u.sts&&Object.keys(u.sts).length)?`<div class="hint" style="margin-top:4px">${Object.entries(u.sts).map(([k,v])=>`<span style="color:${DATA.STATUSES[k].color};margin-right:8px">${DATA.STATUSES[k].icon} ${DATA.STATUSES[k].name} ${v.t}回合</span>`).join('')}</div>`:''}`;
   },
@@ -3760,7 +3736,6 @@ const Battle = {
     Battle.subtitle('💤 休息');
     b.mode=null; b.moveSet=null; b.targetSet=null;
     Battle.renderMap(); Battle.renderPanels(); Battle.renderInfo(u);
-    if (u.sts && u.sts.bleed) Battle.bleedTick(u);   // 休息也是一次行动
     Battle.checkAllActed();
   },
   cmdCancel() {
@@ -3872,7 +3847,6 @@ const Battle = {
     }
     b.mode=null; b.moveSet=null;
     Battle.renderMap(); Battle.renderPanels();
-    if (u.sts && u.sts.bleed) await Battle.bleedTick(u);
     // 移动后自动提示可攻击目标
     if (!u.hasAttacked) {
       const targets = Battle.attackCells(u).filter(([tr,tc])=>{ const t=Battle.unitAt(tr,tc); return t&&t.side==='enemy'; });
@@ -3920,7 +3894,7 @@ const Battle = {
       if (u.side==='enemy') { Battle.log(`☠️ ${u.name} ${label}身亡`, 'kill'); Battle.subtitle(`☠️ ${u.name} 倒地`); }
       else { Battle.downAlly(u, '因'+label+'倒下了', `🩸 ${u.name} 倒下！`); }
     } else {
-      const verb = { '毒发':'中毒发作', '燃烧':'被烈焰灼烧', '流血':'流血不止' }[label] || `受到${label}侵蚀`;
+      const verb = { '毒发':'中毒发作', '燃烧':'被烈焰灼烧' }[label] || `受到${label}侵蚀`;
       const sent = `${u.side==='ally'?'我方':'敌方'}【${u.name}】${verb}，损失 ${got} 点生命`;
       Battle.log(`${S.icon} ${sent}`, 'bad');
       Battle.subtitle(`${S.icon} ${sent}`);
@@ -3984,14 +3958,7 @@ const Battle = {
       if (Battle.b.terrain[r] && Battle.b.terrain[r][c]==='barrel') await Battle.explodeBarrel(r, c, src);
     }
   },
-  /* 流血：每次行动（移动/攻击/技能/防御）后结算 */
-  async bleedTick(u) {
-    if (!u.sts || !u.sts.bleed || u.hp<=0) return;
-    Battle.statusDamage(u, 'bleed', '流血');
-    Battle.renderMap(); Battle.renderPanels();
-    await Battle.sleep(300);
-  },
-  /* 回合结算：每回合开始时对所有存活单位结算 毒/燃/治愈/调息 并递减全部状态计时 */
+  /* 回合结算：每回合开始时对所有存活单位结算 毒/燃 并递减全部状态计时 */
   tickStatuses() {
     const b = Battle.b;
     let dirty = false;
@@ -4007,25 +3974,7 @@ const Battle = {
         if (u.side==='ally') Battle.log(`🔥 ${u.name} 燃烧烧灼，体力 -${s}`, 'bad');
         dirty = true;
       }
-      if (u.hp>0 && u.sts.heal) {
-        const h = Math.max(1, Math.round(u.maxHp * DATA.STATUSES.heal.healPct));
-        const before = u.hp;
-        u.hp = Math.min(u.maxHp, u.hp + h);
-        const got = Math.min(h, u.maxHp - before);
-        Battle.floatDmg(u.row, u.col, '+'+got, DATA.STATUSES.heal.color);
-        const src = u.sts.heal.from && b.units.find(x=>x.uid===u.sts.heal.from);
-        if (src) Battle.stat(src, 'heal', got);
-        Battle.log(`💚 ${u.name} 治愈生效，恢复 ${got} 生命`, 'good');
-        dirty = true;
-      }
-      if (u.hp>0 && u.sts.regen && u.side==='ally') {
-        const r = Math.max(1, Math.round(u.maxStamina * DATA.STATUSES.regen.regenPct));
-        u.stamina = Math.min(u.maxStamina, u.stamina + r);
-        Battle.floatDmg(u.row, u.col, '+'+r+'⚡', DATA.STATUSES.regen.color);
-        Battle.log(`🌀 ${u.name} 调息生效，恢复 ${r} 体力`, 'good');
-        dirty = true;
-      }
-      // 全部状态计时递减（含弱/强/瘸等纯修正状态）
+      // 全部状态计时递减（含强/眩晕等纯修正状态）
       Object.keys(u.sts).forEach(k=>{
         u.sts[k].t--;
         if (u.sts[k].t <= 0) { delete u.sts[k]; Battle.log(`💨 ${u.name} 的「${DATA.STATUSES[k].name}」状态消退了`, ''); }
@@ -4095,7 +4044,6 @@ const Battle = {
     b.mode=null; b.targetSet=null; b.targetMode=null; b.pendingSkill=null;
     Battle.renderMap(); Battle.renderPanels(); Battle.renderInfo(doc);
     await Battle.sleep(300);
-    if (doc.sts && doc.sts.bleed) await Battle.bleedTick(doc);
     Battle.checkAllActed();
   },
 
@@ -4137,7 +4085,6 @@ const Battle = {
     if (att.side==='ally') { att.hasAttacked = true; Battle.checkExp(att); }
     b.mode=null; b.targetSet=null; b.moveSet=null;
     Battle.renderMap(); Battle.renderPanels(); Battle.renderInfo(att.side==='ally'?att:b.selected);
-    if (att.sts && att.sts.bleed) await Battle.bleedTick(att);
     if (att.side==='ally') Battle.checkAllActed();
     Battle.checkBattleEnd();
   },
@@ -4283,7 +4230,6 @@ const Battle = {
     }
     b.mode=null; b.targetSet=null; b.targetMode=null; b.moveSet=null; b.pendingSkill=null; b.multiTargets=null;
     Battle.renderMap(); Battle.renderPanels(); Battle.renderInfo(u);
-    if (u.sts && u.sts.bleed) await Battle.bleedTick(u);
     Battle.checkAllActed();
     Battle.checkBattleEnd();
   },
@@ -4616,7 +4562,6 @@ const Battle = {
       if (plan) {
         if (plan.r!==u.row || plan.c!==u.col) { u.row=plan.r; u.col=plan.c; Battle.renderMap(); await Battle.sleep(220); }
         await Battle.aiExecuteZombie(u, plan.act);
-        if (u.sts && u.sts.bleed) await Battle.bleedTick(u);
         Battle.checkBattleEnd();
         return;
       }
@@ -4656,7 +4601,6 @@ const Battle = {
         const r1 = Battle.calcDamage(u, atk);
         await Battle.applyDamage(u, atk, r1.dmg, r1.crit, 1);
       }
-      if (u.sts && u.sts.bleed) await Battle.bleedTick(u);
       if (u.side==='ally') { u.hasAttacked = true; Battle.checkExp(u); }
       Battle.checkBattleEnd();
     } else if (u.side==='ally') {

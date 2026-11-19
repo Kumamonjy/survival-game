@@ -42,10 +42,9 @@ g.res.gold = 500; g.res.metal = 20; g.res.fabric = 20; g.res.wood = 20;
   assert(R('bow').stamina===20, 'T5c 木弓 20⚡');
   assert(R('spear').stamina===25 && R('stick').stamina===10 && R('thermos').stamina===12 && R('sweater').stamina===15, 'T5d 长枪 25 / 木棍 10 / 保温杯 12 / 毛衣 15');
 
-  // T6 一人一岗冲突：先当厨师再指派工坊被拒（需真厨师，开局随机职业可能没有则造一个）
-  let cook = g.chars.find(c=>c.cls==='chef' && !c.dead);
-  if (!cook) { cook = Game.createChar('chef'); g.chars.push(cook); }
-  g.kitchenLv = 1; cook.stamina = 100; cook.injured = false;
+  // T6 一人一岗冲突：先当厨师再指派工坊被拒（固定创建厨师，避免开局随机职业的不确定性）
+  const cook = Game.createChar('chef'); cook.talents = []; Game.applyTalents(cook); Game.recalc(cook); cook.stamina = 100; cook.injured = false; g.chars.push(cook);
+  g.kitchenLv = 1;
   Game.assignKitchen(cook.id);
   Game.assignWorkshop(cook.id);
   assert(g.workshopChef===smith.id && g.kitchenChef===cook.id, 'T6 已当值厨师不能同时当工匠');
