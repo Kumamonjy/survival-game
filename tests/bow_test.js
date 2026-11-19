@@ -23,8 +23,8 @@ assert(SL && SL.slot==='weapon' && SL.stats.atk===5 && SL.range===2, 'T1a 弹弓
 assert(BOW && BOW.slot==='weapon' && BOW.stats.atk===10 && BOW.range===3, 'T1b 木弓：攻+10 / 射程 3');
 assert(ST.range===1, 'T1c 木棍补 range:1（近战统一）');
 const rSl = DATA.RECIPES.find(r=>r.id==='slingshot'), rBow = DATA.RECIPES.find(r=>r.id==='bow');
-assert(rSl && rSl.cost.gold===30 && rSl.cost.metal===2, 'T1d 弹弓配方 30💰+2⚙️');
-assert(rBow && rBow.cost.gold===60 && rBow.cost.metal===4 && rBow.cost.fabric===2, 'T1e 木弓配方 60💰+4⚙️+2🧵');
+assert(rSl && rSl.cost.gold===25 && rSl.cost.metal===3, 'T1d 弹弓配方 25💰+3⚙️');
+assert(rBow && rBow.cost.gold===50 && rBow.cost.metal===5 && rBow.cost.fabric===3, 'T1e 木弓配方 50💰+5⚙️+3🧵');
 
 // T2 effRange：max(自身, 武器)
 const soldier = Game.createChar('soldier', '老兵', false);    // 自身射程 1

@@ -31,7 +31,7 @@ const g = Game.g;
   // ===== T3 制造石块（金币+金属） =====
   g.res.gold = 100; g.res.metal = 5; g.res.fabric = 0;
   Game.craft('stone');
-  assert(g.bag.stone===3 && g.res.gold===100-15 && g.res.metal===5-2, 'T3a 制造石块：扣 15💰+2⚙️（初始2+造1=3）');
+  assert(g.bag.stone===3 && g.res.gold===100-12 && g.res.metal===5-3, 'T3a 制造石块：扣 12💰+3⚙️（初始2+造1=3）');
 
   // ===== T4 材料不足拒绝 =====
   g.res.metal = 0;
@@ -43,13 +43,13 @@ const g = Game.g;
   assert(g.bag.cloth===clothCnt, 'T4b 布料不足不能造布衣（数量不增）');
 
   // ===== T5 制造布系装备（布料） =====
-  g.res.gold = 500; g.res.fabric = 10;
+  g.res.gold = 500; g.res.fabric = 14;
   Game.craft('chood');
-  assert(g.bag.chood===1 && g.res.fabric===10-3 && g.res.gold===500-40, 'T5a 制造布帽：扣 3🧵');
+  assert(g.bag.chood===1 && g.res.fabric===14-4 && g.res.gold===500-32, 'T5a 制造布帽：扣 4🧵');
   Game.craft('cshoes');
-  assert(g.bag.cshoes===3 && g.res.fabric===7-3 && g.res.gold===460-50, 'T5b 制造布鞋：扣 3🧵（初始2+造1=3）');
+  assert(g.bag.cshoes===3 && g.res.fabric===10-4 && g.res.gold===468-40, 'T5b 制造布鞋：扣 4🧵（初始2+造1=3）');
   Game.craft('cloth');
-  assert(g.bag.cloth===3 && g.res.fabric===4-4 && g.res.gold===410-60, 'T5c 制造布衣：扣 4🧵（初始2+造1=3）');
+  assert(g.bag.cloth===3 && g.res.fabric===6-5 && g.res.gold===428-48, 'T5c 制造布衣：扣 5🧵（初始2+造1=3）');
 
   // ===== T6 未建工坊不能造（新档） =====
   const g2 = Game.newGame();

@@ -819,6 +819,7 @@ DATA.EQUIPS = {
             skill:{ name:'穿刺', desc:'消耗20体力，选择一个方向，对直线上 2 格内的所有敌人造成 100% 攻击力的伤害。', cost:20, cd:2, type:'attack', shape:'line', lineLen:2, mult:1.0 },
             desc:'攻击力 +15，射程 2（远程）；自带技能「穿刺」：直线 2 格 100% 伤害（冷却 2 回合，消耗 20 体力）' },
   sweater:{ id:'sweater',name:'毛衣', slot:'armor',  icon:'🧶', stats:{hp:35, def:10},               desc:'生命值 +35，防御力 +10' },
+  bottle: { id:'bottle', name:'水瓶', slot:'acc',    icon:'🥤', stats:{stamina:15},                  desc:'体力值 +15' },
   stone:  { id:'stone',  name:'石块', slot:'item',   icon:'🪨', consumable:true,
             skill:{ name:'投掷石头', desc:'消耗10体力，选择 3 格内的一名敌人，奋力掷出石块，造成 50% 攻击力的伤害。使用后消耗 1 个石块。', cost:10, cd:0, type:'attack', shape:'target', mult:0.5, range:3, equipSkill:true, eqName:'石块' },
             desc:'消耗品 · 不提供属性；自带技能「投掷石头」（消耗10体力）：对 3 格内一名敌人造成 50% 攻击力的伤害，使用后消耗 1 个' },
@@ -841,16 +842,17 @@ DATA.EMPTY_EQUIP = { weapon:null, head:null, armor:null, shoes:null, acc:null, i
 /* 工坊：制造装备 */
 DATA.WORKSHOP = { name:'工坊', icon:'🏭', buildCost:250, upgradeCost:250, maxLv:5, desc:'消耗金币、布料与金属制造装备，造好的装备放入背包后可在人物信息中穿戴。每升一级，制造与升级装备的材料消耗减少 10%（向上取整）。' };
 DATA.RECIPES = [
-  { id:'stone',  cost:{ gold:15, metal:2 } },
-  { id:'dart',   cost:{ gold:10, metal:1 } },
-  { id:'stick',  cost:{ gold:30, metal:3 } },
-  { id:'slingshot', cost:{ gold:30, metal:2 } },
-  { id:'bow',    cost:{ gold:60, metal:4, fabric:2 } },
-  { id:'spear',  cost:{ gold:80, metal:5, fabric:2 } },
-  { id:'sweater', cost:{ gold:90, fabric:6 } },
-  { id:'chood',  cost:{ gold:40, fabric:3 } },
-  { id:'cshoes', cost:{ gold:50, fabric:3 } },
-  { id:'cloth',  cost:{ gold:60, fabric:4 } },
+  { id:'stone',  cost:{ gold:12, metal:3 } },
+  { id:'dart',   cost:{ gold:8, metal:2 } },
+  { id:'bottle', cost:{ gold:20, metal:1, fabric:1 } },
+  { id:'stick',  cost:{ gold:25, metal:4 } },
+  { id:'slingshot', cost:{ gold:25, metal:3 } },
+  { id:'bow',    cost:{ gold:50, metal:5, fabric:3 } },
+  { id:'spear',  cost:{ gold:65, metal:6, fabric:3 } },
+  { id:'sweater', cost:{ gold:75, fabric:8 } },
+  { id:'chood',  cost:{ gold:32, fabric:4 } },
+  { id:'cshoes', cost:{ gold:40, fabric:4 } },
+  { id:'cloth',  cost:{ gold:48, fabric:5 } },
 ];
 
 /* 生产统一配置：cookBread/makeAntidote/craft 共用 Game.produce 入口（工坊配方动态生成） */
@@ -2587,7 +2589,7 @@ const UI = {
       <div class="wiki-sec panel"><h4>🧰 装备与工坊</h4>
         <div class="wiki-p">
         · 每名角色有 <b>5 个装备位</b>（武器 / 头盔 / 衣服 / 鞋子 / 饰品）+ <b>1 个道具位</b>（消耗品）。角色初始<b>没有装备</b>，需要建造工坊制造后穿戴<br>
-        · <b>工坊</b>（营地建筑，250 💰 建造）：消耗 <b>金币 / 布料 / 金属</b> 制造装备——飞镖 10💰+1⚙️、石块 15💰+2⚙️、木棍 30💰+3⚙️、布帽 40💰+3🧵、布鞋 50💰+3🧵、布衣 60💰+4🧵；新档背包自带 2 布衣、2 布鞋、2 石块可先穿<br>
+        · <b>工坊</b>（营地建筑，250 💰 建造）：消耗 <b>金币 / 布料 / 金属</b> 制造装备——飞镖 8💰+2⚙️、石块 12💰+3⚙️、水瓶 20💰+1⚙️+1🧵、木棍 25💰+4⚙️、布帽 32💰+4🧵、布鞋 40💰+4🧵、布衣 48💰+5🧵；新档背包自带 2 布衣、2 布鞋、2 石块可先穿<br>
         · <b>装备升级</b>：每件装备独立升级，每级属性加成 +20%（基于初始值，血/体/攻/防），最高 +5；费用 = 制造成本 × (当前级+1)<br>
         · <b>装备分解</b>：分解背包中不需要的装备，返还 50% 制造成本（向上取整）；穿戴中的装备需先卸下再分解<br>
         · <b>道具（消耗品）</b>：不提供属性加成、不可升级；每人在人物信息「道具」格携带（同类最多 3 个，占用背包）；战斗中使用道具技能后消耗 1 个，用完即失效<br>

@@ -104,7 +104,7 @@ const [s1, s2] = g.chars;
   const dart = DATA.EQUIPS.dart;
   assert(dart && dart.icon==='🎯' && dart.consumable && !dart.stats && dart.slot==='item'
     && dart.skill.name==='投掷飞镖' && dart.skill.mult===0.3 && dart.skill.range===2 && dart.skill.cost===10, 'T10a 飞镖定义（消耗品，2格30%）');
-  assert(DATA.RECIPES.some(r=>r.id==='dart' && r.cost.gold===10 && r.cost.metal===1), 'T10b 工坊配方 10💰+1⚙️');
+  assert(DATA.RECIPES.some(r=>r.id==='dart' && r.cost.gold===8 && r.cost.metal===2), 'T10b 工坊配方 8💰+2⚙️');
   assert(DATA.EQUIPS.stone.skill.name==='投掷石头', 'T10c 石块技能已改名「投掷石头」');
   Game.addEquip('dart', 2);
   Game.carryItem(s1.id, 'dart'); Game.carryItem(s1.id, 'dart');   // carryItem 每次携带 1 个（同类叠加）
@@ -119,6 +119,13 @@ const [s1, s2] = g.chars;
   await Battle.execSkill(dme, { sk: dsk, target: dfoe });
   assert(dfoe.hp < dfoe.maxHp && dme.item.count===1 && dme.stamina===90, `T10e 投掷飞镖造成伤害并消耗 1 个（余 ${dme.item.count}）`);
   assert(dfoe.maxHp - dfoe.hp === Math.round(dme.atk*0.3), `T10f 伤害 = 30%攻(${dme.atk}) = ${dfoe.maxHp - dfoe.hp}`);
+
+  // T11 水瓶饰品：acc 槽体力加成
+  assert(DATA.EQUIPS.bottle && DATA.EQUIPS.bottle.slot==='acc' && DATA.EQUIPS.bottle.stats.stamina===15 && !DATA.EQUIPS.bottle.consumable, 'T11a 水瓶：饰品槽 体力+15 非消耗品');
+  assert(DATA.RECIPES.some(r=>r.id==='bottle' && r.cost.gold===20 && r.cost.metal===1 && r.cost.fabric===1), 'T11b 水瓶配方 20💰+1⚙️+1🧵');
+  const probeAcc = { equip:{ acc:{ uid:'y', id:'bottle', lv:0 } }, maxHp:0, maxStamina:0, atk:0, def:0 };
+  const stAcc = Game.equipStats(probeAcc);
+  assert(stAcc.stamina===15 && stAcc.atk===0 && stAcc.hp===0, `T11c equipStats 聚合 acc 槽 +15⚡（${stAcc.stamina}）`);
 
   console.log('--- done ---');
   process.exit(0);

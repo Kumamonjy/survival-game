@@ -24,8 +24,8 @@ const g = Game.g;
   assert(SP.skill && SP.skill.shape==='line' && SP.skill.lineLen===2 && SP.skill.mult===1.0 && SP.skill.cost===20 && SP.skill.cd===2 && !SP.skill.equipSkill, 'T1b 穿刺：直线2格 100% / 20⚡ / CD2 / 非消耗型');
   assert(SW && SW.slot==='armor' && SW.stats.hp===35 && SW.stats.def===10, 'T1c 毛衣：生命+35 / 防御+10');
   const rSp = DATA.RECIPES.find(r=>r.id==='spear'), rSw = DATA.RECIPES.find(r=>r.id==='sweater');
-  assert(rSp && rSp.cost.gold===80 && rSp.cost.metal===5 && rSp.cost.fabric===2, 'T1d 长枪配方 80💰+5⚙️+2🧵');
-  assert(rSw && rSw.cost.gold===90 && rSw.cost.fabric===6, 'T1e 毛衣配方 90💰+6🧵');
+  assert(rSp && rSp.cost.gold===65 && rSp.cost.metal===6 && rSp.cost.fabric===3, 'T1d 长枪配方 65💰+6⚙️+3🧵');
+  assert(rSw && rSw.cost.gold===75 && rSw.cost.fabric===8, 'T1e 毛衣配方 75💰+8🧵');
 
   // T2 属性与射程落地
   const s1 = Game.createChar('soldier', '老兵', false);
@@ -73,7 +73,7 @@ const g = Game.g;
   // T6 毛衣升级（+20%/级）——用身上槽引用（equipChar 会复制新对象入槽）
   g.res.gold = 500; g.res.fabric = 60;
   const wornSw = s1.equip.armor;
-  Game.upgradeEquip(wornSw.uid);   // 毛衣 +1：90💰+6🧵
+  Game.upgradeEquip(wornSw.uid);   // 毛衣 +1：75💰+8🧵
   assert(wornSw.lv===1, 'T6a 毛衣可升级');
   const probe = { equip:{ armor:{ uid:'x', id:'sweater', lv:1 } }, maxHp:0, maxStamina:0, atk:0, def:0 };
   const st1 = Game.equipStats(probe);

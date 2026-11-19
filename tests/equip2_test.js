@@ -34,11 +34,11 @@ const [s1, s2] = g.chars;
   // T3 升级：成本 = 制造成本 × (lv+1)，属性 +20%
   g.res.gold = 500; g.res.metal = 50;
   const stickE = DATA.EQUIPS.stick;
-  Game.upgradeEquip(stick.uid);          // +1：30💰+3⚙️
+  Game.upgradeEquip(stick.uid);          // +1：25💰+4⚙️
   assert(stick.lv===1 && g.bagInst.length===n0+1, `T3a 升级到 +1（${stick.lv}）`);
-  assert(g.res.gold===500-30 && g.res.metal===50-3, `T3b +1 成本 30💰+3⚙️（${g.res.gold}/${g.res.metal}）`);
-  Game.upgradeEquip(stick.uid);          // +2：60💰+6⚙️
-  assert(stick.lv===2 && g.res.gold===470-60 && g.res.metal===47-6, `T3c +2 成本 60💰+6⚙️`);
+  assert(g.res.gold===500-25 && g.res.metal===50-4, `T3b +1 成本 25💰+4⚙️（${g.res.gold}/${g.res.metal}）`);
+  Game.upgradeEquip(stick.uid);          // +2：50💰+8⚙️
+  assert(stick.lv===2 && g.res.gold===475-50 && g.res.metal===46-8, `T3c +2 成本 50💰+8⚙️`);
   // 属性系数：攻 +5 → +1 级 = round(5*1.2)=6
   const probe = { equip:{ weapon:{ uid:'x', id:'stick', lv:1 } }, maxHp:0, maxStamina:0, atk:0, def:0 };
   const st1 = Game.equipStats(probe);
@@ -63,9 +63,9 @@ const [s1, s2] = g.chars;
   // T6 分解：返还 50% 向上取整，实例移除
   g.res.gold = 100; g.res.metal = 0;
   const cntBefore = g.bagInst.length;
-  Game.salvageEquip(stick.uid);          // 木棍 30💰+3⚙️ → 返 15💰+2⚙️
+  Game.salvageEquip(stick.uid);          // 木棍 25💰+4⚙️ → 返 13💰+2⚙️
   assert(g.bagInst.length===cntBefore-1 && Game.bagCount('stick')===0, 'T6a 分解移除实例+投影');
-  assert(g.res.gold===115 && g.res.metal===2, `T6b 返还 ceil(15)+ceil(1.5)=2⚙️（${g.res.gold}/${g.res.metal}）`);
+  assert(g.res.gold===113 && g.res.metal===2, `T6b 返还 ceil(12.5)=13💰+ceil(2)=2⚙️（${g.res.gold}/${g.res.metal}）`);
 
   // T7 穿戴实例：穿上后离开背包、卸下放回、lv 跟随
   const clothInst = g.bagInst.find(e=>e.id==='cloth');
@@ -84,9 +84,9 @@ const [s1, s2] = g.chars;
   g.res.gold = 500; g.res.fabric = 100;
   const g0 = g.res.gold;
   const wearRef = s1.equip.armor;                       // 穿戴槽对象引用（bagInst 中为另一实例对象）
-  Game.upgradeEquip(wearRef.uid);                       // 布衣 +3→+4：60×4=240💰+16🧵
+  Game.upgradeEquip(wearRef.uid);                       // 布衣 +3→+4：48×4=192💰+20🧵
   assert(wearRef.lv===4, `T8a 身上件升级（${wearRef.lv}）`);
-  assert(g.res.gold===g0-240 && g.res.fabric===84, 'T8b 布衣 +4 成本 240💰+16🧵');
+  assert(g.res.gold===g0-192 && g.res.fabric===80, 'T8b 布衣 +4 成本 192💰+20🧵');
   assert(s1.equip.armor.lv===4, 'T8c 穿戴槽同步');
   Game.equipChar(s1.id, 'armor', null);
 
