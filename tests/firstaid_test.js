@@ -76,6 +76,13 @@ function mkDuty(cls, name){ const c = Game.createChar(cls, name); c.stamina = 99
   g.res.gold = 500; g.res.wood = 30; g.res.metal = 30; g.res.fabric = 30;
   assert(Game.canProduce('club').ok, 'T10b 指派工匠后可打造');
 
+  // T11 状态分类：只存在重伤（V115 移除「受伤」黄标 / 医生减半假优惠 / 旧药物文案）
+  assert(!html.includes('tag yellow">受伤'), 'T11a 人物页「受伤」黄标已移除');
+  assert(html.includes(`const inj = c.injured ? '<span class="tag red">重伤</span>' : '';`), 'T11b 状态标签只保留重伤');
+  assert(!html.includes('medNote') && !html.includes('治疗消耗减半'), 'T11c 医生减半假优惠标签已移除');
+  assert(!html.includes('药物使用说明') && html.includes('急救丸使用说明'), 'T11d 仓库面板改为急救丸说明');
+  assert(!html.includes('治疗重伤所需药物减半'), 'T11e 医生职业描述不再提药物减半');
+
   console.log('--- done ---');
   process.exit(0);
 })().catch(e=>{ console.log('TEST ERROR', e); process.exit(1); });

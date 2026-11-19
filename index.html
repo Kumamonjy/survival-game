@@ -614,7 +614,7 @@ DATA.CLASSES = {
     price:250
   },
   doctor: {
-    name:'医生', icon:'⚕️', color:'doc', desc:'战地医疗专家，既能 2 格远程急救，也能贴身护理；队中有医生时，治疗重伤所需药物减半。拥有两个职业技能。',
+    name:'医生', icon:'⚕️', color:'doc', desc:'战地医疗专家，既能 2 格远程急救，也能贴身护理；可担任医院医务员，生产绷带/止痛药/急救丸等医疗道具。拥有两个职业技能。',
     avatars:['⚕️','🧑‍⚕️','👨‍⚕️','👩‍⚕️','🚑'],
     food:2,
     skills:[
@@ -2472,13 +2472,15 @@ const UI = {
         return `<div class="equip-cell${e?'':' empty'}" onclick="UI.openEquipSlot('${c.id}','${s.id}')">
           <span class="ic">${e?e.icon:s.icon}</span><span>${e?e.name+lvTag:s.name}</span></div>`;
       }).join('') + '</div>';
-      const inj = c.injured ? '<span class="tag red">重伤</span>' : (c.hp<eHp? '<span class="tag yellow">受伤</span>':'');
+      const inj = c.injured ? '<span class="tag red">重伤</span>' : '';
       const faCnt = g.bag.firstaid||0;
-      const healBtn = (c.injured || c.hp<eHp)
+      const healBtn = c.injured
         ? (faCnt>0
           ? `<button class="btn small primary" onclick="Game.useFirstaid('${c.id}')">⛑️ 使用急救丸 (${faCnt})</button>`
-          : `<span style="font-size:12px;color:var(--txt2)">⛑️ 需要「急救丸」治疗（恢复 60 生命/解除重伤）——在医院或实验室生产</span>`)
-        : '';
+          : `<span style="font-size:12px;color:var(--txt2)">⛑️ 重伤需「急救丸」治疗（恢复 60 生命/解除重伤）——在医院或实验室生产</span>`)
+        : (faCnt>0 && c.hp<eHp
+          ? `<button class="btn small" onclick="Game.useFirstaid('${c.id}')">⛑️ 使用急救丸 (${faCnt})</button>`
+          : '');
       return `<div class="char-card ${c.injured?'disabled':''}">
         <div class="avatar ${C.color}">${c.av||C.icon}<span class="lvl">Lv.${c.level}</span></div>
         <div style="flex:1;min-width:0">
@@ -2665,7 +2667,6 @@ const UI = {
   },
   renderInv() {
     const g = Game.g;
-    const medNote = g.chars.some(c=>c.cls==='doctor'&&!c.dead) ? '<span class="tag blue">队内有医生 · 治疗消耗减半优惠已激活</span>' : '';
     /* 物品模块：已穿戴 / 背包装备 / 携带中道具 / 背包道具 */
     const slotCn = s => UI.slotCn(s);
     const wornRows = [];
@@ -2694,7 +2695,7 @@ const UI = {
         ${(!wornRows.length && !bagRows.length && !carriedRows.length && !itemBagRows.length)?'<div class="wiki-p" style="color:var(--txt2);margin-top:8px">暂无物品——建造工坊制造装备，或外出探险获取（胜利有概率掉落装备）</div>':''}
       </div>`;
     document.getElementById('inv-list').innerHTML = `
-      <div class="panel"><h3>📦 当前物资</h3>${medNote}
+      <div class="panel"><h3>📦 当前物资</h3>
         <div class="attr-grid" style="grid-template-columns:repeat(2,1fr);margin-top:8px">
           <div class="attr-cell"><b>💰 ${g.res.gold}</b><span>金币</span></div>
           <div class="attr-cell"><b>💊 ${g.res.med}</b><span>药物</span></div>
@@ -2705,8 +2706,8 @@ const UI = {
         </div>
       </div>
       ${itemPanel}
-      <div class="panel"><h3>💊 药物使用说明</h3>
-        <div class="wiki-p">· 在<b>人物信息</b>页对受伤成员使用：1 份药物恢复 60 生命${g.chars.some(c=>c.cls==='doctor'&&!c.dead)?'（队内有医生：<b>1 份药物可治疗重伤</b>）':''}<br>· 治疗重伤成员：需要 ${g.chars.some(c=>c.cls==='doctor'&&!c.dead)?'1':'2'} 份药物<br>· 药物主要在<b>市中心医院</b>区域获得</div>
+      <div class="panel"><h3>⛑️ 急救丸使用说明</h3>
+        <div class="wiki-p">· 战斗中：通过「服用急救丸」技能，为 1 格内一名友方（含自己）恢复 60 生命<br>· 营地中：在<b>人物信息</b>页使用，恢复 60 生命；对<b>重伤</b>成员使用还可解除重伤<br>· 生产：医院或实验室 15⚡ + 2💊 + 20💰；药物（💊）主要在<b>市中心医院</b>区域获得</div>
       </div>
       <div class="panel"><h3>🍞 食物消耗</h3>
         <div class="wiki-p">每天结束时每名幸存者按职业消耗食物（食量见各职业图鉴）。断粮（食物为 0 或不够分）时，没吃到饭的人<b>不会掉血、不会饿死</b>，但当天生命与体力都不恢复。食物主要在<b>废弃超市</b>区域获得。</div>
@@ -2755,9 +2756,9 @@ const UI = {
         <div class="wiki-p">
         · <b>体力</b>：外出探险每人消耗 15 点；吃到晚饭时恢复 50 点<br>
         · <b>时间</b>：探险不过夜；点击主界面「进入下一天」才结算晚餐、恢复与建筑产出，同一天可多次探索<br>
-        · <b>生命恢复</b>：吃到晚饭时每天 +50 生命（重伤者回满后<b>自动解除重伤</b>，药物则可立即治愈）<br>
+        · <b>生命恢复</b>：吃到晚饭时每天 +50 生命（重伤者回满后<b>自动解除重伤</b>，急救丸可立即治愈）<br>
         · <b>食物</b>：每天每名成员按职业消耗食物——<b>平民 1 / 科学家 1 / 厨师·格斗家·猎人·医生·运动员 2 / 军人 3</b>（贪吃天赋额外 +1，节俭天赋 −1）；<b>粮食不够全营吃时，会弹出晚餐分配让你勾选谁吃</b>——吃到的人恢复 50 体力+50 生命，没吃到的人不会掉血、不会饿死，但当天什么都不恢复<br>
-        · <b>药物</b>：治疗受伤 / 重伤成员（立即回满并解除重伤）<br>
+        · <b>急救丸</b>：恢复 60 生命；对重伤成员使用可解除重伤（医院/实验室生产，战斗中也可对 1 格内友方使用）<br>
         · <b>布料</b>：工坊制造布系装备的材料，主要来自超市/商业街区域奖励与物资箱<br>
         · <b>天数</b>：时间由主界面「进入下一天」推进——过夜时刷新天气、结算晚餐与建筑产出；同一天可多次探索
         </div>
