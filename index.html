@@ -822,6 +822,9 @@ DATA.EQUIPS = {
   sweater:{ id:'sweater',name:'毛衣', slot:'armor',  icon:'🧶', stats:{hp:35, def:10},               desc:'生命值 +35，防御力 +10' },
   bottle: { id:'bottle', name:'水瓶', slot:'acc',    icon:'🥤', stats:{stamina:15},                  desc:'体力值 +15' },
   thermos:{ id:'thermos',name:'保温杯', slot:'acc',  icon:'🥛', stats:{stamina:25},                  desc:'体力值 +25' },
+  bracer: { id:'bracer', name:'护腕', slot:'acc',    icon:'💪', stats:{hp:5, def:5},                 desc:'生命值 +5 / 防御力 +5' },
+  bear:   { id:'bear',   name:'熊熊', slot:'acc',    icon:'🧸', special:true, stats:{critRate:5, critDmg:10}, desc:'暴击率 +5% / 暴伤 +10%（特殊饰品）' },
+  bunny:  { id:'bunny',  name:'兔兔', slot:'acc',    icon:'🐰', special:true, stats:{stamina:15, def:5},   desc:'体力值 +15 / 防御力 +5（特殊饰品）' },
   stone:  { id:'stone',  name:'石块', slot:'item',   icon:'🪨', consumable:true,
             skill:{ name:'投掷石头', desc:'消耗10体力，选择 3 格内的一名敌人，奋力掷出石块，造成 50% 攻击力的伤害。使用后消耗 1 个石块。', cost:10, cd:0, type:'attack', shape:'target', mult:0.5, range:3, equipSkill:true, eqName:'石块' },
             desc:'消耗品 · 不提供属性；自带技能「投掷石头」（消耗10体力）：对 3 格内一名敌人造成 50% 攻击力的伤害，使用后消耗 1 个' },
@@ -848,6 +851,7 @@ DATA.RECIPES = [
   { id:'dart',   cost:{ gold:8, metal:2 } },
   { id:'bottle', cost:{ gold:20, metal:1, fabric:1 } },
   { id:'thermos', cost:{ gold:35, metal:2, fabric:1 } },
+  { id:'bracer', cost:{ gold:5, fabric:3 } },
   { id:'stick',  cost:{ gold:20, wood:5 } },
   { id:'slingshot', cost:{ gold:20, wood:3, fabric:1 } },
   { id:'bow',    cost:{ gold:40, wood:5, fabric:3 } },
@@ -1260,6 +1264,9 @@ const Game = {
   effSt(c){ return c.maxStamina + (c.equip ? Game.equipStats(c).stamina : 0); },
   effAtk(c){ return c.atk + (c.equip ? Game.equipStats(c).atk : 0); },
   effDef(c){ return c.def + (c.equip ? Game.equipStats(c).def : 0); },
+  /* 暴击率/暴伤 = 角色值 + 装备加成（熊熊等特殊饰品） */
+  effCrit(c){ return c.critRate + (c.equip ? (Game.equipStats(c).critRate||0) : 0); },
+  effCritDmg(c){ return c.critDmg + (c.equip ? (Game.equipStats(c).critDmg||0) : 0); },
   /* 战斗射程 = max(自身射程, 武器射程||1)（射程不随装备升级缩放） */
   effRange(c) {
     let rg = c.range || 1;
@@ -2377,8 +2384,8 @@ const UI = {
             <div class="attr-cell"><b>🛡️ ${eDef}</b><span>防御${eDef>c.def?` <i style="color:var(--green2);font-style:normal">+${eDef-c.def}</i>`:''}</span></div>
             <div class="attr-cell"><b>🎯 ${Game.effRange(c)}</b><span>射程</span></div>
             <div class="attr-cell"><b>👟 ${c.move}</b><span>移速</span></div>
-            <div class="attr-cell"><b>✨ ${c.critRate}%</b><span>暴击率</span></div>
-            <div class="attr-cell"><b>💥 ${c.critDmg}%</b><span>暴伤</span></div>
+            <div class="attr-cell"><b>✨ ${Game.effCrit(c)}%</b><span>暴击率</span></div>
+            <div class="attr-cell"><b>💥 ${Game.effCritDmg(c)}%</b><span>暴伤</span></div>
             <div class="attr-cell" style="grid-column:span 2"><b>${c.stamina>=15?'可出战':'体力不足'}</b><span>状态</span></div>
           </div>
           <div class="wiki-p" style="color:var(--txt2);margin-top:8px">🧰 装备（点击格位穿卸）</div>
@@ -2502,7 +2509,7 @@ const UI = {
         <div class="avatar ${C.color}">${c.av||C.icon}<span class="lvl">Lv.${c.level}</span></div>
         <div style="flex:1">
           <div class="row"><b>${c.name}</b><span class="tag">${C.name}</span>${onDuty?'<span class="tag yellow">🍳 厨房当值</span>':''}${c.injured?'<span class="tag red">重伤</span>':''}</div>
-          <div class="wiki-p">❤️ ${c.hp}/${Game.effHp(c)}　⚡ ${c.stamina}/${Game.effSt(c)}　🗡️${Game.effAtk(c)} 🛡️${Game.effDef(c)} 🎯${Game.effRange(c)} 👟${c.move}　✨${c.critRate}% 💥${c.critDmg}%</div>
+          <div class="wiki-p">❤️ ${c.hp}/${Game.effHp(c)}　⚡ ${c.stamina}/${Game.effSt(c)}　🗡️${Game.effAtk(c)} 🛡️${Game.effDef(c)} 🎯${Game.effRange(c)} 👟${c.move}　✨${Game.effCrit(c)}% 💥${Game.effCritDmg(c)}%</div>
           ${(C.skills||[C.skill].filter(Boolean)).map(sk=>`<div class="wiki-p"><span class="tag blue">${sk.name}</span>${sk.range!==undefined&&sk.range!==c.range?`<span class="tag yellow">技能射程 ${sk.range}</span>`:''}</div>`).join('')}
           <div class="row" style="flex-wrap:wrap;margin-top:3px">${UI.talentTags(c)}</div>
         </div>
@@ -2597,7 +2604,8 @@ const UI = {
       <div class="wiki-sec panel"><h4>🧰 装备与工坊</h4>
         <div class="wiki-p">
         · 每名角色有 <b>5 个装备位</b>（武器 / 头盔 / 衣服 / 鞋子 / 饰品）+ <b>1 个道具位</b>（消耗品）。角色初始<b>没有装备</b>，需要建造工坊制造后穿戴<br>
-        · <b>工坊</b>（营地建筑，250 💰 建造）：消耗 <b>金币 / 木材 / 布料 / 金属</b> 制造装备——飞镖 8💰+2⚙️、石块 12💰+3⚙️、水瓶 20💰+1⚙️+1🧵、保温杯 35💰+2⚙️+1🧵、木棍 20💰+5🪵、弹弓 20💰+3🪵+1🧵、木弓 40💰+5🪵+3🧵、长枪 60💰+4🪵+3⚙️；新档背包自带 2 布衣、2 布鞋、2 石块可先穿<br>
+        · <b>工坊</b>（营地建筑，250 💰 建造）：消耗 <b>金币 / 木材 / 布料 / 金属</b> 制造装备——飞镖 8💰+2⚙️、石块 12💰+3⚙️、护腕 5💰+3🧵、水瓶 20💰+1⚙️+1🧵、保温杯 35💰+2⚙️+1🧵、木棍 20💰+5🪵、弹弓 20💰+3🪵+1🧵、木弓 40💰+5🪵+3🧵、长枪 60💰+4🪵+3⚙️；新档背包自带 2 布衣、2 布鞋、2 石块可先穿<br>
+        · <b>特殊饰品</b>：熊熊 🧸（暴击率 +5% / 暴伤 +10%）、兔兔 🐰（体力 +15 / 防御 +5）——无法通过工坊制造，获取途径将在后续版本开放<br>
         · <b>装备升级</b>：每件装备独立升级，每级属性加成 +20%（基于初始值，血/体/攻/防），最高 +5；费用 = 制造成本 × (当前级+1)<br>
         · <b>装备分解</b>：分解背包中不需要的装备，返还 50% 制造成本（向上取整）；穿戴中的装备需先卸下再分解<br>
         · <b>道具（消耗品）</b>：不提供属性加成、不可升级；每人在人物信息「道具」格携带（同类最多 3 个，占用背包）；战斗中使用道具技能后消耗 1 个，用完即失效<br>
@@ -2901,8 +2909,8 @@ const Recruit = {
         <div class="attr-cell"><b>${Game.effDef(c)}</b><span>防御</span></div>
         <div class="attr-cell"><b>${Game.effRange(c)}</b><span>射程</span></div>
         <div class="attr-cell"><b>${c.move}</b><span>移速</span></div>
-        <div class="attr-cell"><b>${c.critRate}%</b><span>暴击率</span></div>
-        <div class="attr-cell"><b>${c.critDmg}%</b><span>暴伤</span></div>
+        <div class="attr-cell"><b>${Game.effCrit(c)}%</b><span>暴击率</span></div>
+        <div class="attr-cell"><b>${Game.effCritDmg(c)}%</b><span>暴伤</span></div>
         <div class="attr-cell"><b>${Game.effSt(c)}</b><span>体力</span></div>
       </div>
       ${(C.skills||[C.skill].filter(Boolean)).map(sk=>`<div class="wiki-p" style="margin-top:8px"><span class="tag blue">技能 · ${sk.name}</span> ${sk.desc}</div>`).join('')}
@@ -3025,7 +3033,7 @@ const Battle = {
     return {
       uid:'u'+uidCounter++, side:'ally', ref:c, name:c.name, icon:c.av||C.icon, clsTag:C.name, level:c.level,
       hp:Math.max(1, Math.min(c.hp, Game.effHp(c))), maxHp:Game.effHp(c), atk:Game.effAtk(c), def:Game.effDef(c), range:Game.effRange(c), move:c.move,
-      critRate:c.critRate, critDmg:c.critDmg, stamina:c.stamina, maxStamina:Game.effSt(c),
+      critRate:Game.effCrit(c), critDmg:Game.effCritDmg(c), stamina:c.stamina, maxStamina:Game.effSt(c),
       skill:C.skill, skills, cds:{}, sts:{},
       item: c.item ? { id:c.item.id, count:c.item.count } : null,
       row:r, col, hasMoved:false, hasAttacked:false, isDefending:false,

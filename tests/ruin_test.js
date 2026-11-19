@@ -45,14 +45,14 @@ const g = Game.g;
   const loot0 = JSON.parse(JSON.stringify(b.loot));
   await Battle.searchRuin(me, 4, 5);
   const gain = {};
-  ['gold','food','metal','fabric','med'].forEach(k=>gain[k]=b.loot[k]-loot0[k]);
+  ['gold','food','metal','fabric','med','wood'].forEach(k=>gain[k]=b.loot[k]-loot0[k]);
   const kinds = Object.values(gain).filter(v=>v>0).length;
   assert(kinds>=1 && kinds<=2, `T2b 获得 1-2 种物资（${kinds} 种）`);
   const totalGain = Object.values(gain).reduce((a,x)=>a+x,0);
   assert(totalGain>=1 && totalGain<=8, `T2c 物资量在池范围内（合计 ${totalGain}）`);
   assert(b.ruins['4,5']===0 && me.hasAttacked===true, 'T2d 次数清零、消耗攻击');
   const subT = elems['battle-subtitle'] ? elems['battle-subtitle'].innerHTML : '';
-  assert(subT.includes('翻找废墟：') && (subT.includes('💰')||subT.includes('🍞')||subT.includes('⚙️')||subT.includes('🧵')||subT.includes('💊')), `T2e 字幕显示获得物资（${subT}）`);
+  assert(subT.includes('翻找废墟：') && (subT.includes('💰')||subT.includes('🍞')||subT.includes('⚙️')||subT.includes('🧵')||subT.includes('💊')||subT.includes('🪵')), `T2e 字幕显示获得物资（${subT}）`);
 
   // T3 已翻过的废墟不再出现在攻击目标
   me.hasAttacked=false;
