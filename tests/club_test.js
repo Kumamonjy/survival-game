@@ -22,7 +22,7 @@ g.res.gold = 500; g.res.wood = 30; g.res.metal = 30; g.res.fabric = 30;
   assert(inst && inst.lv===0, 'T2b 棍棒打造入包');
 
   // T3 属性链：effAtk +15，射程 1（固定近战角色，避免随机职业全远程导致兜底失败）
-  const s1 = Game.createChar('civilian','持棒者'); s1.stamina = 9999; g.chars.push(s1);
+  const s1 = Game.createChar('civilian','持棒者'); s1.stamina = 9999; s1.talents = []; g.chars.push(s1);
   Game.equipChar(s1.id, 'weapon', inst.uid);
   assert(Game.effAtk(s1)===s1.atk+15, 'T3a 装备棍棒 effAtk +15');
   assert(Game.effRange(s1)===1, 'T3b 射程 1');

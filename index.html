@@ -1264,10 +1264,9 @@ const Game = {
     return !c.dead && !c.injured && c.stamina >= 15;
   },
 
-  /* 里程碑事件：随机幸存者投奔 */
+  /* 里程碑事件：随机幸存者投奔（无人数上限） */
   addRecruitJoin() {
     const g = Game.g;
-    if (g.chars.filter(c=>!c.dead).length >= 8) { g.res.gold += 50; UI.toast('队伍已满，对方留下 50 金币表示感谢后离去'); return; }
     const c = Game.createChar(pick(Object.keys(DATA.CLASSES)));
     g.chars.push(c);
     UI.toast(`🎉 ${c.name}（${DATA.CLASSES[c.cls].name}）加入了队伍！`);
@@ -1475,14 +1474,13 @@ const Game = {
     Game.saveToSlot(Game.currentSlot, true);
     UI.openVisitors();
   },
-  /* 流浪者招募：150金+20食物，职业天赋当日固定；队伍满 8 人不可招 */
+  /* 流浪者招募：150金+20食物，职业天赋当日固定（无人数上限） */
   recruitWanderer() {
     const g = Game.g;
     const v = g.visitors;
     if (!v || !v.wanderer) { UI.toast('今天没有流浪者到访'); return; }
     const w = v.wanderer;
     if (w.recruited) { UI.toast('已经招募过这位流浪者'); return; }
-    if (g.chars.filter(c=>!c.dead).length >= 8) { UI.toast('队伍已满（8 人），无法招募'); return; }
     const C = DATA.VISITOR.recruitCost;
     if (g.res.gold < C.gold || g.res.food < C.food) { UI.toast(`资源不足：招募需要 ${C.gold} 金币 + ${C.food} 食物`); return; }
     g.res.gold -= C.gold;
@@ -2057,18 +2055,16 @@ const UI = {
         : `<div class="loot-line"><span>出售报价：${UI.resIcon(m.sell.res)} ${resName(m.sell.res)} ×${m.sell.amt}　<small style="color:var(--txt2)">单价约 ${(m.sell.gold/m.sell.amt).toFixed(1)}💰/份</small></span><button class="btn small" ${(g.res.gold<m.sell.gold)?'disabled':''} onclick="Game.tradeMerchant('sell')">买下 -${m.sell.gold}${UI.resIcon('gold')}</button></div>`;
       const w = v.wanderer;
       const C = DATA.CLASSES[w.cls];
-      const full = g.chars.filter(c=>!c.dead).length >= 8;
       const RC = DATA.VISITOR.recruitCost;
       const wBtn = w.recruited
         ? '<span class="tag green">已加入队伍</span>'
-        : `<button class="btn small primary" ${(full||g.res.gold<RC.gold||g.res.food<RC.food)?'disabled':''} onclick="Game.recruitWanderer()">招募 -${RC.gold}${UI.resIcon('gold')} -${RC.food}${UI.resIcon('food')}</button>`;
+        : `<button class="btn small primary" ${(g.res.gold<RC.gold||g.res.food<RC.food)?'disabled':''} onclick="Game.recruitWanderer()">招募 -${RC.gold}${UI.resIcon('gold')} -${RC.food}${UI.resIcon('food')}</button>`;
       body = `
       <div class="panel"><h3>🧳 流动商人</h3>${rowBuy}${rowSell}
         <div class="wiki-p" style="margin-top:6px;color:var(--txt2)">每日报价各限成交一次；次日商人与流浪者都会换新（无法付费重刷）</div></div>
       <div class="panel"><h3>🧍 流浪者</h3>
         <div class="loot-line"><span>${w.av||C.icon} ${w.name} <span class="tag">${C.name}</span> Lv.${w.level}</span>${wBtn}</div>
         ${!w.recruited?`<div class="wiki-p" style="margin-top:6px">${UI.talentTags(w, true)}</div><div class="wiki-p" style="margin-top:4px">${UI.statLine(w, true)}</div>`:''}
-        ${(!w.recruited && full)?'<div class="wiki-p" style="color:var(--red2)">⚠️ 队伍已满（8 人），无法招募</div>':''}
       </div>`;
     }
     UI.modal(`<h3>🚶 家园访客 <span class="tag yellow">第 ${g.day} 天</span></h3>${body}` + UI.closeRow());
@@ -2644,11 +2640,9 @@ const UI = {
   renderRecruit() {
     const g = Game.g;
     const el = document.getElementById('recruit-list');
-    if (g.chars.filter(c=>!c.dead).length >= 8) {
-      el.innerHTML = '<div class="panel">⚠️ 队伍已满（上限 8 人）。已有足够多的人手，除非有人牺牲，否则无法继续招募。</div>';
-      return;
-    }
-    el.innerHTML = Recruit.candidates.map((c,i)=>{
+    const alive = g.chars.filter(c=>!c.dead).length;
+    el.innerHTML = `<div class="wiki-p" style="color:var(--txt2);margin-bottom:8px">当前队伍 ${alive} 人 · 招募无人数上限，人越多每天消耗的食物也越多</div>`
+      + Recruit.candidates.map((c,i)=>{
       const C = DATA.CLASSES[c.cls];
       const tdesc = (c.talents||[]).map(id=>{ const t=DATA.TALENTS.find(x=>x.id===id); return t?t.desc:''; }).filter(Boolean).join('、');
       return `<div class="char-card recruit-card">
@@ -2876,7 +2870,7 @@ const UI = {
         · <b>食物</b>：每天每名成员按职业消耗食物——<b>平民 1 / 科学家 1 / 厨师·格斗家·猎人·医生·运动员 2 / 军人 3</b>（贪吃天赋额外 +1，节俭天赋 −1）；<b>粮食不够全营吃时，会弹出晚餐分配让你勾选谁吃</b>——吃到的人恢复 50 体力+50 生命，没吃到的人不会掉血、不会饿死，但当天什么都不恢复<br>
         · <b>急救丸</b>：恢复 60 生命；对重伤成员使用可解除重伤（医院/实验室生产，战斗中也可对 1 格内友方使用）<br>
         · <b>布料</b>：工坊制造布系装备的材料，主要来自超市/商业街区域奖励与物资箱<br>
-        · <b>家园访客</b>：每天到访一位<b>流动商人</b>与一位<b>流浪者</b>——商人回收一种物资（换金币）并出售一种物资（花金币），每日报价各限成交一次；流浪者职业天赋随机，花 150 金币 + 20 食物可招募（队伍上限 8 人）。访客随过夜刷新，<b>无法付费重刷</b><br>
+        · <b>家园访客</b>：每天到访一位<b>流动商人</b>与一位<b>流浪者</b>——商人回收一种物资（换金币）并出售一种物资（花金币），每日报价各限成交一次；流浪者职业天赋随机，花 150 金币 + 20 食物可招募。访客随过夜刷新，<b>无法付费重刷</b><br>
         · <b>天数</b>：时间由主界面「进入下一天」推进——过夜时刷新天气、结算晚餐与建筑产出；同一天可多次探索
         </div>
       </div>`;
@@ -3156,7 +3150,6 @@ const Recruit = {
   },
   refreshCandidates() {
     const g = Game.g;
-    if (g.chars.filter(c=>!c.dead).length >= 8) { UI.toast('队伍已满，无法招募'); return; }
     if (g.res.gold < 20) { UI.toast('金币不足（需要 20 金币发布广播）'); return; }
     g.res.gold -= 20;
     Recruit.rollCandidates();
@@ -3167,7 +3160,6 @@ const Recruit = {
   hire(i) {
     const g = Game.g, c = Recruit.candidates[i];
     if (!c) return;
-    if (g.chars.filter(x=>!x.dead).length >= 8) { UI.toast('队伍已满（上限8人）'); return; }
     const price = DATA.CLASSES[c.cls].price;
     if (g.res.gold < price) { UI.toast(`金币不足，招募 ${DATA.CLASSES[c.cls].name} 需要 ${price} 金币`); return; }
     g.res.gold -= price;
