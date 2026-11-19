@@ -63,6 +63,7 @@ function mkDuty(cls, name){ const c = Game.createChar(cls, name); c.stamina = 99
 
   // T9 医院卡渲染含急救丸按钮
   g.hospitalLv = 1;
+  UI.campSel='hospital';
   UI.renderBuild();
   const bh = Object.values(elems).map(e=>e.innerHTML).join('');
   assert(bh.includes('makeFirstaid') && bh.includes('生产急救丸'), 'T9 医院卡含急救丸生产按钮');

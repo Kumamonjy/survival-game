@@ -60,6 +60,7 @@ const c3 = Game.createChar('civilian'); g.chars.push(c3);
   assert(dutyHtml.includes(c3.name) && dutyHtml.includes('撤职'), 'T5b 指派页显示当值者与撤职按钮');
   assert(dutyHtml.includes('已任：'), 'T5c 指派页显示职务冲突标签');
   assert(typeof UI.openDuty==='function' && typeof UI.renderDuty==='function', 'T5d 主界面指派入口函数存在');
+  UI.campSel='kitchen';
   UI.renderBuild();
   const all = Object.values(elems).map(e=>e.innerHTML||'').join('');
   assert(!all.includes('队内厨师'), 'T5e 建筑页不再显示队内厨师卡片');

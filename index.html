@@ -145,6 +145,30 @@ button:disabled { opacity:.45; cursor:not-allowed; }
 .base-scene .campfire { animation:fireGlow 2.2s infinite alternate; }
 @keyframes fireGlow { from{filter:drop-shadow(0 0 4px rgba(255,150,50,.4));} to{filter:drop-shadow(0 0 14px rgba(255,150,50,.9));} }
 
+/* ============ 营地场景（建筑贴图，V123） ============ */
+.camp-scene {
+  position:relative; height:300px; margin-bottom:12px; border-radius:12px; overflow:hidden;
+  border:1px solid var(--line2); flex-shrink:0;
+  background:linear-gradient(180deg,#39432f 0%,#2a3226 52%,#1c2217 100%);
+}
+.camp-sun { position:absolute; top:8px; right:14px; font-size:22px; filter:drop-shadow(0 0 10px rgba(212,167,44,.5)); }
+.camp-deco { position:absolute; font-size:20px; opacity:.75; filter:drop-shadow(0 2px 2px rgba(0,0,0,.4)); pointer-events:none; }
+.camp-fire { position:absolute; font-size:24px; animation:fireGlow 2.2s infinite alternate; pointer-events:none; }
+.camp-b {
+  position:absolute; width:78px; padding:7px 2px 5px; text-align:center; cursor:pointer;
+  background:rgba(20,26,15,.6); border:1px solid var(--line2); border-radius:10px;
+  transition:transform .08s, border-color .15s; user-select:none; -webkit-user-select:none;
+}
+.camp-b:active { transform:scale(.94); }
+.camp-b.sel { border-color:var(--sel); box-shadow:0 0 0 1px var(--sel); }
+.camp-b .ci { font-size:30px; line-height:1.25; filter:drop-shadow(0 3px 3px rgba(0,0,0,.5)); }
+.camp-b .cn { font-size:11px; color:var(--txt); margin-top:2px; letter-spacing:1px; }
+.camp-b .clv { color:var(--yellow); font-size:10px; }
+.camp-b .cb { font-size:10px; color:var(--red2); margin-top:1px; }
+.camp-b.off { border-style:dashed; background:rgba(20,26,15,.35); }
+.camp-b.off .ci { filter:grayscale(1) brightness(.5) drop-shadow(0 3px 3px rgba(0,0,0,.5)); }
+.camp-b.off .cn { color:var(--dim); }
+
 .func-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:0 12px; }
 .func-btn {
   display:flex; align-items:center; gap:10px; padding:13px 12px; border-radius:12px;
@@ -2211,7 +2235,7 @@ const UI = {
   renderBuild() {
     const g = Game.g; if (!g) return;
     document.getElementById('build-gold').textContent = '💰 ' + g.res.gold;
-    /* 建筑卡公共片段：卡壳/建造按钮/升级行/当值者提示 六张卡共用 */
+    /* 建筑卡公共片段：卡壳/建造按钮/升级行/当值者提示 七张卡共用 */
     const cardShell = (icon, name, lv, showLv, desc, body) => `<div class="panel"><h3>${icon} ${name} ${lv>0 ? (showLv?'Lv.'+lv:'') : '（未建造）'}</h3>
       <div class="wiki-p" style="font-size:12px;color:var(--txt2)">
         ${desc}
@@ -2227,122 +2251,165 @@ const UI = {
       </div>`;
     const occNote = (occHtml, warn, trailing) => `<div class="wiki-p" style="margin-top:8px">${occHtml || `<span style="color:var(--red2)">${warn}</span>`}${trailing}</div>`;
     const dutyHint = (word) => `${word}在主界面「职务指派」。`;
-    // 厨房
-    const K = DATA.KITCHEN;
-    const lv = g.kitchenLv;
-    const chef = g.kitchenChef ? g.chars.find(c=>c.id===g.kitchenChef && !c.dead) : null;
-    const canCook = chef && !chef.injured && chef.stamina>=10 && g.res.food>=1;
-    let html = cardShell('🍳', '厨房', lv, true,
-      `指派厨师当值，每天结算时产出食物。当值厨师每天消耗 ${K.workCost}⚡ 体力（体力不足或重伤则当天停产），<b>不影响探险出战</b>。<br>
-        产出：Lv.1→4 · Lv.2→8 · Lv.3→12 · Lv.4→16 · Lv.5→20 份/天<br>
-        <b>烤面包</b>：点击按钮可让当值厨师消耗 1 份食物 + 10⚡ 体力，烤 1 个面包放入背包（可让人在战斗中携带食用恢复体力）。`,
-      lv === 0
-        ? buildRow(K, 'Game.buildKitchen()', '建造厨房')
-        : upRow(lv, K, 'Game.upgradeKitchen()', `<span class="tag yellow">每日产出 ${K.out(lv)} 🍞</span>`)
-          + `<div class="row" style="margin-top:8px">
-        <button class="btn small" ${canCook?'':'disabled'} onclick="Game.cookBread()">🥖 烤面包（1 🍞食物 + 10⚡ → 背包 +1 面包）</button>
-      </div>`
-          + occNote(chef ? `👨‍🍳 当值厨师：<b>${chef.name}</b>（⚡ ${chef.stamina}/${chef.maxStamina}）` : null, '⚠️ 未指派厨师，厨房空转没有产出。', dutyHint('人员安排')));
 
-    // 寝室
-    const Dm = DATA.DORM;
-    const dlv = g.dormLv;
-    const beds = (g.dormBeds||[]).filter(id=>g.chars.some(c=>c.id===id&&!c.dead));
-    const bedNames = beds.map(id=>{ const c=g.chars.find(c=>c.id===id&&!c.dead); return c?c.name:null; }).filter(Boolean);
-    html += cardShell('🛏️', '寝室', dlv, true,
-      `每级 1 个床位。入住成员每天结算时<b>额外恢复 ${Dm.regenAmt} 体力 + ${Dm.regenAmt} 生命</b>（独立于晚餐——没吃到饭也生效；重伤者睡满自愈）。入住<b>不影响出战</b>，床位随时免费换人。`,
-      dlv === 0
-        ? buildRow(Dm, 'Game.buildDorm()', '建造寝室')
-        : upRow(dlv, Dm, 'Game.upgradeDorm()', `<span class="tag yellow">床位 ${beds.length}/${dlv}</span>`)
-          + occNote(bedNames.length ? '🛏️ 入住：'+bedNames.join('、') : null, '⚠️ 床位全部空置。', dutyHint('入住/退房')));
+    /* 各建筑功能卡：点击场景贴图后显示对应卡（V123 营地场景化） */
+    const CARDS = {};
+    {
+      // 厨房
+      const K = DATA.KITCHEN;
+      const lv = g.kitchenLv;
+      const chef = g.kitchenChef ? g.chars.find(c=>c.id===g.kitchenChef && !c.dead) : null;
+      const canCook = chef && !chef.injured && chef.stamina>=10 && g.res.food>=1;
+      CARDS.kitchen = () => cardShell('🍳', '厨房', lv, true,
+        `指派厨师当值，每天结算时产出食物。当值厨师每天消耗 ${K.workCost}⚡ 体力（体力不足或重伤则当天停产），<b>不影响探险出战</b>。<br>
+          产出：Lv.1→4 · Lv.2→8 · Lv.3→12 · Lv.4→16 · Lv.5→20 份/天<br>
+          <b>烤面包</b>：点击按钮可让当值厨师消耗 1 份食物 + 10⚡ 体力，烤 1 个面包放入背包（可让人在战斗中携带食用恢复体力）。`,
+        lv === 0
+          ? buildRow(K, 'Game.buildKitchen()', '建造厨房')
+          : upRow(lv, K, 'Game.upgradeKitchen()', `<span class="tag yellow">每日产出 ${K.out(lv)} 🍞</span>`)
+            + `<div class="row" style="margin-top:8px">
+          <button class="btn small" ${canCook?'':'disabled'} onclick="Game.cookBread()">🥖 烤面包（1 🍞食物 + 10⚡ → 背包 +1 面包）</button>
+        </div>`
+            + occNote(chef ? `👨‍🍳 当值厨师：<b>${chef.name}</b>（⚡ ${chef.stamina}/${chef.maxStamina}）` : null, '⚠️ 未指派厨师，厨房空转没有产出。', dutyHint('人员安排')));
 
-    // 健身房
-    const Dg = DATA.GYM;
-    const glv = g.gymLv;
-    const slots = (g.gymSlots||[]).filter(id=>g.chars.some(c=>c.id===id&&!c.dead));
-    const gymNames = slots.map(id=>{ const c=g.chars.find(c=>c.id===id&&!c.dead); if(!c) return null; const stop=c.injured||c.stamina<Dg.staminaCost; return c.name+(stop?'（停训）':''); }).filter(Boolean);
-    html += cardShell('🏋️', '健身房', glv, true,
-      `每级 1 个训练位。被指派成员每天结算时<b>消耗 ${Dg.staminaCost} 体力、获得 ${Dg.expAmt} 经验</b>（与战斗经验叠加，可快速练级）。<b>不影响出战</b>，可与寝室床位叠加（寝室恢复恰好对冲训练消耗）；<b>重伤或体力不足 ${Dg.staminaCost} 的成员无法指派</b>，指派后变重伤 / 体力耗尽的当天自动停训。`,
-      glv === 0
-        ? buildRow(Dg, 'Game.buildGym()', '建造健身房')
-        : upRow(glv, Dg, 'Game.upgradeGym()', `<span class="tag yellow">训练位 ${slots.length}/${glv}</span>`)
-          + occNote(gymNames.length ? '🏋️ 训练中：'+gymNames.join('、') : null, '⚠️ 训练位全部空置。', dutyHint('指派/撤下')));
+      // 寝室
+      const Dm = DATA.DORM;
+      const dlv = g.dormLv;
+      const beds = (g.dormBeds||[]).filter(id=>g.chars.some(c=>c.id===id&&!c.dead));
+      const bedNames = beds.map(id=>{ const c=g.chars.find(c=>c.id===id&&!c.dead); return c?c.name:null; }).filter(Boolean);
+      CARDS.dorm = () => cardShell('🛏️', '寝室', dlv, true,
+        `每级 1 个床位。入住成员每天结算时<b>额外恢复 ${Dm.regenAmt} 体力 + ${Dm.regenAmt} 生命</b>（独立于晚餐——没吃到饭也生效；重伤者睡满自愈）。入住<b>不影响出战</b>，床位随时免费换人。`,
+        dlv === 0
+          ? buildRow(Dm, 'Game.buildDorm()', '建造寝室')
+          : upRow(dlv, Dm, 'Game.upgradeDorm()', `<span class="tag yellow">床位 ${beds.length}/${dlv}</span>`)
+            + occNote(bedNames.length ? '🛏️ 入住：'+bedNames.join('、') : null, '⚠️ 床位全部空置。', dutyHint('入住/退房')));
 
-    // 农场
-    const F = DATA.FARM;
-    const flv = g.farmLv;
-    const fw = g.farmWorker ? g.chars.find(c=>c.id===g.farmWorker && !c.dead) : null;
-    html += cardShell('🌾', '农场', flv, true,
-      `指派<b>任意职业</b>成员耕作，每天结算时产出食物。当值成员每天消耗 ${F.workCost}⚡ 体力（体力不足或重伤则当天停产），<b>不影响探险出战</b>，随时免费换人。<br>
-        产出：Lv.1→2 · Lv.2→4 · Lv.3→6 · Lv.4→8 · Lv.5→10 份/天`,
-      flv === 0
-        ? buildRow(F, 'Game.buildFarm()', '建造农场')
-        : upRow(flv, F, 'Game.upgradeFarm()', `<span class="tag yellow">每日产出 ${F.out(flv)} 🍞</span>`)
-          + occNote(fw ? `🌾 耕作：<b>${fw.name}</b>（⚡ ${fw.stamina}/${fw.maxStamina}）` : null, '⚠️ 无人耕作，农场没有产出。', dutyHint('人员安排')));
+      // 健身房
+      const Dg = DATA.GYM;
+      const glv = g.gymLv;
+      const slots = (g.gymSlots||[]).filter(id=>g.chars.some(c=>c.id===id&&!c.dead));
+      const gymNames = slots.map(id=>{ const c=g.chars.find(c=>c.id===id&&!c.dead); if(!c) return null; const stop=c.injured||c.stamina<Dg.staminaCost; return c.name+(stop?'（停训）':''); }).filter(Boolean);
+      CARDS.gym = () => cardShell('🏋️', '健身房', glv, true,
+        `每级 1 个训练位。被指派成员每天结算时<b>消耗 ${Dg.staminaCost} 体力、获得 ${Dg.expAmt} 经验</b>（与战斗经验叠加，可快速练级）。<b>不影响出战</b>，可与寝室床位叠加（寝室恢复恰好对冲训练消耗）；<b>重伤或体力不足 ${Dg.staminaCost} 的成员无法指派</b>，指派后变重伤 / 体力耗尽的当天自动停训。`,
+        glv === 0
+          ? buildRow(Dg, 'Game.buildGym()', '建造健身房')
+          : upRow(glv, Dg, 'Game.upgradeGym()', `<span class="tag yellow">训练位 ${slots.length}/${glv}</span>`)
+            + occNote(gymNames.length ? '🏋️ 训练中：'+gymNames.join('、') : null, '⚠️ 训练位全部空置。', dutyHint('指派/撤下')));
 
-    // 实验室：建造 + 生产解毒针（不可升级）
-    const L = DATA.LAB;
-    let labBody;
-    if (g.labLv === 0) {
-      labBody = buildRow(L, 'Game.buildLab()', '建造实验室');
-    } else {
-      const sci = g.labChef ? g.chars.find(c=>c.id===g.labChef && !c.dead) : null;
-      const chkAnt = Game.canProduce('antidote'), chkPain = Game.canProduce('painkiller'), chkAid = Game.canProduce('firstaid');
-      labBody = `<div class="row" style="margin-top:10px;flex-wrap:wrap">
-        <button class="btn primary" ${chkAnt.ok?'':'disabled'} title="${chkAnt.why||''}" onclick="Game.makeAntidote()">💉 生产解毒针（15⚡ + 15💰 + 1⚙️ + 3💊）</button>
-        <button class="btn primary" ${chkPain.ok?'':'disabled'} title="${chkPain.why||''}" onclick="Game.makePainkiller()">💊 生产止痛药（10⚡ + 2💊 + 10💰）</button>
-        <button class="btn primary" ${chkAid.ok?'':'disabled'} title="${chkAid.why||''}" onclick="Game.makeFirstaid()">⛑️ 生产急救丸（15⚡ + 2💊 + 20💰）</button>
-        ${(!chkAnt.ok||!chkPain.ok||!chkAid.ok)?`<span style="color:var(--red2);font-size:12px">${chkAnt.why||chkPain.why||chkAid.why}</span>`:''}
-      </div>`
-        + (sci ? `<div class="wiki-p" style="margin-top:8px">🔬 实验员：<b>${sci.name}</b>（⚡ ${sci.stamina}/${sci.maxStamina}${sci.injured?'，重伤停产':''}）</div>` : '');
+      // 农场
+      const F = DATA.FARM;
+      const flv = g.farmLv;
+      const fw = g.farmWorker ? g.chars.find(c=>c.id===g.farmWorker && !c.dead) : null;
+      CARDS.farm = () => cardShell('🌾', '农场', flv, true,
+        `指派<b>任意职业</b>成员耕作，每天结算时产出食物。当值成员每天消耗 ${F.workCost}⚡ 体力（体力不足或重伤则当天停产），<b>不影响探险出战</b>，随时免费换人。<br>
+          产出：Lv.1→2 · Lv.2→4 · Lv.3→6 · Lv.4→8 · Lv.5→10 份/天`,
+        flv === 0
+          ? buildRow(F, 'Game.buildFarm()', '建造农场')
+          : upRow(flv, F, 'Game.upgradeFarm()', `<span class="tag yellow">每日产出 ${F.out(flv)} 🍞</span>`)
+            + occNote(fw ? `🌾 耕作：<b>${fw.name}</b>（⚡ ${fw.stamina}/${fw.maxStamina}）` : null, '⚠️ 无人耕作，农场没有产出。', dutyHint('人员安排')));
+
+      // 实验室：建造 + 生产（不可升级）
+      const L = DATA.LAB;
+      CARDS.lab = () => {
+        let labBody;
+        if (g.labLv === 0) {
+          labBody = buildRow(L, 'Game.buildLab()', '建造实验室');
+        } else {
+          const sci = g.labChef ? g.chars.find(c=>c.id===g.labChef && !c.dead) : null;
+          const chkAnt = Game.canProduce('antidote'), chkPain = Game.canProduce('painkiller'), chkAid = Game.canProduce('firstaid');
+          labBody = `<div class="row" style="margin-top:10px;flex-wrap:wrap">
+          <button class="btn primary" ${chkAnt.ok?'':'disabled'} title="${chkAnt.why||''}" onclick="Game.makeAntidote()">💉 生产解毒针（15⚡ + 15💰 + 1⚙️ + 3💊）</button>
+          <button class="btn primary" ${chkPain.ok?'':'disabled'} title="${chkPain.why||''}" onclick="Game.makePainkiller()">💊 生产止痛药（10⚡ + 2💊 + 10💰）</button>
+          <button class="btn primary" ${chkAid.ok?'':'disabled'} title="${chkAid.why||''}" onclick="Game.makeFirstaid()">⛑️ 生产急救丸（15⚡ + 2💊 + 20💰）</button>
+          ${(!chkAnt.ok||!chkPain.ok||!chkAid.ok)?`<span style="color:var(--red2);font-size:12px">${chkAnt.why||chkPain.why||chkAid.why}</span>`:''}
+        </div>`
+            + (sci ? `<div class="wiki-p" style="margin-top:8px">🔬 实验员：<b>${sci.name}</b>（⚡ ${sci.stamina}/${sci.maxStamina}${sci.injured?'，重伤停产':''}）</div>` : '');
+        }
+        return cardShell('🧪', '实验室', g.labLv, false,
+          `指派<b>科学家</b>当值后，可生产道具「<b>解毒针</b>」💉：每生产 1 支消耗 <b>15⚡ 体力 + 15💰 + 1⚙️金属 + 3💊药物</b>，还可生产「<b>止痛药</b>」💊（10⚡ + 2💊 + 10💰）与「<b>急救丸</b>」⛑️（15⚡ + 2💊 + 20💰，回 60 血并解除重伤，医院也可生产）。成品放入背包（道具格携带，≤3 个）。当值<b>不影响出战</b>，随时免费换人。`,
+          labBody);
+      };
+
+      // 医院：建造 + 生产（不可升级）
+      const H = DATA.HOSPITAL;
+      CARDS.hospital = () => {
+        let hospBody;
+        if (g.hospitalLv === 0) {
+          hospBody = buildRow(H, 'Game.buildHospital()', '建造医院');
+        } else {
+          const doc = g.hospitalDoc ? g.chars.find(c=>c.id===g.hospitalDoc && !c.dead) : null;
+          const chkBan = Game.canProduce('bandage'), chkPain = Game.canProduce('painkiller'), chkAid = Game.canProduce('firstaid');
+          hospBody = `<div class="row" style="margin-top:10px;flex-wrap:wrap">
+          <button class="btn primary" ${chkBan.ok?'':'disabled'} title="${chkBan.why||''}" onclick="Game.makeBandage()">🩹 生产绷带（10⚡ + 2🧵 + 1💊）</button>
+          <button class="btn primary" ${chkPain.ok?'':'disabled'} title="${chkPain.why||''}" onclick="Game.makePainkiller()">💊 生产止痛药（10⚡ + 2💊 + 10💰）</button>
+          <button class="btn primary" ${chkAid.ok?'':'disabled'} title="${chkAid.why||''}" onclick="Game.makeFirstaid()">⛑️ 生产急救丸（15⚡ + 2💊 + 20💰）</button>
+          ${(!chkBan.ok||!chkPain.ok||!chkAid.ok)?`<span style="color:var(--red2);font-size:12px">${chkBan.why||chkPain.why||chkAid.why}</span>`:''}
+        </div>`
+            + (doc ? `<div class="wiki-p" style="margin-top:8px">⚕️ 医务员：<b>${doc.name}</b>（⚡ ${doc.stamina}/${doc.maxStamina}${doc.injured?'，重伤停产':''}）</div>` : '');
+        }
+        return cardShell('🏥', '医院', g.hospitalLv, false,
+          `指派<b>医生或护士</b>当值后，可生产「<b>绷带</b>」🩹（10⚡ + 2🧵 + 1💊，回 25 血并解除流血）、「<b>止痛药</b>」💊（10⚡ + 2💊 + 10💰，回 40 血）与「<b>急救丸</b>」⛑️（15⚡ + 2💊 + 20💰，回 60 血，营地中使用可解除重伤；止痛药/急救丸实验室也可生产），成品放入背包（道具格携带，≤3 个）。当值<b>不影响出战</b>，随时免费换人。`,
+          hospBody);
+      };
+
+      // 工坊：建造 + 制造装备（可升级：每级 -10% 材料消耗）
+      const W = DATA.WORKSHOP;
+      const wlv = g.workshopLv || 0;
+      CARDS.workshop = () => {
+        const wBody = wlv === 0
+          ? buildRow(W, 'Game.buildWorkshop()', '建造工坊')
+          : `<div class="row" style="margin-top:10px;flex-wrap:wrap">
+          <span class="tag yellow">💰 ${g.res.gold}</span><span class="tag blue">⚙️ ${g.res.metal||0}</span><span class="tag blue">🧵 ${g.res.fabric||0}</span><span class="tag blue">🪵 ${g.res.wood||0}</span>
+        </div>
+        ${( ()=>{ const smith = g.workshopChef ? g.chars.find(c=>c.id===g.workshopChef && !c.dead) : null;
+          return `<div class="wiki-p" style="margin-top:8px">${smith
+            ? `⚒️ 工匠：<b>${smith.name}</b>（⚡ ${smith.stamina}/${smith.maxStamina}${smith.injured?'，重伤停产':''}）`
+            : '<span style="color:var(--red2);font-size:12px">⚠️ 尚未指派工匠——去「职务指派」安排一名成员当值（不限职业）后才能打造</span>'}</div>`; })() }
+        <div class="row" style="margin-top:10px">
+          <button class="btn primary" style="flex:1" onclick="UI.openCraftModal()">🔨 打造</button>
+          <button class="btn" style="flex:1" onclick="UI.openUpgradeModal()">⬆️ 升级</button>
+          <button class="btn" style="flex:1" onclick="UI.openSalvageModal()">♻️ 分解</button>
+        </div>
+        ${upRow(wlv, W, "Game.upgradeBuilding('workshop')", wlv>1?`<span class="tag yellow">材料 -${(wlv-1)*10}%</span>`:'')}
+        <div class="wiki-p" style="font-size:12px;color:var(--txt2);margin-top:8px">打造需工匠当值并消耗其体力（消耗品 5⚡ ~ 长枪 25⚡）。升级：每级属性加成 +20%（最高 +5），费用 = 制造成本 × (当前级+1)；分解：返还 50% 成本（向上取整）。工坊每升一级，制造与升级装备的材料消耗 -10%（向上取整）。</div>`;
+        return cardShell('🏭', '工坊', wlv, wlv>0,
+          `${W.desc}<br>材料来源：金币/金属来自各区域产出，<b>木材</b>主要在旧钢铁工厂、商业街废墟搜集（物资箱也会随机掉落），<b>布料</b>主要在废弃超市、商业街废墟搜集（物资箱也会随机掉落）。`,
+          wBody);
+      };
     }
-    html += cardShell('🧪', '实验室', g.labLv, false,
-      `指派<b>科学家</b>当值后，可生产道具「<b>解毒针</b>」💉：每生产 1 支消耗 <b>15⚡ 体力 + 15💰 + 1⚙️金属 + 3💊药物</b>，还可生产「<b>止痛药</b>」💊（10⚡ + 2💊 + 10💰）与「<b>急救丸</b>」⛑️（15⚡ + 2💊 + 20💰，回 60 血并解除重伤，医院也可生产）。成品放入背包（道具格携带，≤3 个）。当值<b>不影响出战</b>，随时免费换人。`,
-      labBody);
 
-    // 医院：建造 + 生产绷带（不可升级）
-    const H = DATA.HOSPITAL;
-    let hospBody;
-    if (g.hospitalLv === 0) {
-      hospBody = buildRow(H, 'Game.buildHospital()', '建造医院');
-    } else {
-      const doc = g.hospitalDoc ? g.chars.find(c=>c.id===g.hospitalDoc && !c.dead) : null;
-      const chkBan = Game.canProduce('bandage'), chkPain = Game.canProduce('painkiller'), chkAid = Game.canProduce('firstaid');
-      hospBody = `<div class="row" style="margin-top:10px;flex-wrap:wrap">
-        <button class="btn primary" ${chkBan.ok?'':'disabled'} title="${chkBan.why||''}" onclick="Game.makeBandage()">🩹 生产绷带（10⚡ + 2🧵 + 1💊）</button>
-        <button class="btn primary" ${chkPain.ok?'':'disabled'} title="${chkPain.why||''}" onclick="Game.makePainkiller()">💊 生产止痛药（10⚡ + 2💊 + 10💰）</button>
-        <button class="btn primary" ${chkAid.ok?'':'disabled'} title="${chkAid.why||''}" onclick="Game.makeFirstaid()">⛑️ 生产急救丸（15⚡ + 2💊 + 20💰）</button>
-        ${(!chkBan.ok||!chkPain.ok||!chkAid.ok)?`<span style="color:var(--red2);font-size:12px">${chkBan.why||chkPain.why||chkAid.why}</span>`:''}
-      </div>`
-        + (doc ? `<div class="wiki-p" style="margin-top:8px">⚕️ 医务员：<b>${doc.name}</b>（⚡ ${doc.stamina}/${doc.maxStamina}${doc.injured?'，重伤停产':''}）</div>` : '');
-    }
-    html += cardShell('🏥', '医院', g.hospitalLv, false,
-      `指派<b>医生或护士</b>当值后，可生产「<b>绷带</b>」🩹（10⚡ + 2🧵 + 1💊，回 25 血并解除流血）、「<b>止痛药</b>」💊（10⚡ + 2💊 + 10💰，回 40 血）与「<b>急救丸</b>」⛑️（15⚡ + 2💊 + 20💰，回 60 血，营地中使用可解除重伤；止痛药/急救丸实验室也可生产），成品放入背包（道具格携带，≤3 个）。当值<b>不影响出战</b>，随时免费换人。`,
-      hospBody);
+    /* 营地场景：建筑贴图（未建造置灰、点击选中查看功能） */
+    const LAYOUT = [
+      { id:'kitchen',  icon:'🍳', name:'厨房',   x:9,  y:5  },
+      { id:'dorm',     icon:'🛏️', name:'寝室',   x:70, y:5  },
+      { id:'gym',      icon:'🏋️', name:'健身房', x:5,  y:38 },
+      { id:'workshop', icon:'🏭', name:'工坊',   x:73, y:36 },
+      { id:'farm',     icon:'🌾', name:'农场',   x:10, y:70 },
+      { id:'hospital', icon:'🏥', name:'医院',   x:41, y:64 },
+      { id:'lab',      icon:'🧪', name:'实验室', x:73, y:70 },
+    ];
+    const lvOf = { kitchen:()=>g.kitchenLv, dorm:()=>g.dormLv, gym:()=>g.gymLv, farm:()=>g.farmLv, hospital:()=>g.hospitalLv, lab:()=>g.labLv, workshop:()=>g.workshopLv||0 };
+    const sel = UI.campSel;
+    const scene = `<div class="camp-scene">
+      <div class="camp-sun">☀️</div>
+      <div class="camp-deco" style="left:38%;top:16%">🌲</div>
+      <div class="camp-deco" style="left:60%;top:24%">🌲</div>
+      <div class="camp-fire" style="left:48%;top:44%">🔥</div>
+      ${LAYOUT.map(b=>{
+        const lv = lvOf[b.id]();
+        const built = lv>0;
+        return `<div class="camp-b${built?'':' off'}${sel===b.id?' sel':''}" style="left:${b.x}%;top:${b.y}%" onclick="UI.campSel='${b.id}';UI.renderBuild()">
+          <div class="ci">${b.icon}</div>
+          <div class="cn">${b.name}${built?` <span class="clv">Lv.${lv}</span>`:''}</div>
+          ${built?'':'<div class="cb">待建造</div>'}
+        </div>`;
+      }).join('')}
+    </div>`;
 
-    // 工坊：建造 + 制造装备（可升级：每级 -10% 材料消耗）
-    const W = DATA.WORKSHOP;
-    const wlv = g.workshopLv || 0;
-    const wBody = wlv === 0
-      ? buildRow(W, 'Game.buildWorkshop()', '建造工坊')
-      : `<div class="row" style="margin-top:10px;flex-wrap:wrap">
-        <span class="tag yellow">💰 ${g.res.gold}</span><span class="tag blue">⚙️ ${g.res.metal||0}</span><span class="tag blue">🧵 ${g.res.fabric||0}</span><span class="tag blue">🪵 ${g.res.wood||0}</span>
-      </div>
-      ${( ()=>{ const smith = g.workshopChef ? g.chars.find(c=>c.id===g.workshopChef && !c.dead) : null;
-        return `<div class="wiki-p" style="margin-top:8px">${smith
-          ? `⚒️ 工匠：<b>${smith.name}</b>（⚡ ${smith.stamina}/${smith.maxStamina}${smith.injured?'，重伤停产':''}）`
-          : '<span style="color:var(--red2);font-size:12px">⚠️ 尚未指派工匠——去「职务指派」安排一名成员当值（不限职业）后才能打造</span>'}</div>`; })() }
-      <div class="row" style="margin-top:10px">
-        <button class="btn primary" style="flex:1" onclick="UI.openCraftModal()">🔨 打造</button>
-        <button class="btn" style="flex:1" onclick="UI.openUpgradeModal()">⬆️ 升级</button>
-        <button class="btn" style="flex:1" onclick="UI.openSalvageModal()">♻️ 分解</button>
-      </div>
-      ${upRow(wlv, W, "Game.upgradeBuilding('workshop')", wlv>1?`<span class="tag yellow">材料 -${(wlv-1)*10}%</span>`:'')}
-      <div class="wiki-p" style="font-size:12px;color:var(--txt2);margin-top:8px">打造需工匠当值并消耗其体力（消耗品 5⚡ ~ 长枪 25⚡）。升级：每级属性加成 +20%（最高 +5），费用 = 制造成本 × (当前级+1)；分解：返还 50% 成本（向上取整）。工坊每升一级，制造与升级装备的材料消耗 -10%（向上取整）。</div>`;
-    html += cardShell('🏭', '工坊', wlv, wlv>0,
-      `${W.desc}<br>材料来源：金币/金属来自各区域产出，<b>木材</b>主要在旧钢铁工厂、商业街废墟搜集（物资箱也会随机掉落），<b>布料</b>主要在废弃超市、商业街废墟搜集（物资箱也会随机掉落）。`,
-      wBody);
-    document.getElementById('build-page').innerHTML = html;
+    const body = sel && CARDS[sel]
+      ? CARDS[sel]()
+      : `<div class="panel"><div class="wiki-p" style="text-align:center;color:var(--txt2)">👆 点击营地中的建筑，建造并使用功能</div></div>`;
+    document.getElementById('build-page').innerHTML = scene + body;
   },
 
   /* ---- 工坊三功能弹窗：打造 / 升级 / 分解 ---- */

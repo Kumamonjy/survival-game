@@ -114,6 +114,7 @@ const [s1, s2] = g.chars;
   assert((elems['modal-body'] ? elems['modal-body'].innerHTML : '').includes('打造装备'), 'T11c 打造弹窗渲染');
 
   // T12 工坊卡三按钮 + 内容不再铺开
+  UI.campSel='workshop';
   UI.renderBuild();
   const bh = elems['build-page'].innerHTML;
   assert(bh.includes('openCraftModal') && bh.includes('openUpgradeModal') && bh.includes('openSalvageModal'), 'T12a 工坊卡三功能按钮');

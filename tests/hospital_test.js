@@ -116,6 +116,7 @@ function mkB(units){
   assert(me.item.count===1, `T8b 使用后消耗 1 个绷带（剩 ${me.item.count}）`);
 
   // ===== T9 UI 渲染 =====
+  UI.campSel='hospital';
   UI.renderBuild();
   const bh = elems['build-page'].innerHTML;
   assert(bh.includes('Game.buildHospital()') || bh.includes('Game.makeBandage()'), 'T9a 建筑页医院卡渲染');

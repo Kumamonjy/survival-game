@@ -53,6 +53,7 @@ const g = Game.g;
 
   // ===== T7 制造面板渲染 =====
   Game.g = g;   // 回到已建工坊档
+  UI.campSel='workshop';
   UI.renderBuild();
   const bp = elems['build-page'] ? elems['build-page'].innerHTML : Object.values(elems).map(e=>e.innerHTML).join('|');
   assert(bp.includes('工坊') && bp.includes('制造'), 'T7a 建筑页显示工坊与制造按钮');

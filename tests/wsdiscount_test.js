@@ -59,6 +59,7 @@ const g = Game.g;
   assert(uh.includes('已含工坊折扣 -20%'), 'T6c 升级弹窗显示折扣');
 
   // T7 工坊卡：Lv3 显示折扣标签且仍可升级
+  UI.campSel='workshop';
   UI.renderBuild();
   const bh = elems['build-page'].innerHTML;
   assert(bh.includes('材料 -20%') && bh.includes('升级到 Lv.4'), 'T7 工坊卡折扣标签 + 升级按钮');
@@ -75,6 +76,7 @@ const g = Game.g;
   assert(c5.gold===12 && c5.wood===3, `T8d Lv5 打造 -40%：ceil(20×0.6)=12💰+ceil(5×0.6)=3🪵（${c5.gold}+${c5.wood}）`);
   Game.upgradeBuilding('workshop');
   assert(g.workshopLv===5, 'T8e Lv5 为上限');
+  UI.campSel='workshop';
   UI.renderBuild();
   assert(elems['build-page'].innerHTML.includes('材料 -40%'), 'T8f Lv5 卡折扣标签');
 
