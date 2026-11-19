@@ -11,15 +11,14 @@ const g = Game.g;
   assert(v.merchant && v.merchant.buy && v.merchant.sell && v.wanderer, 'T1b 商人双报价 + 流浪者齐备');
   assert(v.merchant.buy.res !== v.merchant.sell.res, 'T1c 回收与出售是不同物资');
 
-  // T2 报价合理性：资源在池内、数量在区间、价格围绕基准价
+  // T2 报价合理性：资源在池内、数量在区间、价格按统一单价（回收 2.5💰/份、出售 3💰/份）
   const V = DATA.VISITOR;
-  const inPool = r => Object.keys(V.price).includes(r);
+  const inPool = r => Object.keys(V.amt).includes(r);
   const inAmt = o => { const [a,b] = V.amt[o.res]; return o.amt>=a && o.amt<=b; };
-  const base = o => o.amt * V.price[o.res];
   assert(inPool(v.merchant.buy.res) && inPool(v.merchant.sell.res), 'T2a 报价资源在池内');
   assert(inAmt(v.merchant.buy) && inAmt(v.merchant.sell), 'T2b 数量在区间内');
-  assert(v.merchant.buy.gold >= base(v.merchant.buy)*0.85 && v.merchant.buy.gold <= base(v.merchant.buy)*1.2, 'T2c 回收价 0.9~1.15× 基准');
-  assert(v.merchant.sell.gold >= base(v.merchant.sell)*0.95 && v.merchant.sell.gold <= base(v.merchant.sell)*1.35, 'T2d 出售价 1.0~1.3× 基准');
+  assert(v.merchant.buy.gold === Math.round(v.merchant.buy.amt*V.buyPrice), 'T2c 回收价 = 数量×2.5');
+  assert(v.merchant.sell.gold === v.merchant.sell.amt*V.sellPrice, 'T2d 出售价 = 数量×3');
 
   // T3 回收成交：扣资源加金币 + done + 二次拦截
   const b0 = v.merchant.buy;
