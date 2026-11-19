@@ -821,6 +821,7 @@ DATA.EQUIPS = {
             desc:'攻击力 +15，射程 2（远程）；自带技能「穿刺」：直线 2 格 100% 伤害（冷却 2 回合，消耗 20 体力）' },
   sweater:{ id:'sweater',name:'毛衣', slot:'armor',  icon:'🧶', stats:{hp:35, def:10},               desc:'生命值 +35，防御力 +10' },
   bottle: { id:'bottle', name:'水瓶', slot:'acc',    icon:'🥤', stats:{stamina:15},                  desc:'体力值 +15' },
+  thermos:{ id:'thermos',name:'保温杯', slot:'acc',  icon:'🥛', stats:{stamina:25},                  desc:'体力值 +25' },
   stone:  { id:'stone',  name:'石块', slot:'item',   icon:'🪨', consumable:true,
             skill:{ name:'投掷石头', desc:'消耗10体力，选择 3 格内的一名敌人，奋力掷出石块，造成 50% 攻击力的伤害。使用后消耗 1 个石块。', cost:10, cd:0, type:'attack', shape:'target', mult:0.5, range:3, equipSkill:true, eqName:'石块' },
             desc:'消耗品 · 不提供属性；自带技能「投掷石头」（消耗10体力）：对 3 格内一名敌人造成 50% 攻击力的伤害，使用后消耗 1 个' },
@@ -846,6 +847,7 @@ DATA.RECIPES = [
   { id:'stone',  cost:{ gold:12, metal:3 } },
   { id:'dart',   cost:{ gold:8, metal:2 } },
   { id:'bottle', cost:{ gold:20, metal:1, fabric:1 } },
+  { id:'thermos', cost:{ gold:35, metal:2, fabric:1 } },
   { id:'stick',  cost:{ gold:20, wood:5 } },
   { id:'slingshot', cost:{ gold:20, wood:3, fabric:1 } },
   { id:'bow',    cost:{ gold:40, wood:5, fabric:3 } },
@@ -2595,7 +2597,7 @@ const UI = {
       <div class="wiki-sec panel"><h4>🧰 装备与工坊</h4>
         <div class="wiki-p">
         · 每名角色有 <b>5 个装备位</b>（武器 / 头盔 / 衣服 / 鞋子 / 饰品）+ <b>1 个道具位</b>（消耗品）。角色初始<b>没有装备</b>，需要建造工坊制造后穿戴<br>
-        · <b>工坊</b>（营地建筑，250 💰 建造）：消耗 <b>金币 / 木材 / 布料 / 金属</b> 制造装备——飞镖 8💰+2⚙️、石块 12💰+3⚙️、水瓶 20💰+1⚙️+1🧵、木棍 20💰+5🪵、弹弓 20💰+3🪵+1🧵、木弓 40💰+5🪵+3🧵、长枪 60💰+4🪵+3⚙️；新档背包自带 2 布衣、2 布鞋、2 石块可先穿<br>
+        · <b>工坊</b>（营地建筑，250 💰 建造）：消耗 <b>金币 / 木材 / 布料 / 金属</b> 制造装备——飞镖 8💰+2⚙️、石块 12💰+3⚙️、水瓶 20💰+1⚙️+1🧵、保温杯 35💰+2⚙️+1🧵、木棍 20💰+5🪵、弹弓 20💰+3🪵+1🧵、木弓 40💰+5🪵+3🧵、长枪 60💰+4🪵+3⚙️；新档背包自带 2 布衣、2 布鞋、2 石块可先穿<br>
         · <b>装备升级</b>：每件装备独立升级，每级属性加成 +20%（基于初始值，血/体/攻/防），最高 +5；费用 = 制造成本 × (当前级+1)<br>
         · <b>装备分解</b>：分解背包中不需要的装备，返还 50% 制造成本（向上取整）；穿戴中的装备需先卸下再分解<br>
         · <b>道具（消耗品）</b>：不提供属性加成、不可升级；每人在人物信息「道具」格携带（同类最多 3 个，占用背包）；战斗中使用道具技能后消耗 1 个，用完即失效<br>

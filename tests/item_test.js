@@ -127,6 +127,13 @@ const [s1, s2] = g.chars;
   const stAcc = Game.equipStats(probeAcc);
   assert(stAcc.stamina===15 && stAcc.atk===0 && stAcc.hp===0, `T11c equipStats 聚合 acc 槽 +15⚡（${stAcc.stamina}）`);
 
+  // T12 保温杯饰品：acc 槽体力 +25
+  assert(DATA.EQUIPS.thermos && DATA.EQUIPS.thermos.slot==='acc' && DATA.EQUIPS.thermos.stats.stamina===25 && !DATA.EQUIPS.thermos.consumable, 'T12a 保温杯：饰品槽 体力+25 非消耗品');
+  assert(DATA.RECIPES.some(r=>r.id==='thermos' && r.cost.gold===35 && r.cost.metal===2 && r.cost.fabric===1), 'T12b 保温杯配方 35💰+2⚙️+1🧵');
+  const probeTh = { equip:{ acc:{ uid:'z', id:'thermos', lv:0 } }, maxHp:0, maxStamina:0, atk:0, def:0 };
+  const stTh = Game.equipStats(probeTh);
+  assert(stTh.stamina===25, `T12c equipStats 聚合保温杯 +25⚡（${stTh.stamina}）`);
+
   console.log('--- done ---');
   process.exit(0);
 })();
