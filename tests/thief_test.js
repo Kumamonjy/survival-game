@@ -26,6 +26,7 @@ const g = Game.g;
   const f = Battle.mkZombie('walker', 6, 6, 1);   // 斜角相邻（8格）
   f.maxHp = 500; f.hp = 500; f.def = 5;
   Battle.b.units.push(f);
+  u.critRate = 0;   // 消除暴击随机性（暴击会破坏精确相等断言）
   const atk = Battle.effAtk(u);
   const g0 = Battle.b.loot.gold;
   await Battle.execSkill(u, { sk: sk2, target: f });
