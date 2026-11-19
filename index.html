@@ -186,6 +186,7 @@ button:disabled { opacity:.45; cursor:not-allowed; }
 .avatar.exp { border-color:#a0713c; }
 .avatar.thf { border-color:#8a8f98; }
 .avatar.mus { border-color:#c05a9e; }
+.avatar.gam { border-color:#d4af37; }
 .avatar.exp { border-color:#d0a05a; }
 .avatar .lvl {
   position:absolute; bottom:-6px; left:50%; transform:translateX(-50%); background:#1a2015;
@@ -271,6 +272,7 @@ button:disabled { opacity:.45; cursor:not-allowed; }
 .cell .terr { position:absolute; font-size:16px; opacity:.85; pointer-events:none; }
 .cell.moveable { box-shadow:inset 0 0 0 2px rgba(125,180,80,.85); background:rgba(100,140,60,.45); cursor:pointer; }
 .cell.attackable { box-shadow:inset 0 0 0 2px rgba(220,90,60,.9); background:rgba(170,60,40,.4); cursor:pointer; }
+.cell.picked { box-shadow:inset 0 0 0 3px #ffd76b, inset 0 0 14px rgba(255,215,107,.55); }
 .cell.healable { box-shadow:inset 0 0 0 2px rgba(80,200,160,.9); background:rgba(60,150,120,.4); cursor:pointer; }
 .cell.pickable { box-shadow:inset 0 0 0 2px rgba(230,190,70,.9); background:rgba(180,140,50,.4); cursor:pointer; }
 .cell.path-hint { box-shadow:inset 0 0 0 2px rgba(120,160,220,.7); }
@@ -718,6 +720,17 @@ DATA.CLASSES = {
     ],
     base:{ maxHp:150, maxStamina:130, atk:45, def:5, range:1, move:4, critRate:5, critDmg:150 },
     price:260
+  },
+  gambler: {
+    name:'赌徒', icon:'🎲', color:'gam', desc:'把命运交给骰子的亡命徒，暴伤 170% 冠绝全队。「孤注一掷」听天由命，「一掷千金」豪掷金币双发齐射——输赢全在一念之间。拥有两个职业技能。',
+    avatars:['🎲','🃏','🎩','🎰'],
+    food:2,
+    skills:[
+      { name:'孤注一掷', desc:'消耗15体力，对1格内一名敌人造成 50%~200% 攻击力的随机伤害——是赚是赔，全看天意。', cost:15, cd:2, type:'attack', shape:'target', range:1, randMult:[0.5,2] },
+      { name:'一掷千金', desc:'消耗10金币 + 35体力，选择2格内 2 个目标（点同一目标两次可单独施放），每个目标各受到 50%~200% 攻击力的随机伤害。', cost:35, goldCost:10, cd:2, type:'attack', shape:'target2', range:2, randMult:[0.5,2] },
+    ],
+    base:{ maxHp:200, maxStamina:100, atk:40, def:5, range:1, move:3, critRate:5, critDmg:170 },
+    price:220
   }
 };
 
@@ -3177,8 +3190,10 @@ const Battle = {
       const mk = b.moveSet && b.moveSet[r+','+c]!==undefined && !(u && u.side==='ally' && u===b.selected);
       const mkSelf = b.moveSet && b.moveSet[r+','+c]!==undefined && b.selected && u===b.selected;
       const atk = b.targetSet && b.targetSet.some(([tr,tc])=>tr===r&&tc===c);
+      const picked = b.targetMode==='target2' && b.multiTargets && b.multiTargets.some(t=>t.row===r&&t.col===c);
       if (mk) cls+=' moveable';
       if (atk) cls += (b.mode==='skill'&&b.targetMode==='heal') ? ' healable' : (b.mode==='pickcrate' ? ' pickable' : ' attackable');
+      if (picked) cls+=' picked';
       let inner = '';
       if (t==='water') inner += '<span class="terr">🌊</span>';
       if (t==='rubble') inner += '<span class="terr">🪨</span>';
@@ -3373,10 +3388,12 @@ const Battle = {
     const rows = list.map((sk,i)=>{
       const cd = Battle.skCd(u, sk);
       const noSt = u.stamina < sk.cost;
-      const off = cd>0 || noSt;
-      const st = cd>0 ? `冷却中 · 剩 ${cd} 回合` : (noSt ? `体力不足（需 ${sk.cost}⚡）` : `消耗 ${sk.cost}⚡ · 可用`);
+      const noGold = sk.goldCost && Game.g.res.gold < sk.goldCost;
+      const off = cd>0 || noSt || noGold;
+      const costTag = `${sk.cost}⚡${sk.goldCost?` + ${sk.goldCost}💰`:''}`;
+      const st = cd>0 ? `冷却中 · 剩 ${cd} 回合` : (noSt ? `体力不足（需 ${sk.cost}⚡）` : (noGold ? `金币不足（需 ${sk.goldCost}💰）` : `消耗 ${costTag} · 可用`));
       return `<div class="skill-row${off?' off':''}" ${off?'':`onclick="UI.closeModal();Battle.pickSkill(${i})"`}>
-        <div class="skill-name">${sk.name}<span class="skill-cost">${sk.cost}⚡</span></div>
+        <div class="skill-name">${sk.name}<span class="skill-cost">${costTag}</span></div>
         <div class="skill-st${off?' off':''}">${st}</div>
         <div class="skill-desc">${sk.desc||''}</div>
       </div>`;
@@ -3391,8 +3408,10 @@ const Battle = {
     if (u.hasAttacked) { UI.toast('本回合已攻击过'); return; }
     if (Battle.skCd(u, sk) > 0) { UI.toast(`${sk.name} 冷却中（还需 ${Battle.skCd(u,sk)} 回合）`); return; }
     if (u.stamina < sk.cost) { UI.toast(`体力不足（需要 ${sk.cost} ⚡）`); return; }
+    if (sk.goldCost && Game.g.res.gold < sk.goldCost) { UI.toast(`金币不足（需要 ${sk.goldCost} 💰）`); return; }
     b.pendingSkill = sk;
     b.moveSet = null;
+    b.multiTargets = null;
     /* 统一技能调度：按 shape 分发 —— sweep直接结算 / aoe选落点 / line选方向 / target选目标 / heal选友方 */
     if (sk.shape==='sweep') {
       const victims = Battle.cellsAround(u.row, u.col, sk.area||1)
@@ -3455,6 +3474,11 @@ const Battle = {
         .map(([dr,dc])=>[u.row+dr, u.col+dc])
         .filter(([r,c])=>Battle.inMap(r,c) && (()=>{ const t=Battle.unitAt(r,c); return t && t.side==='enemy'; })());
       if (!b.targetSet.length) { UI.toast('周围 1 格内没有丧尸'); b.mode=null; b.targetMode=null; return; }
+    } else if (sk.shape==='target2') {
+      // 一掷千金：选择射程内至多 2 个敌人（点选 2 个齐射；同一目标点两次=单独施放）
+      b.mode='skill'; b.targetMode='target2'; b.multiTargets=[];
+      b.targetSet = Battle.attackCells(u, skRange).filter(([r,c])=>{ const t=Battle.unitAt(r,c); return t && t.side==='enemy'; });
+      if (!b.targetSet.length) { UI.toast(`技能射程（${Battle.effRange(u,skRange)}格）内没有丧尸`); b.mode=null; b.targetMode=null; return; }
     } else {
       // 单体指定：选择射程内一名敌人
       b.mode='skill'; b.targetMode='target';
@@ -3526,6 +3550,15 @@ const Battle = {
       if (sk.shape==='aoe') return Battle.execSkill(u0, { sk, cell:[r,c] });
       if (sk.shape==='sweep2') return Battle.execSkill(u0, { sk, dir:[r,c] });
       if (sk.shape==='line') return Battle.execSkill(u0, { sk, dir:[r,c] });
+      if (sk.shape==='target2') {
+        // 双目标选择：第一个目标高亮，第二个不同目标齐射；同一目标再点一次=单独施放
+        b.multiTargets = b.multiTargets || [];
+        if (b.multiTargets[0] && b.multiTargets[0].uid===u.uid) return Battle.execSkill(u0, { sk, targets:[u] });
+        b.multiTargets.push(u);
+        if (b.multiTargets.length >= 2) return Battle.execSkill(u0, { sk, targets:b.multiTargets });
+        Battle.subtitle('🎯 已锁定 1 个目标：点另一目标齐射，或再点同一目标单独施放');
+        return Battle.renderMap();
+      }
       if (!u || u.side!=='enemy') return;
       return Battle.execSkill(u0, { sk, target:u });
     }
@@ -3757,6 +3790,7 @@ const Battle = {
   /* 扣费：技能消耗体力并进 CD（execSkill / doHeal / doRegen 共用） */
   paySkillCost(u, sk) {
     if (sk.cost && u.stamina !== undefined) u.stamina -= sk.cost;   // 敌方（丧尸）无体力值限制：只进冷却不扣体力
+    if (sk.goldCost && Game.g.res && Game.g.res.gold !== undefined) Game.g.res.gold -= sk.goldCost;   // 一掷千金：豪掷金币
     (u.cds = u.cds||{})[sk.name] = sk.cd;
   },
   /* 道具技能（消耗品）：使用即消耗 1 个，用尽后移除该技能（execSkill / doRegen 共用） */
@@ -3954,8 +3988,9 @@ const Battle = {
           Battle.renderMap(); Battle.renderPanels();
           await Battle.sleep(320);
         } else {
-          const r1 = Battle.calcDamage(u, t, sk.mult||1, sk.pierce||0);
-          await Battle.applyDamage(u, t, r1.dmg, r1.crit, sk.mult||1, sk.name);
+          const mult = sk.randMult ? sk.randMult[0] + Math.random()*(sk.randMult[1]-sk.randMult[0]) : (sk.mult||1);   // 赌徒：50%~200% 随机倍率（每个目标独立掷骰）
+          const r1 = Battle.calcDamage(u, t, mult, sk.pierce||0);
+          await Battle.applyDamage(u, t, r1.dmg, r1.crit, mult, sk.name);
           if (t.hp > 0 && sk.poison) {
             Battle.applyStatus(t, 'poison', sk.poison.turns, u.uid);
           }
@@ -3983,7 +4018,7 @@ const Battle = {
       Battle.log('💨 技能没有命中任何敌人', 'bad');
       Battle.subtitle('💨 未命中');
     }
-    b.mode=null; b.targetSet=null; b.targetMode=null; b.moveSet=null; b.pendingSkill=null;
+    b.mode=null; b.targetSet=null; b.targetMode=null; b.moveSet=null; b.pendingSkill=null; b.multiTargets=null;
     Battle.renderMap(); Battle.renderPanels(); Battle.renderInfo(u);
     if (u.sts && u.sts.bleed) await Battle.bleedTick(u);
     Battle.checkAllActed();
