@@ -858,6 +858,9 @@ DATA.EQUIPS = {
   bandage: { id:'bandage', name:'绷带', slot:'item', icon:'🩹', consumable:true,
             skill:{ name:'包扎伤口', desc:'为 1 格内一名友方（含自己）恢复 25 点生命，并解除其流血状态。使用后消耗 1 卷绷带。', cost:0, cd:0, type:'heal', shape:'target', flatHeal:25, mult:0, range:1, includeSelf:true, cure:true, cureList:['bleed'], equipSkill:true, eqName:'绷带' },
             desc:'消耗品 · 不提供属性；自带技能「包扎伤口」：为 1 格内一名友方（含自己）恢复 25 点生命并解除流血，使用后消耗 1 卷' },
+  painkiller: { id:'painkiller', name:'止痛药', slot:'item', icon:'💊', consumable:true,
+            skill:{ name:'服用止痛药', desc:'为 1 格内一名友方（含自己）恢复 40 点生命。使用后消耗 1 粒止痛药。', cost:0, cd:0, type:'heal', shape:'target', flatHeal:40, mult:0, range:1, includeSelf:true, equipSkill:true, eqName:'止痛药' },
+            desc:'消耗品 · 不提供属性；自带技能「服用止痛药」：为 1 格内一名友方（含自己）恢复 40 点生命，使用后消耗 1 粒' },
 };
 /* 新角色装备全空（需在工坊制作装备穿戴） */
 DATA.EMPTY_EQUIP = { weapon:null, head:null, armor:null, shoes:null, acc:null, item:null };
@@ -900,6 +903,13 @@ DATA.PRODUCE = {
     noDuty:'⚠️ 请先在「职务指派」中安排医生或护士当值', action:'生产绷带',
     lackMsg:'🏥 材料不足：生产 1 卷绷带需要 2🧵布料 + 1💊药物',
     okMsg:c=>`🩹 ${c.name} 制成了 1 卷绷带放入背包（剩 ${c.stamina}⚡）`,
+  },
+  painkiller: {
+    building:['hospitalLv','labLv'], duty:['hospitalDoc','labChef'], stamina:10, mats:{ med:2, gold:10 },
+    noDuty:'⚠️ 需在医院指派医生/护士当值，或在实验室指派科学家当值', action:'生产止痛药', action2:'生产止痛药',
+    buildToast:'需要先建造医院或实验室',
+    lackMsg:'💊 材料不足：生产 1 粒止痛药需要 2💊药物 + 10💰金币',
+    okMsg:c=>`💊 ${c.name} 制成了 1 粒止痛药放入背包（剩 ${c.stamina}⚡）`,
   },
 };
 
@@ -1632,10 +1642,13 @@ const Game = {
     })();
     if (!P) return;
     if (P.craft) P.mats = Game.craftCost(id) || P.mats;   // 工坊打造：材料按工坊等级打折
-    if (g[P.building] <= 0) { if (P.buildToast) UI.toast(P.buildToast); return; }
+    /* 生产通道：building/duty 支持数组（止痛药 = 医院 或 实验室），取第一个已建造的通道 */
+    const chans = (Array.isArray(P.building)?P.building:[P.building]).map((lv,i)=>({ lv, duty:Array.isArray(P.duty)?P.duty[i]:P.duty }));
+    const chan = chans.find(ch=>(g[ch.lv]||0) > 0);
+    if (!chan) { if (P.buildToast) UI.toast(P.buildToast); return; }
     let c = null;
-    if (P.duty) {
-      c = g.chars.find(c=>c.id===g[P.duty] && !c.dead);
+    if (chan.duty) {
+      c = g.chars.find(c=>c.id===g[chan.duty] && !c.dead);
       if (!c) { UI.toast(P.noDuty); return; }
       if (c.injured) { UI.toast(`${c.name} 重伤，无法${P.action}`); return; }
       if (c.stamina < P.stamina) { UI.toast(`${c.name} 体力不足 ${P.stamina}⚡，无法${P.action2||P.action}`); return; }
@@ -1665,6 +1678,7 @@ const Game = {
   unassignWorkshop(){ Game.unassignDuty('workshop'); },
   unassignLab(){ Game.unassignDuty('lab'); },
   makeAntidote(){ Game.produce('antidote'); },
+  makePainkiller(){ Game.produce('painkiller'); },
   /* 医院：医生或护士生产绷带 */
   buildHospital(){ Game.buildBuilding('hospital'); },
   assignHospital(cid){ Game.assignDuty('hospital', cid); },
@@ -2133,15 +2147,17 @@ const UI = {
     } else {
       const sci = g.labChef ? g.chars.find(c=>c.id===g.labChef && !c.dead) : null;
       const canMake = sci && !sci.injured && sci.stamina>=15 && g.res.gold>=15 && g.res.metal>=1 && g.res.med>=3;
+      const canPain = sci && !sci.injured && sci.stamina>=10 && g.res.med>=2 && g.res.gold>=10;
       labBody = `<div class="row" style="margin-top:10px;flex-wrap:wrap">
         <button class="btn primary" ${canMake?'':'disabled'} onclick="Game.makeAntidote()">💉 生产解毒针（15⚡ + 15💰 + 1⚙️ + 3💊）</button>
+        <button class="btn primary" ${canPain?'':'disabled'} onclick="Game.makePainkiller()">💊 生产止痛药（10⚡ + 2💊 + 10💰）</button>
         ${g.res.metal<1||g.res.med<3 ? '<span class="tag red">材料不足</span>' : ''}
         ${!sci ? '<span style="color:var(--red2);font-size:12px">⚠️ 需先在主界面「职务指派」安排科学家当值</span>' : ''}
       </div>`
         + (sci ? `<div class="wiki-p" style="margin-top:8px">🔬 实验员：<b>${sci.name}</b>（⚡ ${sci.stamina}/${sci.maxStamina}${sci.injured?'，重伤停产':''}）</div>` : '');
     }
     html += cardShell('🧪', '实验室', g.labLv, false,
-      `指派<b>科学家</b>当值后，可生产道具「<b>解毒针</b>」💊：每生产 1 支消耗 <b>15⚡ 体力 + 15💰 + 1⚙️金属 + 3💊药物</b>，成品放入背包（在人物信息「道具」格携带，≤3 个）。战斗中使用可恢复 50 点生命并解除中毒，用后消耗。当值<b>不影响出战</b>，随时免费换人。`,
+      `指派<b>科学家</b>当值后，可生产道具「<b>解毒针</b>」💉：每生产 1 支消耗 <b>15⚡ 体力 + 15💰 + 1⚙️金属 + 3💊药物</b>，还可生产「<b>止痛药</b>」💊（10⚡ + 2💊 + 10💰，医院也可生产）。成品放入背包（道具格携带，≤3 个）。当值<b>不影响出战</b>，随时免费换人。`,
       labBody);
 
     // 医院：建造 + 生产绷带（不可升级）
@@ -2152,15 +2168,17 @@ const UI = {
     } else {
       const doc = g.hospitalDoc ? g.chars.find(c=>c.id===g.hospitalDoc && !c.dead) : null;
       const canMake = doc && !doc.injured && doc.stamina>=10 && g.res.fabric>=2 && g.res.med>=1;
+      const canPain = doc && !doc.injured && doc.stamina>=10 && g.res.med>=2 && g.res.gold>=10;
       hospBody = `<div class="row" style="margin-top:10px;flex-wrap:wrap">
         <button class="btn primary" ${canMake?'':'disabled'} onclick="Game.makeBandage()">🩹 生产绷带（10⚡ + 2🧵 + 1💊）</button>
+        <button class="btn primary" ${canPain?'':'disabled'} onclick="Game.makePainkiller()">💊 生产止痛药（10⚡ + 2💊 + 10💰）</button>
         ${g.res.fabric<2||g.res.med<1 ? '<span class="tag red">材料不足</span>' : ''}
         ${!doc ? '<span style="color:var(--red2);font-size:12px">⚠️ 需先在主界面「职务指派」安排医生或护士当值</span>' : ''}
       </div>`
         + (doc ? `<div class="wiki-p" style="margin-top:8px">⚕️ 医务员：<b>${doc.name}</b>（⚡ ${doc.stamina}/${doc.maxStamina}${doc.injured?'，重伤停产':''}）</div>` : '');
     }
     html += cardShell('🏥', '医院', g.hospitalLv, false,
-      `指派<b>医生或护士</b>当值后，可生产道具「<b>绷带</b>」🩹：每生产 1 卷消耗 <b>10⚡ 体力 + 2🧵布料 + 1💊药物</b>，成品放入背包（在人物信息「道具」格携带，≤3 个）。战斗中使用可恢复 25 点生命并解除流血，用后消耗。当值<b>不影响出战</b>，随时免费换人。`,
+      `指派<b>医生或护士</b>当值后，可生产道具「<b>绷带</b>」🩹（10⚡ + 2🧵 + 1💊，恢复 25 生命并解除流血）与「<b>止痛药</b>」💊（10⚡ + 2💊 + 10💰，恢复 40 生命，实验室也可生产），成品放入背包（道具格携带，≤3 个）。当值<b>不影响出战</b>，随时免费换人。`,
       hospBody);
 
     // 工坊：建造 + 制造装备（可升级：每级 -10% 材料消耗）
@@ -2422,7 +2440,7 @@ const UI = {
       const inj = c.injured ? '<span class="tag red">重伤</span>' : (c.hp<eHp? '<span class="tag yellow">受伤</span>':'');
       const healBtn = c.injured
         ? `<button class="btn small warn" onclick="UI.healInjured('${c.id}')">💊 治疗 (2药物)</button>`
-        : (!c.injured && c.hp<eHp ? `<button class="btn small" onclick="UI.useMed('${c.id}')">💊 使用药物 (1)</button>` : '');
+        : (!c.injured && c.hp<eHp ? `<span style="font-size:12px;color:var(--txt2)">💊 药物是生产材料——先在医院/实验室生产「绷带」或「止痛药」，再在战斗中或背包使用</span>` : '');
       return `<div class="char-card ${c.injured?'disabled':''}">
         <div class="avatar ${C.color}">${c.av||C.icon}<span class="lvl">Lv.${c.level}</span></div>
         <div style="flex:1;min-width:0">
@@ -2464,15 +2482,6 @@ const UI = {
         ? insts.map(inst=>{ const e=DATA.EQUIPS[inst.id]; const lv=inst.lv?' +'+inst.lv:''; return `<div class="loot-line" style="cursor:pointer" onclick="Game.equipChar('${cid}','${slot}','${inst.uid}');UI.closeModal()"><span>${e.icon} ${e.name}${lv}</span><b>${e.desc}</b></div>`; }).join('')
         : '<div class="wiki-p" style="color:var(--txt2)">背包中没有可穿戴的该部位装备（探险胜利有概率获得装备掉落）</div>'}
       <div class="row" style="margin-top:12px"><button class="btn" style="width:100%" onclick="UI.closeModal()">关闭</button></div>`);
-  },
-  useMed(id) {
-    const c = Game.g.chars.find(x=>x.id===id);
-    if (!c || Game.g.res.med<1) { UI.toast('药物不足'); return; }
-    Game.g.res.med--;
-    c.hp = Math.min(Game.effHp(c), c.hp + 60);
-    UI.toast(`🧪 ${c.name} 使用了药物，恢复 60 生命`);
-    Game.saveToSlot(Game.currentSlot, true);
-    UI.renderChars();
   },
   healInjured(id) {
     const c = Game.g.chars.find(x=>x.id===id);
@@ -2821,6 +2830,7 @@ const UI = {
       bread:'厨房烤面包：1🍞食物 + 10⚡',
       antidote:'实验室生产：15⚡ + 15💰 + 1⚙️ + 3💊',
       bandage:'医院生产：10⚡ + 1🧵 + 1💊',
+      painkiller:'医院/实验室生产：10⚡ + 2💊 + 10💰',
     };
     const eqRows = Object.values(DATA.EQUIPS).map(e=>`<tr><td>${e.icon} ${e.name}</td><td>${slotName(e.slot)}${e.consumable?'<br><span style="color:var(--txt2);font-size:11px">消耗品</span>':''}</td><td>${e.desc}</td><td>${craftMap[e.id]?('工坊制造 '+craftMap[e.id]):(prodMap[e.id]||'探险掉落')}</td></tr>`).join('');
     const secEquip = `
