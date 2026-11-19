@@ -460,6 +460,7 @@ button:disabled { opacity:.45; cursor:not-allowed; }
     <div class="func-grid">
       <div class="func-btn" onclick="UI.openChars()"><div class="ic">🧍</div><div><div class="t">人物信息</div><div class="d" id="fb-chars">查看幸存者队伍</div></div><span class="badge" id="badge-injured"></span></div>
       <div class="func-btn" onclick="UI.openRecruit()"><div class="ic">📡</div><div><div class="t">招募广播</div><div class="d">寻找幸存者加入</div></div></div>
+      <div class="func-btn" onclick="UI.openVisitors()"><div class="ic">🚶</div><div><div class="t">家园访客</div><div class="d" id="fb-visitor">商人与流浪者</div></div><span class="badge" id="badge-visitor"></span></div>
       <div class="func-btn" onclick="UI.openZones()"><div class="ic">🧭</div><div><div class="t">外出探险</div><div class="d">搜索物资区域</div></div></div>
       <div class="func-btn" onclick="UI.openInv()"><div class="ic">📦</div><div><div class="t">物资仓库</div><div class="d">物资与物品管理</div></div></div>
       <div class="func-btn" onclick="UI.openDuty()"><div class="ic">👷</div><div><div class="t">职务指派</div><div class="d" id="fb-duty">人员分配</div></div></div>
@@ -995,6 +996,11 @@ DATA.FARM = {
   out:lv=>lv*2,            // 每级产出 2/4/6/8/10
   workCost:50,             // 农场当值每天消耗的体力
 };
+DATA.VISITOR = {
+  price: { metal:2, food:3, wood:3, fabric:3, med:12 },   // 基准单价：回收价 0.9~1.15×，出售价 1.0~1.3×
+  amt:   { metal:[15,25], food:[10,18], wood:[10,16], fabric:[10,16], med:[2,4] },
+  recruitCost: { gold:150, food:20 },                     // 流浪者招募价（职业天赋随机）
+};
 DATA.LAB = {
   name:'实验室', icon:'🧪',
   buildCost:200,           // 不可升级：建造后指派科学家当值即可生产解毒针
@@ -1140,6 +1146,7 @@ const Game = {
       g.chars.push(Game.createChar(cls, name));
     }
     Game.recalcAll(g);
+    Game.rollVisitors(g);   // 第 1 天即有家园访客
     return g;
   },
 
@@ -1426,6 +1433,66 @@ const Game = {
     ['kitchen','farm'].forEach(t=>{ const w = Game.workPending(t); if (w && w.pending) supply += w.pending; });
     return supply;
   },
+  /* ===== 家园访客：每天随过夜刷新一次（新档/旧档迁移也生成），无付费重刷 =====
+     merchant.buy  = 回收报价（玩家卖资源换金币，0.9~1.15× 基准价）
+     merchant.sell = 出售报价（玩家花金币买资源，1.0~1.3× 基准价）
+     wanderer      = 预生成的完整角色（不进队伍），招募价 150金+20食物 */
+  rollVisitors(target) {
+    const g = target || Game.g;
+    const V = DATA.VISITOR;
+    const pool = Object.keys(V.price);
+    const pickRes = ex => { const p = pool.filter(r=>r!==ex); return p[Math.floor(Math.random()*p.length)]; };
+    const mkOffer = (res, buySide) => {
+      const [a,b] = V.amt[res];
+      const amt = a + Math.floor(Math.random()*(b-a+1));
+      const gold = Math.max(1, Math.round(amt * V.price[res] * (buySide ? 0.9+Math.random()*0.25 : 1.0+Math.random()*0.3)));
+      return { res, amt, gold, done:false };
+    };
+    const rb = pickRes(null), rs = pickRes(rb);   // 回收/出售不同物资
+    const wanderer = Game.createChar(pick(Object.keys(DATA.CLASSES)));
+    wanderer.recruited = false;
+    g.visitors = { day:g.day, merchant:{ buy:mkOffer(rb,true), sell:mkOffer(rs,false) }, wanderer };
+  },
+  /* 商人交易：kind='buy' 玩家卖资源（回收）/ 'sell' 玩家买资源；每日报价各限成交一笔 */
+  tradeMerchant(kind) {
+    const g = Game.g;
+    const m = g.visitors && g.visitors.merchant;
+    if (!m) { UI.toast('今天没有商人到访'); return; }
+    const o = m[kind];
+    if (o.done) { UI.toast('这笔生意今天已经成交了'); return; }
+    if (kind === 'buy') {
+      if ((g.res[o.res]||0) < o.amt) { UI.toast('物资不足，无法回收'); return; }
+      g.res[o.res] -= o.amt;
+      g.res.gold += o.gold;
+      UI.toast(`商人回收 ${UI.resIcon(o.res)}×${o.amt}，获得 ${o.gold} 金币`);
+    } else {
+      if (g.res.gold < o.gold) { UI.toast('金币不足'); return; }
+      g.res.gold -= o.gold;
+      g.res[o.res] = (g.res[o.res]||0) + o.amt;
+      UI.toast(`向商人购入 ${UI.resIcon(o.res)}×${o.amt}`);
+    }
+    o.done = true;
+    Game.saveToSlot(Game.currentSlot, true);
+    UI.openVisitors();
+  },
+  /* 流浪者招募：150金+20食物，职业天赋当日固定；队伍满 8 人不可招 */
+  recruitWanderer() {
+    const g = Game.g;
+    const v = g.visitors;
+    if (!v || !v.wanderer) { UI.toast('今天没有流浪者到访'); return; }
+    const w = v.wanderer;
+    if (w.recruited) { UI.toast('已经招募过这位流浪者'); return; }
+    if (g.chars.filter(c=>!c.dead).length >= 8) { UI.toast('队伍已满（8 人），无法招募'); return; }
+    const C = DATA.VISITOR.recruitCost;
+    if (g.res.gold < C.gold || g.res.food < C.food) { UI.toast(`资源不足：招募需要 ${C.gold} 金币 + ${C.food} 食物`); return; }
+    g.res.gold -= C.gold;
+    g.res.food -= C.food;
+    w.recruited = true;
+    g.chars.push(w);
+    Game.saveToSlot(Game.currentSlot, true);
+    UI.openVisitors();
+    UI.toast(`${w.av||''} ${w.name}（${DATA.CLASSES[w.cls].name}）加入了队伍！`);
+  },
   /* ateIds：食物不足时玩家手动分配的用餐名单；不传则自动结算（够分全员吃，不够返回待分配） */
   nextDay(ateIds) {
     const g = Game.g;
@@ -1506,6 +1573,7 @@ const Game = {
     // 天气
     const wroll = Math.random();
     g.weather = wroll<0.5 ? 'sunny' : (wroll<0.75 ? 'rain' : 'fog');
+    Game.rollVisitors();   // 家园访客每日刷新（唯一入口：过夜；无付费重刷）
     Game.renderHome();
     const hungry = alive.filter(c=>!set.has(c.id)).map(c=>c.name);
     return { shortage:false, ate, hungry, cost, kitchen, dorm, gym, farm, lucky, starved: hungry.length>0 };
@@ -1853,6 +1921,8 @@ const Game = {
     if (typeof Game.g.workshopLv !== 'number') Game.g.workshopLv = 0;
     if (typeof Game.g.farmLv !== 'number') Game.g.farmLv = 0;
     if (Game.g.farmWorker === undefined) Game.g.farmWorker = null;
+    // V117 家园访客迁移：旧档无访客 / 天号过期 → 生成当日访客（存档时当天已有访客则保留成交/招募状态）
+    if (!Game.g.visitors || Game.g.visitors.day !== Game.g.day) Game.rollVisitors();
     if (typeof Game.g.labLv !== 'number') Game.g.labLv = 0;
     if (Game.g.labChef === undefined) Game.g.labChef = null;
     if (typeof Game.g.hospitalLv !== 'number') Game.g.hospitalLv = 0;
@@ -1940,6 +2010,17 @@ const UI = {
     badge.style.display = injured ? 'flex' : 'none';
     badge.textContent = injured;
     document.getElementById('fb-chars').textContent = `${g.chars.filter(c=>!c.dead).length} 名幸存者` + (injured?` / ${injured} 人重伤`:'');
+    // 家园访客：待处理项徽标（商人报价×2 + 流浪者招募）
+    let vn = 0;
+    if (g.visitors) {
+      if (!g.visitors.merchant.buy.done) vn++;
+      if (!g.visitors.merchant.sell.done) vn++;
+      if (g.visitors.wanderer && !g.visitors.wanderer.recruited) vn++;
+    }
+    const bv = document.getElementById('badge-visitor');
+    if (bv) { bv.style.display = vn ? 'flex' : 'none'; bv.textContent = vn; }
+    const fbv = document.getElementById('fb-visitor');
+    if (fbv) fbv.textContent = vn ? `商人与流浪者 · ${vn} 项待处理` : '商人与流浪者 · 今日已处理完';
     // 场景：雨天遮罩
     const scene = document.querySelector('.base-scene');
     scene.style.filter = g.weather==='rain' ? 'brightness(.72) saturate(.8)' : (g.weather==='fog' ? 'brightness(.8) contrast(.85)' : '');
@@ -1956,6 +2037,41 @@ const UI = {
       : '提示：每次探险或休整都会消耗食物并推进天数';
     const tip = document.getElementById('home-tip');
     tip.style.color = foodShort ? 'var(--red2)' : (warn ? 'var(--yellow)' : '');
+  },
+
+  /* ---- 家园访客：流动商人（回收/出售各一笔）+ 流浪者（150金+20食物招募） ---- */
+  openVisitors() {
+    const g = Game.g;
+    const v = g.visitors;
+    let body = '';
+    if (!v) {
+      body = '<div class="wiki-p">今天没有访客到访。</div>';
+    } else {
+      const m = v.merchant;
+      const resName = r => ({metal:'金属',food:'食物',wood:'木材',fabric:'布料',med:'药物'})[r]||r;
+      const rowBuy = m.buy.done
+        ? `<div class="loot-line"><span>回收报价：${UI.resIcon(m.buy.res)} ${resName(m.buy.res)} ×${m.buy.amt}</span><span class="tag green">已成交</span></div>`
+        : `<div class="loot-line"><span>回收报价：${UI.resIcon(m.buy.res)} ${resName(m.buy.res)} ×${m.buy.amt}　<small style="color:var(--txt2)">你的库存 ${g.res[m.buy.res]||0}</small></span><button class="btn small primary" ${((g.res[m.buy.res]||0)<m.buy.amt)?'disabled':''} onclick="Game.tradeMerchant('buy')">卖给商人 +${m.buy.gold}${UI.resIcon('gold')}</button></div>`;
+      const rowSell = m.sell.done
+        ? `<div class="loot-line"><span>出售报价：${UI.resIcon(m.sell.res)} ${resName(m.sell.res)} ×${m.sell.amt}</span><span class="tag green">已成交</span></div>`
+        : `<div class="loot-line"><span>出售报价：${UI.resIcon(m.sell.res)} ${resName(m.sell.res)} ×${m.sell.amt}　<small style="color:var(--txt2)">单价约 ${(m.sell.gold/m.sell.amt).toFixed(1)}💰/份</small></span><button class="btn small" ${(g.res.gold<m.sell.gold)?'disabled':''} onclick="Game.tradeMerchant('sell')">买下 -${m.sell.gold}${UI.resIcon('gold')}</button></div>`;
+      const w = v.wanderer;
+      const C = DATA.CLASSES[w.cls];
+      const full = g.chars.filter(c=>!c.dead).length >= 8;
+      const RC = DATA.VISITOR.recruitCost;
+      const wBtn = w.recruited
+        ? '<span class="tag green">已加入队伍</span>'
+        : `<button class="btn small primary" ${(full||g.res.gold<RC.gold||g.res.food<RC.food)?'disabled':''} onclick="Game.recruitWanderer()">招募 -${RC.gold}${UI.resIcon('gold')} -${RC.food}${UI.resIcon('food')}</button>`;
+      body = `
+      <div class="panel"><h3>🧳 流动商人</h3>${rowBuy}${rowSell}
+        <div class="wiki-p" style="margin-top:6px;color:var(--txt2)">每日报价各限成交一次；次日商人与流浪者都会换新（无法付费重刷）</div></div>
+      <div class="panel"><h3>🧍 流浪者</h3>
+        <div class="loot-line"><span>${w.av||C.icon} ${w.name} <span class="tag">${C.name}</span> Lv.${w.level}</span>${wBtn}</div>
+        ${!w.recruited?`<div class="wiki-p" style="margin-top:6px">${UI.talentTags(w, true)}</div><div class="wiki-p" style="margin-top:4px">${UI.statLine(w, true)}</div>`:''}
+        ${(!w.recruited && full)?'<div class="wiki-p" style="color:var(--red2)">⚠️ 队伍已满（8 人），无法招募</div>':''}
+      </div>`;
+    }
+    UI.modal(`<h3>🚶 家园访客 <span class="tag yellow">第 ${g.day} 天</span></h3>${body}` + UI.closeRow());
   },
 
   /* ---- 人物信息 ---- */
@@ -2760,6 +2876,7 @@ const UI = {
         · <b>食物</b>：每天每名成员按职业消耗食物——<b>平民 1 / 科学家 1 / 厨师·格斗家·猎人·医生·运动员 2 / 军人 3</b>（贪吃天赋额外 +1，节俭天赋 −1）；<b>粮食不够全营吃时，会弹出晚餐分配让你勾选谁吃</b>——吃到的人恢复 50 体力+50 生命，没吃到的人不会掉血、不会饿死，但当天什么都不恢复<br>
         · <b>急救丸</b>：恢复 60 生命；对重伤成员使用可解除重伤（医院/实验室生产，战斗中也可对 1 格内友方使用）<br>
         · <b>布料</b>：工坊制造布系装备的材料，主要来自超市/商业街区域奖励与物资箱<br>
+        · <b>家园访客</b>：每天到访一位<b>流动商人</b>与一位<b>流浪者</b>——商人回收一种物资（换金币）并出售一种物资（花金币），每日报价各限成交一次；流浪者职业天赋随机，花 150 金币 + 20 食物可招募（队伍上限 8 人）。访客随过夜刷新，<b>无法付费重刷</b><br>
         · <b>天数</b>：时间由主界面「进入下一天」推进——过夜时刷新天气、结算晚餐与建筑产出；同一天可多次探索
         </div>
       </div>`;
