@@ -74,6 +74,11 @@ let g = Game.g;
   const invHtml = elems['inv-list'] ? elems['inv-list'].innerHTML : '';
   assert(invHtml.includes('🪵') && invHtml.includes('木材'), 'T7 物资面板显示木材');
 
+  // T8 百科装备图鉴木材配方显示（V105 修复 craftMap 漏 wood）
+  UI.wikiTab = 'equip'; UI.openWiki();
+  const eqHtml = elems['wiki-content'] ? elems['wiki-content'].innerHTML : '';
+  assert(eqHtml.includes('5🪵') && eqHtml.includes('20💰 + 5🪵'), 'T8 装备图鉴显示木棍配方 20💰 + 5🪵');
+
   console.log('--- done ---');
   process.exit(0);
 })().catch(e=>{ console.log('TEST ERROR', e); process.exit(1); });

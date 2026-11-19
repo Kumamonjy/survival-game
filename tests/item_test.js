@@ -146,13 +146,17 @@ const [s1, s2] = g.chars;
   assert(bear && bear.special && bear.stats.critRate===5 && bear.stats.critDmg===10, 'T14a 熊熊：特殊饰品 暴击率+5%/暴伤+10%');
   assert(bunny && bunny.special && bunny.stats.stamina===15 && bunny.stats.def===5, 'T14b 兔兔：特殊饰品 体力+15/防御+5');
   assert(!DATA.RECIPES.some(r=>r.id==='bear'||r.id==='bunny'), 'T14c 特殊饰品不在工坊配方（不可制造）');
-  const fc = { id:'f1', cls:'guard', level:1, hp:100, stamina:100, maxHp:200, maxStamina:100, atk:40, def:5, range:1, move:3, critRate:5, critDmg:150,
+  const fc = { id:'f1', cls:'civilian', level:1, hp:100, stamina:100, maxHp:200, maxStamina:100, atk:40, def:5, range:1, move:3, critRate:5, critDmg:150,
     equip:{ acc:{ uid:'k1', id:'bear', lv:0 } }, item:null };
   const u1 = Battle.mkAlly(fc, 5, 5);
   assert(u1.critRate===10 && u1.critDmg===160, `T14d mkAlly 暴击接入：✨10%/💥160%（${u1.critRate}/${u1.critDmg}）`);
   fc.equip = { acc:{ uid:'k2', id:'bunny', lv:0 } };
   const u2 = Battle.mkAlly(fc, 5, 5);
   assert(u2.maxStamina===115 && u2.def===10 && u2.critRate===5, `T14e mkAlly 兔兔：⚡115/🛡10（${u2.maxStamina}/${u2.def}）`);
+
+  // T15 掉落池排除特殊饰品（V105 修复：胜利装备掉落不再出熊熊/兔兔）
+  const dropPool = Object.keys(DATA.EQUIPS).filter(id=>!DATA.EQUIPS[id].special);
+  assert(!dropPool.includes('bear') && !dropPool.includes('bunny') && dropPool.length===Object.keys(DATA.EQUIPS).length-2, 'T15 装备掉落池排除特殊饰品（熊熊/兔兔）');
 
   console.log('--- done ---');
   process.exit(0);

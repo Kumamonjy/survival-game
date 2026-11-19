@@ -2126,7 +2126,7 @@ const UI = {
     const wBody = wlv === 0
       ? buildRow(W, 'Game.buildWorkshop()', '建造工坊')
       : `<div class="row" style="margin-top:10px;flex-wrap:wrap">
-        <span class="tag yellow">💰 ${g.res.gold}</span><span class="tag blue">⚙️ ${g.res.metal||0}</span><span class="tag blue">🧵 ${g.res.fabric||0}</span>
+        <span class="tag yellow">💰 ${g.res.gold}</span><span class="tag blue">⚙️ ${g.res.metal||0}</span><span class="tag blue">🧵 ${g.res.fabric||0}</span><span class="tag blue">🪵 ${g.res.wood||0}</span>
       </div>
       <div class="row" style="margin-top:10px">
         <button class="btn primary" style="flex:1" onclick="UI.openCraftModal()">🔨 打造</button>
@@ -2136,7 +2136,7 @@ const UI = {
       ${upRow(wlv, W, "Game.upgradeBuilding('workshop')", wlv>1?`<span class="tag yellow">材料 -${(wlv-1)*10}%</span>`:'')}
       <div class="wiki-p" style="font-size:12px;color:var(--txt2);margin-top:8px">升级：每级属性加成 +20%（最高 +5），费用 = 制造成本 × (当前级+1)；分解：返还 50% 成本（向上取整）。工坊每升一级，制造与升级装备的材料消耗 -10%（向上取整）。</div>`;
     html += cardShell('🏭', '工坊', wlv, wlv>0,
-      `${W.desc}<br>材料来源：金币/金属来自各区域产出，<b>布料</b>主要在废弃超市、商业街废墟搜集（物资箱也会随机掉落）。`,
+      `${W.desc}<br>材料来源：金币/金属来自各区域产出，<b>木材</b>主要在旧钢铁工厂、商业街废墟搜集（物资箱也会随机掉落），<b>布料</b>主要在废弃超市、商业街废墟搜集（物资箱也会随机掉落）。`,
       wBody);
     document.getElementById('build-page').innerHTML = html;
   },
@@ -2696,7 +2696,7 @@ const UI = {
         <div class="wiki-p" style="margin-top:6px">丧尸强度与队伍实力挂钩：<b>丧尸等级 = 出战角色的平均等级</b>（向下取整），每级生命 +30 / 攻击 +6 / 防御 +3。每个区域有各自的丧尸数量区间与类型概率——<b>旧钢铁工厂有约 5% 概率遭遇暴君变异体</b>，军事基地必定有暴君坐镇。丧尸潮预警会额外增加 2 只丧尸并使奖励翻倍。</div>
       </div>`;
     const slotName = id => (DATA.SLOTS.find(s=>s.id===id)||{name:id}).name;
-    const craftMap = {}; DATA.RECIPES.forEach(r=>{ craftMap[r.id] = `${r.cost.gold}💰` + (r.cost.metal?` + ${r.cost.metal}⚙️`:'') + (r.cost.fabric?` + ${r.cost.fabric}🧵`:''); });
+    const craftMap = {}; DATA.RECIPES.forEach(r=>{ craftMap[r.id] = `${r.cost.gold}💰` + (r.cost.wood?` + ${r.cost.wood}🪵`:'') + (r.cost.metal?` + ${r.cost.metal}⚙️`:'') + (r.cost.fabric?` + ${r.cost.fabric}🧵`:''); });
     const prodMap = {
       bread:'厨房烤面包：1🍞食物 + 10⚡',
       antidote:'实验室生产：15⚡ + 15💰 + 1⚙️ + 3💊',
@@ -4409,10 +4409,11 @@ const Battle = {
     Object.entries(loot).forEach(([k,v])=>{ if(v>0) g.res[k]+=v; });
     Object.entries(rewards).forEach(([k,v])=>{ if(v>0) g.res[k]+=v; });
 
-    // 装备掉落：探险胜利 20% 概率获得一件随机装备（入背包）
+    // 装备掉落：探险胜利 20% 概率获得一件随机装备（入背包；特殊饰品不可掉落，获取途径后续开放）
     let dropEq = null;
     if (result==='win' && Math.random() < 0.2) {
-      dropEq = DATA.EQUIPS[pick(Object.keys(DATA.EQUIPS))];
+      const dropPool = Object.keys(DATA.EQUIPS).filter(id=>!DATA.EQUIPS[id].special);
+      dropEq = DATA.EQUIPS[pick(dropPool)];
       Game.addEquip(dropEq.id, 1);
     }
 
