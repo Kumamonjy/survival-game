@@ -860,19 +860,19 @@ DATA.EMPTY_EQUIP = { weapon:null, head:null, armor:null, shoes:null, acc:null, i
 /* 工坊：制造装备 */
 DATA.WORKSHOP = { name:'工坊', icon:'🏭', buildCost:250, upgradeCost:250, maxLv:5, desc:'消耗金币、木材、布料与金属制造装备，造好的装备放入背包后可在人物信息中穿戴。每升一级，制造与升级装备的材料消耗减少 10%（向上取整）。' };
 DATA.RECIPES = [
-  { id:'stone',  cost:{ gold:12, metal:3 } },
-  { id:'dart',   cost:{ gold:8, metal:2 } },
-  { id:'bottle', cost:{ gold:20, metal:1, fabric:1 } },
-  { id:'thermos', cost:{ gold:35, metal:2, fabric:1 } },
-  { id:'bracer', cost:{ gold:5, fabric:3 } },
-  { id:'stick',  cost:{ gold:20, wood:5 } },
-  { id:'slingshot', cost:{ gold:20, wood:3, fabric:1 } },
-  { id:'bow',    cost:{ gold:40, wood:5, fabric:3 } },
-  { id:'spear',  cost:{ gold:60, wood:4, metal:3 } },
-  { id:'sweater', cost:{ gold:75, fabric:8 } },
-  { id:'chood',  cost:{ gold:32, fabric:4 } },
-  { id:'cshoes', cost:{ gold:40, fabric:4 } },
-  { id:'cloth',  cost:{ gold:48, fabric:5 } },
+  { id:'stone',  cost:{ gold:12, metal:3 }, stamina:5 },
+  { id:'dart',   cost:{ gold:8, metal:2 }, stamina:5 },
+  { id:'bottle', cost:{ gold:20, metal:1, fabric:1 }, stamina:8 },
+  { id:'thermos', cost:{ gold:35, metal:2, fabric:1 }, stamina:12 },
+  { id:'bracer', cost:{ gold:5, fabric:3 }, stamina:8 },
+  { id:'stick',  cost:{ gold:20, wood:5 }, stamina:10 },
+  { id:'slingshot', cost:{ gold:20, wood:3, fabric:1 }, stamina:12 },
+  { id:'bow',    cost:{ gold:40, wood:5, fabric:3 }, stamina:20 },
+  { id:'spear',  cost:{ gold:60, wood:4, metal:3 }, stamina:25 },
+  { id:'sweater', cost:{ gold:75, fabric:8 }, stamina:15 },
+  { id:'chood',  cost:{ gold:32, fabric:4 }, stamina:10 },
+  { id:'cshoes', cost:{ gold:40, fabric:4 }, stamina:10 },
+  { id:'cloth',  cost:{ gold:48, fabric:5 }, stamina:15 },
 ];
 
 /* 生产统一配置：cookBread/makeAntidote/craft 共用 Game.produce 入口（工坊配方动态生成） */
@@ -1012,6 +1012,11 @@ const DUTY_CONFIG = {
     already:'已经在实验室当值了',
     assignMsg:c=>`🧪 ${c.name} 开始在实验室当值（生产解毒针，不影响出战）`,
     unassignMsg:c=>`${c.name} 已撤出实验室，恢复自由行动` },
+  workshop: { slot:'workshopChef', lv:'workshopLv',
+    checks:['already','conflict'],
+    already:'已经是当值工匠了',
+    assignMsg:c=>`⚒️ ${c.name} 开始在工坊当值（打造消耗其体力，不影响出战）`,
+    unassignMsg:c=>`${c.name} 已撤出工坊，恢复自由行动` },
   hospital: { slot:'hospitalDoc', cls:['doctor','nurse'], data:()=>DATA.HOSPITAL,
     already:'已经在医院当值了',
     assignMsg:c=>`🏥 ${c.name} 开始在医院当值（生产绷带，不影响出战）`,
@@ -1079,6 +1084,7 @@ const Game = {
       hordeWarning: false,
       kitchenLv: 0,
       kitchenChef: null,
+      workshopChef: null,
       dormLv: 0,
       dormBeds: [],
       gymLv: 0,
@@ -1614,7 +1620,9 @@ const Game = {
     const g = Game.g;
     const P = DATA.PRODUCE[id] || (()=>{ const r = DATA.RECIPES.find(x=>x.id===id); if (!r || !DATA.EQUIPS[r.id]) return null;
       return { building:'workshopLv', buildToast:'需要先建造工坊', craft:true, mats:r.cost,
-        okMsg:()=>{ const E = DATA.EQUIPS[r.id]; return `🔨 制造成功：${E.icon} ${E.name} 已放入背包（人物信息中穿戴）`; } };
+        duty:'workshopChef', stamina:r.stamina||0, action:'打造', action2:'打造',
+        noDuty:'⚒️ 需要先在「职务指派」中安排工匠当值（不限职业）',
+        okMsg:c=>{ const E = DATA.EQUIPS[r.id]; return `🔨 ${c.name} 打造成功：${E.icon} ${E.name} 已放入背包（物资仓库可穿戴）`; } };
     })();
     if (!P) return;
     if (P.craft) P.mats = Game.craftCost(id) || P.mats;   // 工坊打造：材料按工坊等级打折
@@ -1647,6 +1655,8 @@ const Game = {
   /* 实验室：科学家生产解毒针 */
   buildLab(){ Game.buildBuilding('lab'); },
   assignLab(cid){ Game.assignDuty('lab', cid); },
+  assignWorkshop(cid){ Game.assignDuty('workshop', cid); },
+  unassignWorkshop(){ Game.unassignDuty('workshop'); },
   unassignLab(){ Game.unassignDuty('lab'); },
   makeAntidote(){ Game.produce('antidote'); },
   /* 医院：医生或护士生产绷带 */
@@ -1669,6 +1679,7 @@ const Game = {
     if (g.kitchenChef === cid) return '厨房当值';
     if (g.farmWorker === cid) return '农场耕作';
     if (g.labChef === cid) return '实验室当值';
+    if (g.workshopChef === cid) return '工坊当值';
     if (g.hospitalDoc === cid) return '医院当值';
     if ((g.dormBeds||[]).includes(cid)) return '寝室床位';
     if ((g.gymSlots||[]).includes(cid)) return '健身房训练';
@@ -1754,6 +1765,7 @@ const Game = {
     // 旧档迁移营地建筑字段
     if (typeof Game.g.kitchenLv !== 'number') Game.g.kitchenLv = 0;
     if (Game.g.kitchenChef === undefined) Game.g.kitchenChef = null;
+    if (Game.g.workshopChef === undefined) Game.g.workshopChef = null;
     if (typeof Game.g.dormLv !== 'number') Game.g.dormLv = 0;
     if (!Array.isArray(Game.g.dormBeds)) Game.g.dormBeds = [];
     if (typeof Game.g.gymLv !== 'number') Game.g.gymLv = 0;
@@ -1976,6 +1988,17 @@ const UI = {
         candTitle:n=>`可指派科学家（${n}）：`, candSub:effSub, candBad:c=>c.injured,
         staminaCost:0, fullTag:null, assignLabel:'指派',
         assignCall:c=>`Game.assignLab('${c.id}')` },
+      { built: g.workshopLv > 0,
+        title:'⚒️ 工坊当值（打造消耗当值者体力：消耗品 5⚡ ~ 长枪 25⚡ · 不限职业）',
+        occupants: occOf(g.workshopChef),
+        occBadge:()=>'<span class="tag blue">工匠</span>',
+        occSub:o=>`⚡ ${o.stamina}/${o.maxStamina}（体力不足时无法打造，不影响出战）`,
+        unLabel:'撤职', unCall:()=>'Game.unassignWorkshop()',
+        empty:`⚠️ 工坊空置——没有工匠当值就无法打造装备。${alive.length?'从下方名单指派（不限职业）。':''}`,
+        cands: alive.filter(c=>c.id!==g.workshopChef),
+        candTitle:n=>`可指派工匠（${n}）：`, candSub:effSub, candBad:c=>c.injured,
+        staminaCost:0, fullTag:null, assignLabel:'指派',
+        assignCall:c=>`Game.assignWorkshop('${c.id}')` },
       { built: g.hospitalLv > 0,
         title:'🏥 医院当值（生产绷带：10⚡ + 2🧵 + 1💊 → 背包）',
         occupants: occOf(g.hospitalDoc),
@@ -2142,13 +2165,17 @@ const UI = {
       : `<div class="row" style="margin-top:10px;flex-wrap:wrap">
         <span class="tag yellow">💰 ${g.res.gold}</span><span class="tag blue">⚙️ ${g.res.metal||0}</span><span class="tag blue">🧵 ${g.res.fabric||0}</span><span class="tag blue">🪵 ${g.res.wood||0}</span>
       </div>
+      ${( ()=>{ const smith = g.workshopChef ? g.chars.find(c=>c.id===g.workshopChef && !c.dead) : null;
+        return `<div class="wiki-p" style="margin-top:8px">${smith
+          ? `⚒️ 工匠：<b>${smith.name}</b>（⚡ ${smith.stamina}/${smith.maxStamina}${smith.injured?'，重伤停产':''}）`
+          : '<span style="color:var(--red2);font-size:12px">⚠️ 尚未指派工匠——去「职务指派」安排一名成员当值（不限职业）后才能打造</span>'}</div>`; })() }
       <div class="row" style="margin-top:10px">
         <button class="btn primary" style="flex:1" onclick="UI.openCraftModal()">🔨 打造</button>
         <button class="btn" style="flex:1" onclick="UI.openUpgradeModal()">⬆️ 升级</button>
         <button class="btn" style="flex:1" onclick="UI.openSalvageModal()">♻️ 分解</button>
       </div>
       ${upRow(wlv, W, "Game.upgradeBuilding('workshop')", wlv>1?`<span class="tag yellow">材料 -${(wlv-1)*10}%</span>`:'')}
-      <div class="wiki-p" style="font-size:12px;color:var(--txt2);margin-top:8px">升级：每级属性加成 +20%（最高 +5），费用 = 制造成本 × (当前级+1)；分解：返还 50% 成本（向上取整）。工坊每升一级，制造与升级装备的材料消耗 -10%（向上取整）。</div>`;
+      <div class="wiki-p" style="font-size:12px;color:var(--txt2);margin-top:8px">打造需工匠当值并消耗其体力（消耗品 5⚡ ~ 长枪 25⚡）。升级：每级属性加成 +20%（最高 +5），费用 = 制造成本 × (当前级+1)；分解：返还 50% 成本（向上取整）。工坊每升一级，制造与升级装备的材料消耗 -10%（向上取整）。</div>`;
     html += cardShell('🏭', '工坊', wlv, wlv>0,
       `${W.desc}<br>材料来源：金币/金属来自各区域产出，<b>木材</b>主要在旧钢铁工厂、商业街废墟搜集（物资箱也会随机掉落），<b>布料</b>主要在废弃超市、商业街废墟搜集（物资箱也会随机掉落）。`,
       wBody);
@@ -2206,19 +2233,24 @@ const UI = {
 
   openCraftModal() {
     const g = Game.g;
+    const smith = g.workshopChef ? g.chars.find(c=>c.id===g.workshopChef && !c.dead) : null;
     UI.modal(`<h3>🔨 打造装备</h3>
-      <div class="wiki-p" style="font-size:12px;color:var(--txt2)">工坊 Lv.${g.workshopLv||1}${(g.workshopLv||1)>1?`：材料消耗 -${((g.workshopLv||1)-1)*10}%`:''}。道具为消耗品：不提供属性加成、不可升级；战斗中使用其技能后消耗 1 个；每人最多携带 3 个同类道具（占用背包）。</div>
+      <div class="wiki-p" style="font-size:12px;color:var(--txt2)">工坊 Lv.${g.workshopLv||1}${(g.workshopLv||1)>1?`：材料消耗 -${((g.workshopLv||1)-1)*10}%`:''}。打造需<b>工匠当值</b>并消耗其体力。道具为消耗品：不提供属性加成、不可升级；战斗中使用其技能后消耗 1 个；每人最多携带 3 个同类道具（占用背包）。</div>
+      <div class="wiki-p" style="margin-top:6px">${smith
+        ? `⚒️ 工匠：<b>${smith.name}</b>（⚡ ${smith.stamina}/${smith.maxStamina}${smith.injured?'，<span style="color:var(--red2)">重伤停产</span>':''}）`
+        : '<span style="color:var(--red2)">⚠️ 未指派工匠——请先到「职务指派」安排当值</span>'}</div>
       ${DATA.RECIPES.map(r=>{
         const e = DATA.EQUIPS[r.id];
         const cost = Game.craftCost(r.id);
-        const costStr = Object.entries(cost).map(([k,v])=>`${UI.resIcon(k)}×${v}`).join('　');
-        const ok = Object.entries(cost).every(([k,v])=>(g.res[k]||0) >= v);
+        const costStr = Object.entries(cost).map(([k,v])=>`${UI.resIcon(k)}×${v}`).join('　') + `　⚡×${r.stamina||0}`;
+        const ok = !!smith && !smith.injured && smith.stamina >= (r.stamina||0) && Object.entries(cost).every(([k,v])=>(g.res[k]||0) >= v);
+        const why = !smith ? '未指派工匠' : (smith.injured ? '工匠重伤' : (smith.stamina < (r.stamina||0) ? '工匠体力不足' : ''));
         return `<div class="char-card" style="align-items:center;margin-top:8px">
           <div style="font-size:24px">${e.icon}</div>
           <div style="flex:1;min-width:0">
             <b>${e.name}</b> ${e.consumable?'<span class="tag yellow">消耗品</span>':`<span class="tag">${UI.slotCn(e.slot)}</span>`}<br>
             <span style="font-size:12px;color:var(--txt2)">${e.desc}</span><br>
-            <span style="font-size:12px;color:${ok?'var(--green2)':'var(--red2)'}">成本：${costStr}</span>
+            <span style="font-size:12px;color:${ok?'var(--green2)':'var(--red2)'}">成本：${costStr}${why?`（${why}）`:''}</span>
           </div>
           <button class="btn primary small" ${ok?'':'disabled'} onclick="Game.craft('${r.id}')">${e.consumable?'制造 ×1':'制造'}</button>
         </div>`;
@@ -2778,7 +2810,7 @@ const UI = {
         <div class="wiki-p" style="margin-top:6px">丧尸强度与队伍实力挂钩：<b>丧尸等级 = 出战角色的平均等级</b>（向下取整），每级生命 +30 / 攻击 +6 / 防御 +3。每个区域有各自的丧尸数量区间与类型概率——<b>旧钢铁工厂有约 5% 概率遭遇暴君变异体</b>，军事基地必定有暴君坐镇。丧尸潮预警会额外增加 2 只丧尸并使奖励翻倍。</div>
       </div>`;
     const slotName = id => (DATA.SLOTS.find(s=>s.id===id)||{name:id}).name;
-    const craftMap = {}; DATA.RECIPES.forEach(r=>{ craftMap[r.id] = `${r.cost.gold}💰` + (r.cost.wood?` + ${r.cost.wood}🪵`:'') + (r.cost.metal?` + ${r.cost.metal}⚙️`:'') + (r.cost.fabric?` + ${r.cost.fabric}🧵`:''); });
+    const craftMap = {}; DATA.RECIPES.forEach(r=>{ craftMap[r.id] = `${r.cost.gold}💰` + (r.cost.wood?` + ${r.cost.wood}🪵`:'') + (r.cost.metal?` + ${r.cost.metal}⚙️`:'') + (r.cost.fabric?` + ${r.cost.fabric}🧵`:'') + ` + ${r.stamina}⚡`; });
     const prodMap = {
       bread:'厨房烤面包：1🍞食物 + 10⚡',
       antidote:'实验室生产：15⚡ + 15💰 + 1⚙️ + 3💊',

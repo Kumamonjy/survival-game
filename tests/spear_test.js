@@ -15,6 +15,11 @@ eval(code);
 const assert=(c,n)=>console.log(c?'PASS '+n:'FAIL '+n);
 const { Game, Battle, UI, DATA } = window.__T;
 Game.g = Game.newGame(); Game.currentSlot = 1;
+  { // V110 工坊当值：指派专属工匠（独立角色，避免污染既有体力断言）
+    const sm = Game.createChar('civilian','工匠甲'); sm.stamina = 9999; sm.injured = false;
+    Game.g.chars.push(sm); Game.g.workshopLv = Math.max(Game.g.workshopLv||0, 1);
+    Game.assignWorkshop(sm.id);
+  }
 const g = Game.g;
 
 (async () => {

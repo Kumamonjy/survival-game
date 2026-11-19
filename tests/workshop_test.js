@@ -15,6 +15,12 @@ eval(code);
 const assert=(c,n)=>console.log(c?'PASS '+n:'FAIL '+n);
 const { Game, Battle, UI, DATA } = window.__T;
 Game.g = Game.newGame(); Game.currentSlot = 1;
+  { // V110 工坊当值：指派专属工匠（独立角色，避免污染既有体力断言）
+    const sm = Game.createChar('civilian','工匠甲'); sm.stamina = 9999; sm.injured = false;
+    Game.g.chars.push(sm);
+    Game.g.workshopLv = Math.max(Game.g.workshopLv||0, 0);   // 工坊由下方 T2a 正式建造
+    window.__SM = sm;
+  }
 const g = Game.g;
 
 (async () => {
@@ -27,6 +33,7 @@ const g = Game.g;
   g.res.gold = 300;
   Game.buildWorkshop();
   assert(g.workshopLv === 1 && g.res.gold === 300-DATA.WORKSHOP.buildCost, 'T2a 建造工坊扣 250 金币');
+  Game.assignWorkshop(window.__SM.id);   // V110 建成后指派工匠
 
   // ===== T3 制造石块（金币+金属） =====
   g.res.gold = 100; g.res.metal = 5; g.res.fabric = 0;
