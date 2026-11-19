@@ -841,15 +841,15 @@ DATA.EQUIPS = {
 DATA.EMPTY_EQUIP = { weapon:null, head:null, armor:null, shoes:null, acc:null, item:null };
 
 /* 工坊：制造装备 */
-DATA.WORKSHOP = { name:'工坊', icon:'🏭', buildCost:250, upgradeCost:250, maxLv:5, desc:'消耗金币、布料与金属制造装备，造好的装备放入背包后可在人物信息中穿戴。每升一级，制造与升级装备的材料消耗减少 10%（向上取整）。' };
+DATA.WORKSHOP = { name:'工坊', icon:'🏭', buildCost:250, upgradeCost:250, maxLv:5, desc:'消耗金币、木材、布料与金属制造装备，造好的装备放入背包后可在人物信息中穿戴。每升一级，制造与升级装备的材料消耗减少 10%（向上取整）。' };
 DATA.RECIPES = [
   { id:'stone',  cost:{ gold:12, metal:3 } },
   { id:'dart',   cost:{ gold:8, metal:2 } },
   { id:'bottle', cost:{ gold:20, metal:1, fabric:1 } },
-  { id:'stick',  cost:{ gold:25, metal:4 } },
-  { id:'slingshot', cost:{ gold:25, metal:3 } },
-  { id:'bow',    cost:{ gold:50, metal:5, fabric:3 } },
-  { id:'spear',  cost:{ gold:65, metal:6, fabric:3 } },
+  { id:'stick',  cost:{ gold:20, wood:5 } },
+  { id:'slingshot', cost:{ gold:20, wood:3, fabric:1 } },
+  { id:'bow',    cost:{ gold:40, wood:5, fabric:3 } },
+  { id:'spear',  cost:{ gold:60, wood:4, metal:3 } },
   { id:'sweater', cost:{ gold:75, fabric:8 } },
   { id:'chood',  cost:{ gold:32, fabric:4 } },
   { id:'cshoes', cost:{ gold:40, fabric:4 } },
@@ -2595,7 +2595,7 @@ const UI = {
       <div class="wiki-sec panel"><h4>🧰 装备与工坊</h4>
         <div class="wiki-p">
         · 每名角色有 <b>5 个装备位</b>（武器 / 头盔 / 衣服 / 鞋子 / 饰品）+ <b>1 个道具位</b>（消耗品）。角色初始<b>没有装备</b>，需要建造工坊制造后穿戴<br>
-        · <b>工坊</b>（营地建筑，250 💰 建造）：消耗 <b>金币 / 布料 / 金属</b> 制造装备——飞镖 8💰+2⚙️、石块 12💰+3⚙️、水瓶 20💰+1⚙️+1🧵、木棍 25💰+4⚙️、布帽 32💰+4🧵、布鞋 40💰+4🧵、布衣 48💰+5🧵；新档背包自带 2 布衣、2 布鞋、2 石块可先穿<br>
+        · <b>工坊</b>（营地建筑，250 💰 建造）：消耗 <b>金币 / 木材 / 布料 / 金属</b> 制造装备——飞镖 8💰+2⚙️、石块 12💰+3⚙️、水瓶 20💰+1⚙️+1🧵、木棍 20💰+5🪵、弹弓 20💰+3🪵+1🧵、木弓 40💰+5🪵+3🧵、长枪 60💰+4🪵+3⚙️；新档背包自带 2 布衣、2 布鞋、2 石块可先穿<br>
         · <b>装备升级</b>：每件装备独立升级，每级属性加成 +20%（基于初始值，血/体/攻/防），最高 +5；费用 = 制造成本 × (当前级+1)<br>
         · <b>装备分解</b>：分解背包中不需要的装备，返还 50% 制造成本（向上取整）；穿戴中的装备需先卸下再分解<br>
         · <b>道具（消耗品）</b>：不提供属性加成、不可升级；每人在人物信息「道具」格携带（同类最多 3 个，占用背包）；战斗中使用道具技能后消耗 1 个，用完即失效<br>

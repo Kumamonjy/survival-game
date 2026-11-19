@@ -24,13 +24,13 @@ const g = Game.g;
   assert(SP.skill && SP.skill.shape==='line' && SP.skill.lineLen===2 && SP.skill.mult===1.0 && SP.skill.cost===20 && SP.skill.cd===2 && !SP.skill.equipSkill, 'T1b 穿刺：直线2格 100% / 20⚡ / CD2 / 非消耗型');
   assert(SW && SW.slot==='armor' && SW.stats.hp===35 && SW.stats.def===10, 'T1c 毛衣：生命+35 / 防御+10');
   const rSp = DATA.RECIPES.find(r=>r.id==='spear'), rSw = DATA.RECIPES.find(r=>r.id==='sweater');
-  assert(rSp && rSp.cost.gold===65 && rSp.cost.metal===6 && rSp.cost.fabric===3, 'T1d 长枪配方 65💰+6⚙️+3🧵');
+  assert(rSp && rSp.cost.gold===60 && rSp.cost.wood===4 && rSp.cost.metal===3, 'T1d 长枪配方 60💰+4🪵+3⚙️');
   assert(rSw && rSw.cost.gold===75 && rSw.cost.fabric===8, 'T1e 毛衣配方 75💰+8🧵');
 
   // T2 属性与射程落地
   const s1 = Game.createChar('soldier', '老兵', false);
   g.chars.push(s1);
-  g.workshopLv = 1; g.res.gold = 500; g.res.metal = 50; g.res.fabric = 50;
+  g.workshopLv = 1; g.res.gold = 500; g.res.wood = 50; g.res.metal = 50; g.res.fabric = 50;
   Game.craft('spear'); const sp1 = g.bagInst.find(e=>e.id==='spear');
   Game.craft('sweater'); const sw1 = g.bagInst.find(e=>e.id==='sweater');
   assert(sp1 && sw1, 'T2a 打造入包');

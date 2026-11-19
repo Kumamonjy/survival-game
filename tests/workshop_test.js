@@ -34,12 +34,12 @@ const g = Game.g;
   assert(g.bag.stone===3 && g.res.gold===100-12 && g.res.metal===5-3, 'T3a 制造石块：扣 12💰+3⚙️（初始2+造1=3）');
 
   // ===== T4 材料不足拒绝 =====
-  g.res.metal = 0;
-  Game.craft('stick');   // 需 2 金属
-  assert(!g.bag.stick, 'T4a 金属不足不能造木棍');
+  g.res.wood = 0;
+  Game.craft('stick');   // 需 5 木材
+  assert(!g.bag.stick, 'T4a 木材不足不能造木棍');
   g.res.fabric = 1;
   const clothCnt = g.bag.cloth;   // 新档自带 2 件
-  Game.craft('cloth');   // 需 4 布料
+  Game.craft('cloth');   // 需 5 布料
   assert(g.bag.cloth===clothCnt, 'T4b 布料不足不能造布衣（数量不增）');
 
   // ===== T5 制造布系装备（布料） =====

@@ -25,20 +25,20 @@ const [s1, s2] = g.chars;
 
   // T2 制造产生新实例（独立 uid）
   g.workshopLv = 1;
-  g.res.gold = 200; g.res.metal = 10;
+  g.res.gold = 200; g.res.wood = 20;
   const n0 = g.bagInst.length;
   Game.craft('stick');
   assert(g.bagInst.length===n0+1 && Game.bagCount('stick')===1, 'T2 制造生成独立实例');
   const stick = g.bagInst[g.bagInst.length-1];
 
   // T3 升级：成本 = 制造成本 × (lv+1)，属性 +20%
-  g.res.gold = 500; g.res.metal = 50;
+  g.res.gold = 500; g.res.wood = 50;
   const stickE = DATA.EQUIPS.stick;
-  Game.upgradeEquip(stick.uid);          // +1：25💰+4⚙️
+  Game.upgradeEquip(stick.uid);          // +1：20💰+5🪵
   assert(stick.lv===1 && g.bagInst.length===n0+1, `T3a 升级到 +1（${stick.lv}）`);
-  assert(g.res.gold===500-25 && g.res.metal===50-4, `T3b +1 成本 25💰+4⚙️（${g.res.gold}/${g.res.metal}）`);
-  Game.upgradeEquip(stick.uid);          // +2：50💰+8⚙️
-  assert(stick.lv===2 && g.res.gold===475-50 && g.res.metal===46-8, `T3c +2 成本 50💰+8⚙️`);
+  assert(g.res.gold===500-20 && g.res.wood===45, `T3b +1 成本 20💰+5🪵（${g.res.gold}/${g.res.wood}）`);
+  Game.upgradeEquip(stick.uid);          // +2：40💰+10🪵
+  assert(stick.lv===2 && g.res.gold===480-40 && g.res.wood===35, `T3c +2 成本 40💰+10🪵`);
   // 属性系数：攻 +5 → +1 级 = round(5*1.2)=6
   const probe = { equip:{ weapon:{ uid:'x', id:'stick', lv:1 } }, maxHp:0, maxStamina:0, atk:0, def:0 };
   const st1 = Game.equipStats(probe);
@@ -55,17 +55,17 @@ const [s1, s2] = g.chars;
   stick.lv = 0;
 
   // T5 材料不足拦截
-  g.res.metal = 0;
+  g.res.wood = 0;
   const lvBefore = stick.lv;
   Game.upgradeEquip(stick.uid);
   assert(stick.lv===lvBefore, 'T5 材料不足无法升级');
 
   // T6 分解：返还 50% 向上取整，实例移除
-  g.res.gold = 100; g.res.metal = 0;
+  g.res.gold = 100; g.res.wood = 0;
   const cntBefore = g.bagInst.length;
-  Game.salvageEquip(stick.uid);          // 木棍 25💰+4⚙️ → 返 13💰+2⚙️
+  Game.salvageEquip(stick.uid);          // 木棍 20💰+5🪵 → 返 10💰+3🪵
   assert(g.bagInst.length===cntBefore-1 && Game.bagCount('stick')===0, 'T6a 分解移除实例+投影');
-  assert(g.res.gold===113 && g.res.metal===2, `T6b 返还 ceil(12.5)=13💰+ceil(2)=2⚙️（${g.res.gold}/${g.res.metal}）`);
+  assert(g.res.gold===110 && g.res.wood===3, `T6b 返还 ceil(10)=10💰+ceil(2.5)=3🪵（${g.res.gold}/${g.res.wood}）`);
 
   // T7 穿戴实例：穿上后离开背包、卸下放回、lv 跟随
   const clothInst = g.bagInst.find(e=>e.id==='cloth');

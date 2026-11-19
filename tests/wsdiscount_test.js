@@ -22,46 +22,46 @@ const g = Game.g;
   assert(DATA.WORKSHOP.maxLv===5 && DATA.WORKSHOP.upgradeCost===250, 'T1a 工坊 maxLv5 / 升级 250💰');
   assert(DATA.WORKSHOP.desc.includes('10%'), 'T1b 描述含折扣说明');
 
-  // T2 Lv1 无折扣（木棍 25💰+4⚙️）
+  // T2 Lv1 无折扣（木棍 20💰+5🪵）
   g.workshopLv = 1;
   const c1 = Game.craftCost('stick');
-  assert(c1.gold===25 && c1.metal===4, 'T2a Lv1 无折扣：木棍 25💰+4⚙️');
+  assert(c1.gold===20 && c1.wood===5, 'T2a Lv1 无折扣：木棍 20💰+5🪵');
   const u1 = Game.craftCost('stick', 1);   // 升 +1：×2 无折扣
-  assert(u1.gold===50 && u1.metal===8, 'T2b Lv1 装备升级 +1：50💰+8⚙️');
+  assert(u1.gold===40 && u1.wood===10, 'T2b Lv1 装备升级 +1：40💰+10🪵');
 
-  // T3 Lv2 -10%：打造 ceil(25×0.9)=23💰 / ceil(4×0.9)=4⚙️
-  g.res.gold = 1000; g.res.metal = 100; g.res.fabric = 100;
+  // T3 Lv2 -10%：打造 ceil(20×0.9)=18💰 / ceil(5×0.9)=5🪵
+  g.res.gold = 1000; g.res.wood = 100; g.res.metal = 100; g.res.fabric = 100;
   Game.upgradeBuilding('workshop');
   assert(g.workshopLv===2, 'T3a 升工坊 Lv2');
   const c2 = Game.craftCost('stick');
-  assert(c2.gold===23 && c2.metal===4, `T3b Lv2 打造：23💰+4⚙️（${c2.gold}+${c2.metal}）`);
-  g.res.gold = 500; g.res.metal = 50;
-  const gold0 = g.res.gold, metal0 = g.res.metal;
+  assert(c2.gold===18 && c2.wood===5, `T3b Lv2 打造：18💰+5🪵（${c2.gold}+${c2.wood}）`);
+  g.res.gold = 500; g.res.wood = 50;
+  const gold0 = g.res.gold, wood0 = g.res.wood;
   Game.craft('stick');
   const inst = g.bagInst[g.bagInst.length-1];
-  assert(g.res.gold===gold0-23 && g.res.metal===metal0-4 && inst.id==='stick', 'T3c 实扣 23💰+4⚙️');
+  assert(g.res.gold===gold0-18 && g.res.wood===wood0-5 && inst.id==='stick', 'T3c 实扣 18💰+5🪵');
 
-  // T4 Lv2 装备升级折扣：+1（当前级0）= ceil(25×1×0.9)=23💰 / ceil(4×1×0.9)=4⚙️
+  // T4 Lv2 装备升级折扣：+1（当前级0，系数×1）= ceil(20×0.9)=18💰 / ceil(5×0.9)=5🪵
   Game.upgradeEquip(inst.uid);
-  assert(inst.lv===1 && g.res.gold===gold0-23-23 && g.res.metal===metal0-4-4, `T4 Lv2 升级 +1 实扣 23💰+4⚙️`);
+  assert(inst.lv===1 && g.res.gold===gold0-18-18 && g.res.wood===wood0-5-5, `T4 Lv2 升级 +1 实扣 18💰+5🪵`);
 
-  // T5 Lv3 -20%：打造 ceil(25×0.8)=20💰 / ceil(4×0.8)=4⚙️（3.2→4）
+  // T5 Lv3 -20%：打造 ceil(20×0.8)=16💰 / ceil(5×0.8)=4🪵
   g.res.gold = 1000;
   Game.upgradeBuilding('workshop');
   assert(g.workshopLv===3, 'T5a 升工坊 Lv3');
   const c3 = Game.craftCost('stick');
-  assert(c3.gold===20 && c3.metal===4, `T5b Lv3 打造：20💰+4⚙️（${c3.gold}+${c3.metal}）`);
+  assert(c3.gold===16 && c3.wood===4, `T5b Lv3 打造：16💰+4🪵（${c3.gold}+${c3.wood}）`);
   const c3b = Game.craftCost('stick', 1);
-  assert(c3b.gold===40 && c3b.metal===7, `T5c Lv3 升 +1→+2（级数×2）：ceil(50×0.8)=40💰 / ceil(8×0.8)=7⚙️（${c3b.gold}+${c3b.metal}）`);
+  assert(c3b.gold===32 && c3b.wood===8, `T5c Lv3 升 +1→+2（级数×2）：ceil(40×0.8)=32💰 / ceil(10×0.8)=8🪵（${c3b.gold}+${c3b.wood}）`);
   const c3c = Game.craftCost('stick', 0);
-  assert(c3c.gold===20 && c3c.metal===4, 'T5d Lv3 装备升级 +1（当前级0）：20💰+4⚙️');
+  assert(c3c.gold===16 && c3c.wood===4, 'T5d Lv3 装备升级 +1（当前级0）：16💰+4🪵');
 
   // T6 UI 弹窗显示折扣
   g.res.gold = 500; g.res.metal = 50;
   UI.openCraftModal();
   const ch = elems['modal-body'] ? elems['modal-body'].innerHTML : '';
   assert(ch.includes('工坊 Lv.3') && ch.includes('-20%'), 'T6a 打造弹窗显示折扣');
-  assert(ch.includes('×20'), 'T6b 打造弹窗显示折后成本');
+  assert(ch.includes('×16'), 'T6b 打造弹窗显示折后成本');
   UI.openUpgradeModal();
   const uh = elems['modal-body'] ? elems['modal-body'].innerHTML : '';
   assert(uh.includes('已含工坊折扣 -20%'), 'T6c 升级弹窗显示折扣');
@@ -76,11 +76,11 @@ const g = Game.g;
   Game.upgradeBuilding('workshop');
   assert(g.workshopLv===4, 'T8a 升工坊 Lv4');
   const c4 = Game.craftCost('stick');
-  assert(c4.gold===18 && c4.metal===3, `T8b Lv4 打造 -30%：ceil(25×0.7)=18💰+ceil(4×0.7)=3⚙️（${c4.gold}+${c4.metal}）`);
+  assert(c4.gold===14 && c4.wood===4, `T8b Lv4 打造 -30%：ceil(20×0.7)=14💰+ceil(5×0.7)=4🪵（${c4.gold}+${c4.wood}）`);
   Game.upgradeBuilding('workshop');
   assert(g.workshopLv===5, 'T8c 升工坊 Lv5');
   const c5 = Game.craftCost('stick');
-  assert(c5.gold===15 && c5.metal===3, `T8d Lv5 打造 -40%：ceil(25×0.6)=15💰+ceil(4×0.6)=3⚙️（${c5.gold}+${c5.metal}）`);
+  assert(c5.gold===12 && c5.wood===3, `T8d Lv5 打造 -40%：ceil(20×0.6)=12💰+ceil(5×0.6)=3🪵（${c5.gold}+${c5.wood}）`);
   Game.upgradeBuilding('workshop');
   assert(g.workshopLv===5, 'T8e Lv5 为上限');
   UI.renderBuild();
