@@ -415,6 +415,17 @@ button:disabled { opacity:.45; cursor:not-allowed; }
   background:rgba(255,255,255,.04); border:1px solid var(--line); color:var(--txt2);
 }
 .wiki-subtab.active { background:rgba(125,163,69,.22); border-color:#7a9a44; color:var(--yellow); font-weight:bold; }
+/* 打造：紧凑行（图标 + 名称/摘要 + 成本/按钮） */
+.craft-row { display:flex; align-items:center; gap:9px; padding:7px 9px; margin-top:6px; border-radius:8px;
+  background:rgba(255,255,255,.035); border:1px solid rgba(120,140,90,.22); }
+.craft-ic { flex:none; width:26px; text-align:center; font-size:21px; }
+.craft-info { flex:1; min-width:0; }
+.craft-nm { font-size:14px; display:flex; align-items:center; gap:5px; flex-wrap:wrap; }
+.craft-sub { font-size:11px; color:var(--txt2); line-height:1.35; margin-top:2px; }
+.craft-act { flex:none; display:flex; flex-direction:column; align-items:flex-end; gap:4px; }
+.craft-cost { font-size:11px; color:var(--green2); white-space:nowrap; }
+.craft-cost.no { color:var(--red2); }
+.craft-act .btn { padding:4px 9px; font-size:12px; }
 .wiki-sec { margin-bottom:14px; }
 .wiki-sec h4 { color:var(--green2); margin-bottom:6px; font-size:14px; }
 .wiki-table { width:100%; border-collapse:collapse; font-size:12px; }
@@ -1379,7 +1390,7 @@ const Game = {
       const lv = eq && typeof eq==='object' ? (eq.lv||0) : 0;
       const e = DATA.EQUIPS[id];
       if (!e) return;
-      Object.entries(e.stats).forEach(([k,v])=>{ sum[k]=(sum[k]||0)+Math.round(v*(1+0.2*lv)); });   // 每级 +20% 初始加成
+      Object.entries(e.stats||{}).forEach(([k,v])=>{ sum[k]=(sum[k]||0)+Math.round(v*(1+0.2*lv)); });   // 每级 +20% 初始加成（旧档误把消耗品放武器槽时不崩）
     });
     return sum;
   },
@@ -2435,7 +2446,7 @@ const UI = {
           <button class="btn" style="flex:1" onclick="UI.openSalvageModal()">♻️ 分解</button>
         </div>
         ${upRow(wlv, W, "Game.upgradeBuilding('workshop')", wlv>1?`<span class="tag yellow">材料 -${(wlv-1)*10}%</span>`:'')}
-        <div class="wiki-p" style="font-size:12px;color:var(--txt2);margin-top:8px">打造需工匠当值并消耗其体力（消耗品 5⚡ ~ 长枪 25⚡）。升级：每级属性加成 +20%（最高 +5），费用 = 制造成本 × (当前级+1)；分解：返还 50% 成本（向上取整）。工坊每升一级，制造与升级装备的材料消耗 -10%（向上取整）。</div>`;
+        <div class="wiki-p" style="font-size:12px;color:var(--txt2);margin-top:8px">打造/升级消耗工匠体力；升级每级 +20%（上限 +5）；分解返还 50% 材料；工坊每级材料 -10%。</div>`;
         return cardShell('🏭', '工坊', wlv, wlv>0,
           `消耗金币/木材/布料/金属制造装备；每升一级材料消耗 -10%。`,
           wBody);
@@ -2513,11 +2524,11 @@ const UI = {
         const sameType = !it || it.id===id;
         const full = it && it.count>=3;
         const ok = sameType && !full && inBag>0;
-        return `<div class="char-card" style="align-items:center;margin-top:6px">
-          <div style="font-size:22px">${E.icon}</div>
-          <div style="flex:1;min-width:0">
-            <b>${E.name}</b> <span class="tag">消耗品</span> <span style="font-size:12px;color:var(--txt2)">背包 ×${inBag}</span><br>
-            <span style="font-size:12px;color:var(--txt2)">${E.desc}</span>
+        return `<div class="craft-row">
+          <div class="craft-ic">${E.icon}</div>
+          <div class="craft-info">
+            <div class="craft-nm"><b>${E.name}</b> <span class="tag yellow">消耗品</span> <span class="craft-sub">背包 ×${inBag}</span></div>
+            <div class="craft-sub">${UI.skillBrief(E.skill)}</div>
           </div>
           <button class="btn primary small" ${ok?'':'disabled'} onclick="Game.carryItem('${cid}','${id}')">携带</button>
         </div>`;
@@ -2525,28 +2536,54 @@ const UI = {
       ${UI.closeRow()}`);
   },
 
+  /* 技能一行摘要：名称 + 射程/伤害/附加状态/体力，供打造与道具界面压缩显示 */
+  skillBrief(sk) {
+    if (!sk) return '';
+    const dmg = sk.fixedDmg ? `${sk.fixedDmg}伤` : (sk.mult ? `${Math.round(sk.mult*100)}%攻` : (sk.flatHeal ? `回${sk.flatHeal}❤️` : (sk.regenAmt ? `+${sk.regenAmt}⚡` : '')));
+    const sts = [sk.burn&&`燃烧${sk.burn.turns||''}`, sk.bleed&&`流血${sk.bleed.turns||''}`, sk.poison&&`中毒${sk.poison.turns||''}`, sk.stun&&`眩晕${sk.stun.turns||''}`].filter(Boolean).join('+');
+    return `「${sk.name}」${[sk.range?sk.range+'格':'', dmg, sts&&'+'+sts, sk.cost&&`${sk.cost}⚡`].filter(Boolean).join(' ')}`;
+  },
+  /* 打造弹窗：按类别分标签（消耗品/武器/防具/饰品），紧凑单行卡片 */
+  openCraftTab(tab) { UI.craftTab = tab; UI.openCraftModal(); },
   openCraftModal() {
     const g = Game.g;
     const smith = g.workshopChef ? g.chars.find(c=>c.id===g.workshopChef && !c.dead) : null;
+    const CATS = [
+      { id:'item',   name:'消耗品', icon:'🧪' },
+      { id:'weapon', name:'武器',   icon:'🗡️' },
+      { id:'armor',  name:'防具',   icon:'🛡️' },
+      { id:'acc',    name:'饰品',   icon:'📿' },
+    ];
+    const catOf = e => e.consumable ? 'item' : (['head','armor','shoes'].includes(e.slot) ? 'armor' : e.slot);
+    const groups = CATS.map(c=>({ ...c, items: DATA.RECIPES.filter(r=>DATA.EQUIPS[r.id] && catOf(DATA.EQUIPS[r.id])===c.id) })).filter(c=>c.items.length);
+    const tab = groups.some(c=>c.id===UI.craftTab) ? UI.craftTab : (groups[0] || {id:'item'}).id;
+    const cur = groups.find(c=>c.id===tab);
     UI.modal(`<h3>🔨 打造装备</h3>
-      <div class="wiki-p" style="font-size:12px;color:var(--txt2)">工坊 Lv.${g.workshopLv||1}${(g.workshopLv||1)>1?`：材料消耗 -${((g.workshopLv||1)-1)*10}%`:''}。打造需<b>工匠当值</b>并消耗其体力。道具为消耗品：不提供属性加成、不可升级；战斗中使用其技能后消耗 1 个；每人最多携带 3 个同类道具（占用背包）。</div>
-      <div class="wiki-p" style="margin-top:6px">${smith
+      <div class="wiki-p" style="font-size:12px;color:var(--txt2)">工坊 Lv.${g.workshopLv||1}${(g.workshopLv||1)>1?`（材料 -${((g.workshopLv||1)-1)*10}%）`:''} · 需工匠当值并消耗体力。消耗品不提供属性、不可升级，战斗中使用后 -1，每人最多携带 3 个。</div>
+      <div class="wiki-p" style="margin-top:4px;font-size:12px">${smith
         ? `⚒️ 工匠：<b>${smith.name}</b>（⚡ ${smith.stamina}/${smith.maxStamina}${smith.injured?'，<span style="color:var(--red2)">重伤停产</span>':''}）`
         : '<span style="color:var(--red2)">⚠️ 未指派工匠——请先到「职务指派」安排当值</span>'}</div>
-      ${DATA.RECIPES.map(r=>{
+      <div class="wiki-subtabs" style="margin-top:8px">${groups.map(c=>
+        `<span class="wiki-subtab${c.id===tab?' active':''}" onclick="UI.openCraftTab('${c.id}')">${c.icon} ${c.name} ${c.items.length}</span>`).join('')}</div>
+      ${(cur?cur.items:[]).map(r=>{
         const e = DATA.EQUIPS[r.id];
         const cost = Game.craftCost(r.id);
-        const costStr = UI.fmtMats(cost) + `　⚡×${r.stamina||0}`;
+        const costStr = UI.fmtMats(cost) + (r.stamina?`　⚡×${r.stamina}`:'');
         const chk = Game.canProduce(r.id);          // 统一判定：建筑/工匠/体力/材料
         const ok = chk.ok, why = chk.why||'';
-        return `<div class="char-card" style="align-items:center;margin-top:8px">
-          <div style="font-size:24px">${e.icon}</div>
-          <div style="flex:1;min-width:0">
-            <b>${e.name}</b> ${e.consumable?'<span class="tag yellow">消耗品</span>':`<span class="tag">${UI.slotCn(e.slot)}</span>`}<br>
-            <span style="font-size:12px;color:var(--txt2)">${e.desc}</span><br>
-            <span style="font-size:12px;color:${ok?'var(--green2)':'var(--red2)'}">成本：${costStr}${why?`（${why}）`:''}</span>
+        const brief = e.consumable
+          ? UI.skillBrief(e.skill)
+          : `${UI.eqStatsStr(e, 0)}${e.range?`　射程${e.range}`:''}${e.skill?`｜${UI.skillBrief(e.skill)}`:''}`;
+        return `<div class="craft-row">
+          <div class="craft-ic">${e.icon}</div>
+          <div class="craft-info">
+            <div class="craft-nm"><b>${e.name}</b> <span class="tag ${e.consumable?'yellow':'blue'}">${e.consumable?'消耗品':UI.slotCn(e.slot)}</span></div>
+            <div class="craft-sub">${brief}</div>
           </div>
-          <button class="btn primary small" ${ok?'':'disabled'} onclick="Game.craft('${r.id}')">${e.consumable?'制造 ×1':'制造'}</button>
+          <div class="craft-act">
+            <div class="craft-cost${ok?'':' no'}"${why?` title="${why}"`:''}>${costStr}</div>
+            <button class="btn primary small" ${ok?'':'disabled'} onclick="Game.craft('${r.id}')">制造</button>
+          </div>
         </div>`;
       }).join('')}
       ${UI.closeRow()}`);

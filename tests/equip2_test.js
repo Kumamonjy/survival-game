@@ -91,17 +91,19 @@ const [s1, s2] = g.chars;
   assert(g.bagInst.length===cnt9 && g.res.gold===gold9, 'T9 穿戴中不可分解');
 
   // T10 旧档迁移：计数 bag → 实例、equip 字符串 → 对象、投影重建
-  const oldSave = { bag:{ stone:3, cloth:1 }, bagInst:[], chars:[ Object.assign({}, Game.createChar('soldier','旧人'), { equip:{ weapon:'stone', armor:null } }) ] };
+  const oldSave = { bag:{ stick:3, cloth:1 }, bagInst:[], chars:[ Object.assign({}, Game.createChar('soldier','旧人'), { equip:{ weapon:'stick', armor:null } }) ] };
   const gg = oldSave;
   // 直接走迁移逻辑（模拟 applySave 的装备段）
   gg.bagInst = gg.bagInst || [];
   if (gg.bagInst.length===0) Object.entries(gg.bag).forEach(([id,n])=>{ if (DATA.EQUIPS[id]) for(let i=0;i<n;i++) gg.bagInst.push({ uid:Game.newUid(), id, lv:0 }); });
   gg.bag = {}; gg.bagInst.forEach(e=>{ gg.bag[e.id]=(gg.bag[e.id]||0)+1; });
   gg.chars.forEach(c=>{ Object.entries(c.equip||{}).forEach(([slot,v])=>{ if (typeof v==='string') c.equip[slot] = { uid:Game.newUid(), id:v, lv:0 }; }); });
-  assert(gg.bagInst.length===4 && gg.bag.stone===3, 'T10a 旧计数迁移为 4 件实例');
-  assert(typeof gg.chars[0].equip.weapon==='object' && gg.chars[0].equip.weapon.id==='stone' && gg.chars[0].equip.weapon.lv===0, 'T10b 穿戴槽对象化');
+  assert(gg.bagInst.length===4 && gg.bag.stick===3, 'T10a 旧计数迁移为 4 件实例');
+  assert(typeof gg.chars[0].equip.weapon==='object' && gg.chars[0].equip.weapon.id==='stick' && gg.chars[0].equip.weapon.lv===0, 'T10b 穿戴槽对象化');
   const probe2 = { equip:{ weapon: gg.chars[0].equip.weapon }, maxHp:0, maxStamina:0, atk:0, def:0 };
   assert(Game.equipStats(probe2).atk===5, 'T10c 迁移后 +0 级属性正常');
+  // T10d 旧档把消耗品（石块）穿在武器槽：不再崩溃，按 0 属性处理
+  assert(Game.equipStats({ equip:{ weapon:{ uid:'x', id:'stone', lv:0 } } }).atk===0, 'T10d 消耗品误入武器槽时安全降级');
 
   // T11 UI 弹窗渲染
   UI.openUpgradeModal();

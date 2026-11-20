@@ -20,6 +20,7 @@ const hunter = Game.createChar('hunter', '猎手', false);      // 自身射程 
 g.chars.push(soldier, scout, hunter);
 assert(Game.effRange(soldier)===1 && Game.effRange(scout)===2 && Game.effRange(hunter)===3, 'T2a 无武器 = 自身射程（1/2/3）');
 g.workshopLv = 1; g.res.gold = 500; g.res.wood = 50; g.res.fabric = 50;
+const smith = Game.createChar('civilian','工匠甲'); smith.stamina = 999; g.chars.push(smith); Game.assignWorkshop(smith.id);
 Game.craft('slingshot'); const sl1 = g.bagInst.find(e=>e.id==='slingshot');
 Game.equipChar(soldier.id, 'weapon', sl1.uid);
 assert(Game.effRange(soldier)===2 && Game.effAtk(soldier)===soldier.atk+5, 'T2b 军人(射程1)穿弹弓：射程 2 / 攻 +5');
@@ -50,7 +51,7 @@ assert(atkSet.some(([r,c])=>r===5&&c===8), 'T4b 3 格外敌人进入攻击目标
 
 // T5 工坊弹窗列出两把新武器
 g.res.gold = 300; g.res.metal = 20; g.res.fabric = 10;
-UI.openCraftModal();
+UI.openCraftTab('weapon');
 const cm = elems['modal-body'] ? elems['modal-body'].innerHTML : '';
 assert(cm.includes('弹弓') && cm.includes('木弓'), 'T5 打造弹窗含弹弓/木弓');
 

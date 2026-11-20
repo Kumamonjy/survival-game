@@ -6,8 +6,8 @@ const g = Game.g;
 const [s1, s2] = g.chars;
 
 (() => {
-  // 给 s1 穿上装备：武器石块(+5攻) + 防具布衣(+25血 +8防)
-  s1.equip.weapon = 'stone'; s1.equip.armor = 'cloth';
+  // 给 s1 穿上装备：武器木棍(+5攻) + 防具布衣(+25血 +8防)
+  s1.equip.weapon = 'stick'; s1.equip.armor = 'cloth';
   const atkB = Game.effAtk(s1), defB = Game.effDef(s1), hpB = Game.effHp(s1), stB = Game.effSt(s1);
   assert(atkB>s1.atk && defB>s1.def && hpB>s1.maxHp && stB>=s1.maxStamina, `T1 装备加成生效（攻${atkB}>${s1.atk} 防${defB}>${s1.def} 血${hpB}>${s1.maxHp}）`);
 

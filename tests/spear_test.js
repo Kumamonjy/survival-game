@@ -73,8 +73,12 @@ const g = Game.g;
 
   // T7 打造弹窗 + 百科自动入表
   g.res.gold = 300; g.res.metal = 20; g.res.fabric = 20;
-  UI.openCraftModal();
-  assert((elems['modal-body'] ? elems['modal-body'].innerHTML : '').includes('长枪') && (elems['modal-body'] ? elems['modal-body'].innerHTML : '').includes('毛衣'), 'T7a 打造弹窗含长枪/毛衣');
+  UI.openCraftTab('weapon');
+  let cmh = elems['modal-body'] ? elems['modal-body'].innerHTML : '';
+  assert(cmh.includes('长枪') && !cmh.includes('毛衣'), 'T7a 打造弹窗「武器」页含长枪');
+  UI.openCraftTab('armor');
+  cmh = elems['modal-body'] ? elems['modal-body'].innerHTML : '';
+  assert(cmh.includes('毛衣') && !cmh.includes('长枪'), 'T7a2 打造弹窗「防具」页含毛衣');
   UI.wikiTab = 'equip';
   UI.openWiki();
   const wh = elems['wiki-content'].innerHTML;
