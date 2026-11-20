@@ -45,6 +45,7 @@ const g = Game.g;
   g.towerArrowLv = 1; UI.renderBuild();
   bp = elems['build-page'].innerHTML;
   assert(bp.includes('已建1/2'), 'T5g 建成后入口显示已建数量');
+  assert(bp.includes('15⚡') && bp.includes('操作员本人不可出战'), 'T5h 工事卡提示 15⚡ 消耗与不可出战');
   g.towerArrowLv = 0;
 
   // T6 工坊选中：三功能按钮

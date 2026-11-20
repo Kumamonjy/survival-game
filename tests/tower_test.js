@@ -63,11 +63,13 @@ const mkB = (units) => ({ units, selected:units[0], terrain:mkTerrain(), mode:nu
   Game.assignTowerOp('ballista', op2.id);
   assert(g.towerArrowOp===op1.id && g.towerBallistaOp===op2.id, 'T5a 可指派操作员');
   assert(Game.dutyOf(op1.id)==='箭塔操控' && Game.dutyOf(op2.id)==='弩塔操控', 'T5b 操作员占用职务（不可一人兼两职）');
+  assert(!Game.canBattle(op1) && !Game.canBattle(op2), 'T5b2 操作员不可出战');
   assert(Game.towerOperator('arrow')===op1, 'T5c 健康操作员有效');
   const bSp = mkB([]); Battle.b = bSp;
   Battle.spawnTowers(bSp);
   const tws = bSp.units.filter(u=>u.isTower);
   assert(tws.length===2, 'T5d 已建造且已指派的工事全部部署');
+  assert(op1.stamina===35 && op2.stamina===35, 'T5d2 每次参战消耗操作员 15⚡');
   const bottomRows = [Battle.ROWS-2, Battle.ROWS-1];
   assert(tws.every(u=>bottomRows.includes(u.row)), 'T5e 工事仅出现在底部两行（' + tws.map(u=>u.row+','+u.col).join(' ') + '）');
   const keys = tws.map(u=>u.row+','+u.col);
@@ -95,6 +97,20 @@ const mkB = (units) => ({ units, selected:units[0], terrain:mkTerrain(), mode:nu
   Game.assignTowerOp('ballista', opBusy.id);
   assert(g.towerBallistaOp===op2.id, 'T5l 已有职务者不能兼任操作员');
   g.kitchenChef = null;
+
+  // 体力门槛：指派需 ≥15，参战时 <15 不部署
+  const weak = Game.createChar('soldier', '疲惫者'); weak.stamina = 5; g.chars.push(weak);
+  Game.assignTowerOp('arrow', weak.id);
+  assert(g.towerArrowOp===op1.id, 'T5m2 体力不足15不能指派操作员');
+  g.towerArrowOp = op1.id; op1.stamina = 10; op2.stamina = 50;
+  const bLow = mkB([]); Battle.b = bLow;
+  Battle.spawnTowers(bLow);
+  assert(!bLow.units.some(u=>u.towerType==='arrow'), 'T5n 操作员体力不足15时工事不参战');
+  assert(bLow.log.some(e=>e.msgs.some(m=>m.m.includes('体力不足'))), 'T5n2 给出体力不足提示');
+  op1.stamina = 35;
+  Game.unassignTowerOp('arrow'); Game.unassignTowerOp('ballista');
+  assert(Game.canBattle(op1) && Game.canBattle(op2), 'T5o 撤职后恢复出战资格');
+  g.towerArrowOp = null; g.towerBallistaOp = null;
 
   g.towerArrowLv = 0; g.towerBallistaLv = 0;
   g.towerArrowOp = null; g.towerBallistaOp = null;

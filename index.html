@@ -1137,13 +1137,13 @@ const DUTY_CONFIG = {
     fullMsg:g=>`训练位已满（Lv.${g.gymLv} 共 ${g.gymLv} 个），先撤下一位或升级健身房`,
     assignMsg:c=>`🏋️ ${c.name} 开始训练，每天 -${DATA.GYM.staminaCost}⚡ 换 +${DATA.GYM.expAmt} 经验（不影响出战）`,
     unassignMsg:c=>`${c.name} 已停止训练` },
-  towerArrow: { slot:'towerArrowOp', lv:'towerArrowLv', checks:['already','conflict','injured'], noInjured:true, action:'操控工事',
+  towerArrow: { slot:'towerArrowOp', lv:'towerArrowLv', checks:['already','conflict','injured','stamina'], noInjured:true, workCost:()=>15, action:'操控工事',
     already:'已经在操控箭塔了',
-    assignMsg:c=>`🏹 ${c.name} 成为箭塔操作员，外出探索时箭塔会自动参战（不影响出战）`,
+    assignMsg:c=>`🏹 ${c.name} 成为箭塔操作员（每次参战消耗 15⚡，不可出战），外出探索时箭塔会自动参战`,
     unassignMsg:c=>`${c.name} 已离开箭塔操作位，箭塔暂时无法参战` },
-  towerBallista: { slot:'towerBallistaOp', lv:'towerBallistaLv', checks:['already','conflict','injured'], noInjured:true, action:'操控工事',
+  towerBallista: { slot:'towerBallistaOp', lv:'towerBallistaLv', checks:['already','conflict','injured','stamina'], noInjured:true, workCost:()=>15, action:'操控工事',
     already:'已经在操控弩塔了',
-    assignMsg:c=>`🎯 ${c.name} 成为弩塔操作员，外出探索时弩塔会自动参战（不影响出战）`,
+    assignMsg:c=>`🎯 ${c.name} 成为弩塔操作员（每次参战消耗 15⚡，不可出战），外出探索时弩塔会自动参战`,
     unassignMsg:c=>`${c.name} 已离开弩塔操作位，弩塔暂时无法参战` },
 };
 
@@ -1341,8 +1341,9 @@ const Game = {
     Battle.start(UI.teamZone);
   },
 
-  /* 出战资格统一判定：在编、未重伤、体力足够支付 15⚡ 出征费（建筑职务一律不影响出战） */
+  /* 出战资格统一判定：在编、未重伤、体力足够支付 15⚡ 出征费；防御工事操作员不可出战 */
   canBattle(c) {
+    if (Game.towerOpOfChar(c.id)) return false;
     return !c.dead && !c.injured && c.stamina >= 15;
   },
 
@@ -1935,6 +1936,13 @@ const Game = {
     const c = Game.g.chars.find(x=>x.id===id && !x.dead);
     return c && !c.injured ? c : null;
   },
+  /* 角色担任哪座工事的操作员（用于禁止出战判断） */
+  towerOpOfChar(cid) {
+    if (!cid) return null;
+    if (cid === Game.g.towerArrowOp) return 'arrow';
+    if (cid === Game.g.towerBallistaOp) return 'ballista';
+    return null;
+  },
   assignTowerOp(key, cid){ Game.assignDuty(key==='arrow' ? 'towerArrow' : 'towerBallista', cid); },
   unassignTowerOp(key){ Game.unassignDuty(key==='arrow' ? 'towerArrow' : 'towerBallista'); },
   buildFarm(){ Game.buildBuilding('farm'); },
@@ -2327,26 +2335,26 @@ const UI = {
         staminaCost:Dg.staminaCost, fullTag:'训练位已满', capacity:()=>g.gymLv, assignLabel:'指派',
         assignCall:c=>`Game.assignGym('${c.id}')` },
       { built: g.towerArrowLv > 0,
-        title:`🏹 箭塔操作员（Lv.${g.towerArrowLv} · 无体力消耗）`,
+        title:`🏹 箭塔操作员（Lv.${g.towerArrowLv} · 每次参战 -15⚡ · 操作员不可出战）`,
         occupants: occOf(g.towerArrowOp),
         occBadge:o=>o.injured?'<span class="tag red">重伤（无法参战）</span>':'<span class="tag blue">操控箭塔</span>',
-        occSub:o=>`❤️ ${o.hp}/${Game.effHp(o)} · ⚡ ${o.stamina}/${Game.effSt(o)}（体力不影响工事）`,
+        occSub:o=>`⚡ ${o.stamina}/${Game.effSt(o)}（每次参战消耗 15⚡）`,
         unLabel:'撤职', unCall:()=>`Game.unassignTowerOp('arrow')`,
-        empty:'⚠️ 箭塔无人操控——外出探索时不会参战。从下方名单指派一名操作员。',
+        empty:'⚠️ 箭塔无人操控——外出探索时不会参战。从下方名单指派一名操作员（需 15⚡）。',
         cands: alive.filter(c=>c.id!==g.towerArrowOp),
-        candTitle:n=>`可指派操作员（${n}）：`, candSub:effSub, candBad:c=>c.injured,
-        staminaCost:0, fullTag:null, assignLabel:'指派',
+        candTitle:n=>`可指派操作员（${n}）：`, candSub:effSub, candBad:c=>c.injured||c.stamina<15,
+        staminaCost:15, fullTag:null, assignLabel:'指派',
         assignCall:c=>`Game.assignTowerOp('arrow','${c.id}')` },
       { built: g.towerBallistaLv > 0,
-        title:`🎯 弩塔操作员（Lv.${g.towerBallistaLv} · 无体力消耗）`,
+        title:`🎯 弩塔操作员（Lv.${g.towerBallistaLv} · 每次参战 -15⚡ · 操作员不可出战）`,
         occupants: occOf(g.towerBallistaOp),
         occBadge:o=>o.injured?'<span class="tag red">重伤（无法参战）</span>':'<span class="tag blue">操控弩塔</span>',
-        occSub:o=>`❤️ ${o.hp}/${Game.effHp(o)} · ⚡ ${o.stamina}/${Game.effSt(o)}（体力不影响工事）`,
+        occSub:o=>`⚡ ${o.stamina}/${Game.effSt(o)}（每次参战消耗 15⚡）`,
         unLabel:'撤职', unCall:()=>`Game.unassignTowerOp('ballista')`,
-        empty:'⚠️ 弩塔无人操控——外出探索时不会参战。从下方名单指派一名操作员。',
+        empty:'⚠️ 弩塔无人操控——外出探索时不会参战。从下方名单指派一名操作员（需 15⚡）。',
         cands: alive.filter(c=>c.id!==g.towerBallistaOp),
-        candTitle:n=>`可指派操作员（${n}）：`, candSub:effSub, candBad:c=>c.injured,
-        staminaCost:0, fullTag:null, assignLabel:'指派',
+        candTitle:n=>`可指派操作员（${n}）：`, candSub:effSub, candBad:c=>c.injured||c.stamina<15,
+        staminaCost:15, fullTag:null, assignLabel:'指派',
         assignCall:c=>`Game.assignTowerOp('ballista','${c.id}')` },
     ].forEach(P=>{ if (P.built) html += dutyPanel(P); });
 
@@ -2511,7 +2519,7 @@ const UI = {
           const lv = g[T.lvKey] || 0, grow = 1 + 0.1 * Math.max(0, lv-1);
           const opId = g[T.opKey] || null, opC = opId ? g.chars.find(x=>x.id===opId) : null;
           const op = Game.towerOperator(k);
-          const opState = op ? `<b>${op.name}</b>` : (opC ? `<b>${opC.name}</b> <span style="color:var(--red2)">（${opC.dead?'已阵亡':'重伤'}，无法参战）</span>` : '<span style="color:var(--red2)">空缺</span>');
+          const opState = op ? `<b>${op.name}</b>${op.stamina<15?' <span style="color:var(--red2)">（⚡不足15，无法参战）</span>':''}` : (opC ? `<b>${opC.name}</b> <span style="color:var(--red2)">（${opC.dead?'已阵亡':'重伤'}，无法参战）</span>` : '<span style="color:var(--red2)">空缺</span>');
           const stats = `<div class="row" style="margin-top:8px;flex-wrap:wrap">
             <span class="tag red">❤️ ${Math.round(T.hp*grow)}</span>
             <span class="tag">🗡️ ${Math.round(T.atk*grow)}</span>
@@ -2522,11 +2530,12 @@ const UI = {
             ? `${stats}
               <div class="wiki-p" style="margin-top:8px">建造成本：<b>${Game.towerCostStr(T.buildCost)}</b>${Game.canAfford(T.buildCost)?'':'　<span style="color:var(--red2)">资源不足</span>'}</div>
               <button class="btn primary" style="margin-top:8px" ${Game.canAfford(T.buildCost)?'':'disabled'} onclick="Game.buildTower('${k}')">🏰 建造${T.name}</button>
-              <div class="wiki-p" style="margin-top:8px;font-size:12px;color:var(--txt2)">建成后需指派操作员才能参战：随机落在战场底部两行，无体力、不可移动、每回合自动攻击；被摧毁只在本场消失，下次探索重新出现。</div>`
+              <div class="wiki-p" style="margin-top:8px;font-size:12px;color:var(--txt2)">建成后需指派操作员（15⚡/次，操作员不可出战）才能参战：随机落在战场底部两行，无体力、不可移动、每回合自动攻击；被摧毁只在本场消失，下次探索重新出现。</div>`
             : `${stats}
               ${T.skill?`<div class="wiki-p" style="margin-top:8px">🎯 技能「${T.skill.name}」：${T.skill.desc}</div>`:''}
-              <div class="wiki-p" style="margin-top:8px">👤 操作员：${opState}${op?'':'　<span style="color:var(--red2)">— 需指派后才能参战</span>'}</div>
+              <div class="wiki-p" style="margin-top:8px">👤 操作员：${opState}${op&&op.stamina>=15?'':'　<span style="color:var(--red2)">— 需指派后才能参战</span>'}</div>
               <div class="row" style="margin-top:6px"><button class="btn small" onclick="UI.openDuty()">${op?'更换 / 撤职操作员':'去指派操作员'}</button></div>
+              <div class="wiki-p" style="margin-top:6px;font-size:12px;color:var(--txt2)">每次参战消耗操作员 15⚡；操作员本人不可出战。</div>
               ${upRow(lv, { upgradeCost:T.upgradeCost, maxLv:T.maxLv }, `Game.upTower('${k}')`, lv>1?`<span class="tag yellow">属性 +${(lv-1)*10}%</span>`:'')}
               <div class="wiki-p" style="margin-top:8px;font-size:12px;color:var(--txt2)">每级生命/攻击 +10%；战斗中无需操作，每回合自动选择射程内最近敌人开火。</div>`;
           return cardShell(T.icon, T.name, lv, lv>0, T.desc, body);
@@ -2983,22 +2992,23 @@ const UI = {
     const warn = document.getElementById('team-stamina-warn');
     if (available.length===0) {
       warn.style.display='block';
-      warn.textContent = '没有可出战的成员：需要体力 ≥15 且未重伤的幸存者（建筑当值不影响出战）。可以先休整恢复体力，或治疗重伤成员。';
+      warn.textContent = '没有可出战的成员：需要体力 ≥15 且未重伤的幸存者（防御工事操作员不可出战，其余建筑当值不影响出战）。可以先休整恢复体力，或治疗重伤成员。';
     } else warn.style.display='none';
     document.getElementById('team-list').innerHTML = g.chars.filter(c=>!c.dead).map(c=>{
       const C = DATA.CLASSES[c.cls];
+      const twOp = Game.towerOpOfChar(c.id);
       const onDuty = c.id===g.kitchenChef;
       const ok = Game.canBattle(c);
       const sel = UI.teamSelected.includes(c.id);
       return `<div class="char-card ${sel?'selected':''} ${ok?'':'disabled'}" onclick="${ok?`UI.toggleTeam('${c.id}')`:''}">
         <div class="avatar ${C.color}">${c.av||C.icon}<span class="lvl">Lv.${c.level}</span></div>
         <div style="flex:1">
-          <div class="row"><b>${c.name}</b><span class="tag">${C.name}</span>${onDuty?'<span class="tag yellow">🍳 厨房当值</span>':''}${c.injured?'<span class="tag red">重伤</span>':''}</div>
+          <div class="row"><b>${c.name}</b><span class="tag">${C.name}</span>${twOp?`<span class="tag yellow">${DATA.TOWERS[twOp].icon} ${DATA.TOWERS[twOp].name}操控（不可出战）</span>`:''}${onDuty?'<span class="tag yellow">🍳 厨房当值</span>':''}${c.injured?'<span class="tag red">重伤</span>':''}</div>
           <div class="wiki-p">${UI.statLine(c, true)}</div>
           ${(C.skills||[C.skill].filter(Boolean)).map(sk=>`<div class="wiki-p"><span class="tag blue">${sk.name}</span>${sk.range!==undefined&&sk.range!==c.range?`<span class="tag yellow">技能射程 ${sk.range}</span>`:''}</div>`).join('')}
           <div class="row" style="flex-wrap:wrap;margin-top:3px">${UI.talentTags(c)}</div>
         </div>
-        <div style="color:${sel?'var(--sel)':'var(--dim)'};font-size:18px">${onDuty?'🍳':(sel?'✔':'＋')}</div>
+        <div style="color:${sel?'var(--sel)':'var(--dim)'};font-size:18px">${twOp?'🏰':onDuty?'🍳':(sel?'✔':'＋')}</div>
       </div>`;
     }).join('');
   },
@@ -3184,7 +3194,7 @@ const UI = {
             <td>${T.skill?`技能「${T.skill.name}」：直线 ${T.skill.lineLen} 格内所有敌人受到 100% 攻击力伤害，冷却 ${T.skill.cd} 回合；`:'每回合自动攻击射程内最近的敌人；'}无体力、不可移动</td></tr>`;
         }).join('')}
         </table>
-        <div class="wiki-p" style="margin-top:6px">每类最多建造 <b>1 座</b>，可升级至 Lv.5（每级生命/攻击 +10%，基准价 ×(1+0.5×当前等级)）。建成后需在「职务」中<b>指派一名操作员</b>（无体力要求，但操作员重伤或阵亡时工事无法参战）。参战时<b>不占出战位</b>：外出探索时随机部署在战场<b>底部两行</b>的空位，玩家行动结束后自动开火，弩塔在直线可命中 ≥2 名敌人时会优先施放「穿射」。工事没有体力限制；被摧毁只在本场消失，下次探索自动重建，也不会造成角色重伤。</div>
+        <div class="wiki-p" style="margin-top:6px">每类最多建造 <b>1 座</b>，可升级至 Lv.5（每级生命/攻击 +10%，基准价 ×(1+0.5×当前等级)）。建成后需在「职务」中<b>指派一名操作员</b>：指派要求体力 ≥15⚡，<b>每次参战再消耗操作员 15⚡</b>，且操作员<b>不可出战</b>（重伤或阵亡时工事无法参战）。参战时<b>不占出战位</b>：外出探索时随机部署在战场<b>底部两行</b>的空位，玩家行动结束后自动开火，弩塔在直线可命中 ≥2 名敌人时会优先施放「穿射」。工事没有体力限制；被摧毁只在本场消失，下次探索自动重建，也不会造成角色重伤。</div>
       </div>`;
     const secSave = `
       <div class="wiki-sec panel"><h4>💾 存档说明</h4>
@@ -3829,11 +3839,17 @@ const Battle = {
     ['arrow','ballista'].forEach(k=>{
       const T = DATA.TOWERS[k], lv = g[T.lvKey] || 0;
       if (lv <= 0) return;
-      /* 必须有健康且在岗的操作员，否则本场不部署 */
-      if (!Game.towerOperator(k)) {
+      /* 必须有健康且在岗的操作员，且每次参战消耗 15⚡ */
+      const op = Game.towerOperator(k);
+      if (!op) {
         Battle.log(`⚠️ ${T.name}无人操控（需在职务中指派操作员），本场未参战`, 'bad');
         return;
       }
+      if (op.stamina < 15) {
+        Battle.log(`⚠️ ${T.name}操作员${op.name}体力不足 15⚡，本场未参战`, 'bad');
+        return;
+      }
+      op.stamina -= 15;
       const pos = Battle.randomBottomCell();
       if (!pos) return;
       b.units.push(Battle.mkTower(k, lv, pos.r, pos.c));
