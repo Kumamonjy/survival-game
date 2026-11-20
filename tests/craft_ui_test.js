@@ -62,6 +62,22 @@ g.chars.push(smith); g.workshopLv = 1; Game.assignWorkshop(smith.id);
   assert(UI.skillBrief({name:'抽烟',range:1,regenAmt:15,regenStatus:{turns:2},cost:0}) === '「抽烟」1格 +15⚡', 'T9b 体力类消耗品摘要');
   assert(UI.skillBrief(null) === '', 'T9c 无技能返回空串');
 
+  // T10 金币排序：默认无排序，切换为升序 / 降序
+  UI.craftSort = null; UI.openCraftTab('item');
+  h = body();
+  assert(h.includes('💰 金币排序'), 'T10a 顶部提供金币排序按钮');
+  UI.toggleCraftSort();
+  h = body();
+  assert(h.includes('金币升序'), 'T10b 首次点击切换为升序');
+  assert(h.indexOf('飞镖') < h.indexOf('石块') && h.indexOf('石块') < h.indexOf('燃烧瓶'), 'T10c 升序按金币从低到高（8→12→22）');
+  UI.toggleCraftSort();
+  h = body();
+  assert(h.includes('金币降序') && h.indexOf('燃烧瓶') < h.indexOf('飞镖'), 'T10d 再次点击切换为降序');
+
+  // T11 成本移入说明列，允许换行（两行显示），不再挤压右侧按钮
+  h = body();
+  assert(/<div class="craft-info">[\s\S]*?craft-cost[\s\S]*?<div class="craft-act">/.test(h), 'T11 成本位于说明列内、按钮独占右列');
+
   console.log('--- done ---');
   process.exit(0);
 })();

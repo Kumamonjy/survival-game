@@ -407,14 +407,14 @@ button:disabled { opacity:.45; cursor:not-allowed; }
 }
 .wiki-subtab.active { background:rgba(125,163,69,.22); border-color:#7a9a44; color:var(--yellow); font-weight:bold; }
 /* 打造：紧凑行（图标 + 名称/摘要 + 成本/按钮） */
-.craft-row { display:flex; align-items:center; gap:9px; padding:7px 9px; margin-top:6px; border-radius:8px;
+.craft-row { display:flex; align-items:flex-start; gap:9px; padding:8px 9px; margin-top:6px; border-radius:8px;
   background:rgba(255,255,255,.035); border:1px solid rgba(120,140,90,.22); }
-.craft-ic { flex:none; width:26px; text-align:center; font-size:21px; }
-.craft-info { flex:1; min-width:0; }
+.craft-ic { flex:none; width:26px; text-align:center; font-size:21px; padding-top:2px; }
+.craft-info { flex:1 1 auto; min-width:0; }
 .craft-nm { font-size:14px; display:flex; align-items:center; gap:5px; flex-wrap:wrap; }
-.craft-sub { font-size:11px; color:var(--txt2); line-height:1.35; margin-top:2px; }
-.craft-act { flex:none; display:flex; flex-direction:column; align-items:flex-end; gap:4px; }
-.craft-cost { font-size:11px; color:var(--green2); white-space:nowrap; }
+.craft-sub { font-size:12px; color:var(--txt2); line-height:1.4; margin-top:3px; }
+.craft-act { flex:none; display:flex; flex-direction:column; align-items:flex-end; gap:4px; align-self:center; }
+.craft-cost { font-size:11px; color:var(--green2); white-space:normal; line-height:1.55; margin-top:4px; }
 .craft-cost.no { color:var(--red2); }
 .craft-act .btn { padding:4px 9px; font-size:12px; }
 .wiki-sec { margin-bottom:14px; }
@@ -2708,6 +2708,11 @@ const UI = {
   },
   /* 打造弹窗：按类别分标签（消耗品/武器/防具/饰品），紧凑单行卡片 */
   openCraftTab(tab) { UI.craftTab = tab; UI.openCraftModal(); },
+  /* 打造排序：按金币消耗升序/降序切换 */
+  toggleCraftSort() {
+    UI.craftSort = UI.craftSort==='asc' ? 'desc' : 'asc';
+    UI.openCraftModal();
+  },
   openCraftModal() {
     const g = Game.g;
     const smith = g.workshopChef ? g.chars.find(c=>c.id===g.workshopChef && !c.dead) : null;
@@ -2728,7 +2733,17 @@ const UI = {
         : '<span style="color:var(--red2)">⚠️ 未指派工匠——请先到「职务指派」安排当值</span>'}</div>
       <div class="wiki-subtabs" style="margin-top:8px">${groups.map(c=>
         `<span class="wiki-subtab${c.id===tab?' active':''}" onclick="UI.openCraftTab('${c.id}')">${c.icon} ${c.name} ${c.items.length}</span>`).join('')}</div>
-      ${(cur?cur.items:[]).map(r=>{
+      <div class="row" style="justify-content:flex-end;margin-bottom:4px">
+        <button class="btn small" onclick="UI.toggleCraftSort()">💰 金币${UI.craftSort==='asc'?'升序 ↑':UI.craftSort==='desc'?'降序 ↓':'排序'}</button>
+      </div>
+      ${(()=>{
+        const items = (cur?cur.items:[]).slice();
+        if (UI.craftSort==='asc' || UI.craftSort==='desc') {
+          const dir = UI.craftSort==='asc' ? 1 : -1;
+          items.sort((a,b)=>(Game.craftCost(a.id).gold - Game.craftCost(b.id).gold) * dir);
+        }
+        return items;
+      })().map(r=>{
         const e = DATA.EQUIPS[r.id];
         const cost = Game.craftCost(r.id);
         const costStr = UI.fmtMats(cost) + (r.stamina?`　⚡×${r.stamina}`:'');
@@ -2742,9 +2757,9 @@ const UI = {
           <div class="craft-info">
             <div class="craft-nm"><b>${e.name}</b> <span class="tag ${e.consumable?'yellow':'blue'}">${e.consumable?'消耗品':UI.slotCn(e.slot)}</span></div>
             <div class="craft-sub">${brief}</div>
+            <div class="craft-cost${ok?'':' no'}"${why?` title="${why}"`:''}>${costStr}</div>
           </div>
           <div class="craft-act">
-            <div class="craft-cost${ok?'':' no'}"${why?` title="${why}"`:''}>${costStr}</div>
             <button class="btn primary small" ${ok?'':'disabled'} onclick="Game.craft('${r.id}')">制造</button>
           </div>
         </div>`;
