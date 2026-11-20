@@ -2577,20 +2577,22 @@ const UI = {
           <div class="cn">防御工事${twBuilt?` <span class="clv">已建${twBuilt}/2</span>`:''}</div>
           ${twBuilt?'':'<div class="cb">待建造</div>'}
         </div>
-        <div class="camp-tile util" onclick="UI.openRecruit()">
+      </div>
+      <div class="camp-spots util-row">
+        <div class="camp-spot" onclick="UI.openRecruit()">
           <div class="ci">📻</div><div class="cn">广播站</div>
         </div>
-        <div class="camp-tile util" onclick="UI.openDuty()">
+        <div class="camp-spot" onclick="UI.openDuty()">
           <div class="ci">📋</div><div class="cn">职务</div>
+        </div>
+        <div class="camp-spot" onclick="UI.openInv()">
+          <div class="ci">📦</div><div class="cn">仓库</div>
         </div>
       </div>
       <div class="camp-spots">
         <div class="camp-spot" onclick="UI.openChars()">
           <div class="ci">🧍</div>
           <div><div class="cn">人物</div>${injured?`<div class="csub">${injured} 重伤</div>`:''}</div>
-        </div>
-        <div class="camp-spot" onclick="UI.openInv()">
-          <div class="ci">📦</div><div class="cn">仓库</div>
         </div>
         <div class="camp-spot main" onclick="UI.openZones()">
           <div class="ci">🚪</div><div class="cn">外出探险</div>

@@ -5,11 +5,11 @@ Game.g = Game.newGame(); Game.currentSlot = 1;
 const g = Game.g;
 
 (async () => {
-  // T1 场景渲染：3 列建筑网格（7 建筑 + 防御工事入口 + 广播站/职务），无装饰元素
+  // T1 场景渲染：3 列建筑网格（7 建筑 + 防御工事），广播站/职务/仓库另起一行
   UI.campSel = null;
   UI.renderBuild();
   let bp = elems['build-page'].innerHTML;
-  assert((bp.match(/class="camp-tile/g)||[]).length===10, 'T1a 场景为 10 格网格（7 建筑 + 工事入口 + 广播站/职务）');
+  assert((bp.match(/class="camp-tile/g)||[]).length===8, 'T1a 场景为 8 格网格（7 建筑 + 防御工事）');
   assert(bp.includes('🍳') && bp.includes('🛏️') && bp.includes('🏋️') && bp.includes('🏭') && bp.includes('🌾') && bp.includes('🏥') && bp.includes('🧪') && bp.includes('🏰'), 'T1b 七建筑与防御工事图标齐备');
   assert(bp.includes('camp-grid') && !bp.includes('camp-sun') && !bp.includes('camp-deco') && !bp.includes('camp-fire'), 'T1c 无太阳/树/帐篷/砖墙/篝火等装饰');
 
@@ -110,6 +110,7 @@ const g = Game.g;
     assert(bp.includes(fn), `T14 场景热点 ${fn}`);
   });
   assert(/camp-spot main[^>]*onclick="UI.openZones\(\)"/.test(bp), 'T14b 外出探险为大门主热点');
+  assert(/class="camp-spots util-row"[\s\S]*?UI\.openRecruit\(\)[\s\S]*?UI\.openDuty\(\)[\s\S]*?UI\.openInv\(\)[\s\S]*?<div class="camp-spots">/.test(bp), 'T14c 广播站/职务/仓库三图标同行排列');
 
   // T15 访客热点按状态显隐
   g.visitors = null; UI.renderBuild();
