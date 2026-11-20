@@ -408,6 +408,13 @@ button:disabled { opacity:.45; cursor:not-allowed; }
   background:linear-gradient(180deg,#5c7d2e,#486522); border-color:#7a9a44;
   color:#eef3dd; font-weight:bold;
 }
+.wiki-subtabs { display:flex; gap:5px; overflow-x:auto; margin-bottom:8px; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+.wiki-subtabs::-webkit-scrollbar { display:none; }
+.wiki-subtab {
+  flex-shrink:0; padding:4px 10px; border-radius:14px; font-size:12px; white-space:nowrap;
+  background:rgba(255,255,255,.04); border:1px solid var(--line); color:var(--txt2);
+}
+.wiki-subtab.active { background:rgba(125,163,69,.22); border-color:#7a9a44; color:var(--yellow); font-weight:bold; }
 .wiki-sec { margin-bottom:14px; }
 .wiki-sec h4 { color:var(--green2); margin-bottom:6px; font-size:14px; }
 .wiki-table { width:100%; border-collapse:collapse; font-size:12px; }
@@ -3058,10 +3065,16 @@ const UI = {
       painkiller:'医院/实验室生产：10⚡ + 2💊 + 10💰',
       firstaid:'医院/实验室生产：15⚡ + 2💊 + 20💰（解除重伤）',
     };
-    const eqRows = Object.values(DATA.EQUIPS).map(e=>`<tr><td>${e.icon} ${e.name}</td><td>${slotName(e.slot)}${e.consumable?'<br><span style="color:var(--txt2);font-size:11px">消耗品</span>':''}</td><td>${e.desc}</td><td>${craftMap[e.id]?('工坊制造 '+craftMap[e.id]):(prodMap[e.id]||'探险掉落')}</td></tr>`).join('');
+    const eqSlot = UI.wikiEquipSlot || 'all';
+    const eqList = Object.values(DATA.EQUIPS).filter(e=>eqSlot==='all' || e.slot===eqSlot);
+    const eqRows = eqList.map(e=>`<tr><td>${e.icon} ${e.name}</td><td>${slotName(e.slot)}${e.consumable?'<br><span style="color:var(--txt2);font-size:11px">消耗品</span>':''}</td><td>${e.desc}</td><td>${craftMap[e.id]?('工坊制造 '+craftMap[e.id]):(prodMap[e.id]||'探险掉落')}</td></tr>`).join('');
+    // 装备子标签：全部 + 各部位（数据来自 DATA.SLOTS，新增部位自动出现）
+    const eqSubTabs = [{ id:'all', name:'全部', icon:'📦' }, ...DATA.SLOTS]
+      .map(s=>`<button class="wiki-subtab${s.id===eqSlot?' active':''}" onclick="UI.wikiEquipSlot='${s.id}';UI.openWiki()">${s.icon||''} ${s.name}</button>`).join('');
     const secEquip = `
-      <div class="wiki-sec panel"><h4>🧰 装备图鉴</h4>
-        <table class="wiki-table"><tr><th>装备</th><th>部位</th><th>效果</th><th>获取途径</th></tr>${eqRows}</table>
+      <div class="wiki-sec panel"><h4>🧰 装备图鉴（${eqList.length} 件${eqSlot==='all'?'':' · '+slotName(eqSlot)}）</h4>
+        <div class="wiki-subtabs">${eqSubTabs}</div>
+        <table class="wiki-table"><tr><th>装备</th><th>部位</th><th>效果</th><th>获取途径</th></tr>${eqRows||'<tr><td colspan="4" style="text-align:center;color:var(--txt2)">该部位暂无装备</td></tr>'}</table>
         <div class="wiki-p" style="margin-top:6px">· 每人有 <b>6 个装备槽位</b>（武器/头盔/衣服/鞋子/饰品/道具），同一部位只能穿一件；造好/掉落的装备在<b>背包</b>中，到人物信息里点击格位穿戴<br>
         · <b>升级</b>：每级属性加成 +20%（基于初始值），最高 +5 级，费用 = 制造成本 ×（当前级+1）；射程不随升级变化<br>
         · <b>分解</b>：返还 50% 制造成本（向上取整）；穿戴中的装备需先卸下才能分解<br>
