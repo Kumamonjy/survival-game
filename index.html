@@ -416,6 +416,10 @@ button:disabled { opacity:.45; cursor:not-allowed; }
 .craft-act { flex:none; display:flex; flex-direction:column; align-items:flex-end; gap:4px; align-self:center; }
 .craft-cost { font-size:11px; color:var(--green2); white-space:normal; line-height:1.55; margin-top:4px; }
 .craft-cost.no { color:var(--red2); }
+.craft-pick { margin-top:6px; border:1px solid var(--line2); border-radius:8px; max-height:190px; overflow-y:auto; background:rgba(0,0,0,.18); }
+.craft-pick .pick-row { display:flex; align-items:center; gap:6px; padding:7px 9px; border-bottom:1px solid rgba(120,140,90,.16); cursor:pointer; font-size:12px; }
+.craft-pick .pick-row:last-child { border-bottom:none; }
+.craft-pick .pick-row:active { background:rgba(255,255,255,.07); }
 .craft-act .btn { padding:4px 9px; font-size:12px; }
 .wiki-sec { margin-bottom:14px; }
 .wiki-sec h4 { color:var(--green2); margin-bottom:6px; font-size:14px; }
@@ -2712,12 +2716,20 @@ const UI = {
   },
   /* 打造弹窗：按类别分标签（消耗品/武器/防具/饰品），紧凑单行卡片 */
   openCraftTab(tab) { UI.craftTab = tab; UI.openCraftModal(); },
+  openCraftModal() { UI.craftAssign = false; UI.renderCraftModal(); },
+  /* 打造弹窗内直接指派工匠：展开/收起角色选择列表 */
+  toggleCraftAssign() { UI.craftAssign = !UI.craftAssign; UI.renderCraftModal(); },
+  quickAssignWorkshop(cid) {
+    Game.assignWorkshop(cid);
+    UI.craftAssign = false;
+    UI.renderCraftModal();
+  },
   /* 打造排序：按金币消耗升序/降序切换 */
   toggleCraftSort() {
-    UI.craftSort = UI.craftSort==='asc' ? 'desc' : 'asc';
-    UI.openCraftModal();
+    UI.craftSort = UI.craftSort==='desc' ? 'asc' : 'desc';
+    UI.renderCraftModal();
   },
-  openCraftModal() {
+  renderCraftModal() {
     const g = Game.g;
     const smith = g.workshopChef ? g.chars.find(c=>c.id===g.workshopChef && !c.dead) : null;
     const CATS = [
@@ -2732,20 +2744,32 @@ const UI = {
     const cur = groups.find(c=>c.id===tab);
     UI.modal(`<h3>🔨 打造装备</h3>
       <div class="wiki-p" style="font-size:12px;color:var(--txt2)">工坊 Lv.${g.workshopLv||1}${(g.workshopLv||1)>1?`（材料 -${((g.workshopLv||1)-1)*10}%）`:''} · 需工匠当值并消耗体力。消耗品不提供属性、不可升级，战斗中使用后 -1，每人最多携带 3 个。</div>
-      <div class="wiki-p" style="margin-top:4px;font-size:12px">${smith
-        ? `⚒️ 工匠：<b>${smith.name}</b>（⚡ ${smith.stamina}/${smith.maxStamina}${smith.injured?'，<span style="color:var(--red2)">重伤停产</span>':''}）`
-        : '<span style="color:var(--red2)">⚠️ 未指派工匠——请先到「职务指派」安排当值</span>'}</div>
+      <div class="wiki-p" style="margin-top:4px;font-size:12px">
+        <div class="row" style="gap:6px">
+          <span style="flex:1;min-width:0">${smith
+            ? `⚒️ 工匠：<b>${smith.name}</b>（⚡ ${smith.stamina}/${smith.maxStamina}${smith.injured?'，<span style="color:var(--red2)">重伤停产</span>':''}）`
+            : '<span style="color:var(--red2)">⚠️ 未指派工匠——点右侧按钮直接安排当值</span>'}</span>
+          <button class="btn small" onclick="UI.toggleCraftAssign()">${smith?'🔄 更换':'👤 指派'}</button>
+        </div>
+        ${UI.craftAssign ? `<div class="craft-pick">${g.chars.filter(c=>!c.dead).map(c=>{
+          const duty = Game.dutyOf(c.id);
+          return `<div class="pick-row" onclick="UI.quickAssignWorkshop('${c.id}')">
+            <span>${c.av||DATA.CLASSES[c.cls].icon}</span>
+            <b>${c.name}</b>
+            <span style="color:var(--txt2)">${DATA.CLASSES[c.cls].name}　⚡${c.stamina}</span>
+            ${c.injured?'<span class="tag red">重伤</span>':''}
+            ${duty?`<span class="tag yellow" style="margin-left:auto">${duty}</span>`:''}
+          </div>`; }).join('') || '<div class="wiki-p" style="font-size:12px">暂无可用成员</div>'}</div>` : ''}
+      </div>
+      <div class="row" style="margin-top:8px;justify-content:flex-start">
+        <button class="btn small" onclick="UI.toggleCraftSort()">💰 金币${UI.craftSort==='desc'?'↓':'↑'}</button>
+      </div>
       <div class="wiki-subtabs" style="margin-top:8px">${groups.map(c=>
         `<span class="wiki-subtab${c.id===tab?' active':''}" onclick="UI.openCraftTab('${c.id}')">${c.icon} ${c.name} ${c.items.length}</span>`).join('')}</div>
-      <div class="row" style="justify-content:flex-end;margin-bottom:4px">
-        <button class="btn small" onclick="UI.toggleCraftSort()">💰 金币${UI.craftSort==='asc'?'升序 ↑':UI.craftSort==='desc'?'降序 ↓':'排序'}</button>
-      </div>
       ${(()=>{
         const items = (cur?cur.items:[]).slice();
-        if (UI.craftSort==='asc' || UI.craftSort==='desc') {
-          const dir = UI.craftSort==='asc' ? 1 : -1;
-          items.sort((a,b)=>(Game.craftCost(a.id).gold - Game.craftCost(b.id).gold) * dir);
-        }
+        const dir = UI.craftSort==='desc' ? -1 : 1;
+        items.sort((a,b)=>(Game.craftCost(a.id).gold - Game.craftCost(b.id).gold) * dir);
         return items;
       })().map(r=>{
         const e = DATA.EQUIPS[r.id];

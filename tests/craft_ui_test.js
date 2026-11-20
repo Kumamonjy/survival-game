@@ -62,17 +62,17 @@ g.chars.push(smith); g.workshopLv = 1; Game.assignWorkshop(smith.id);
   assert(UI.skillBrief({name:'抽烟',range:1,regenAmt:15,regenStatus:{turns:2},cost:0}) === '「抽烟」1格 +15⚡', 'T9b 体力类消耗品摘要');
   assert(UI.skillBrief(null) === '', 'T9c 无技能返回空串');
 
-  // T10 金币排序：默认无排序，切换为升序 / 降序
+  // T10 金币排序：默认升序，按钮简化为 金币↑ / 金币↓ 且靠左
   UI.craftSort = null; UI.openCraftTab('item');
   h = body();
-  assert(h.includes('💰 金币排序'), 'T10a 顶部提供金币排序按钮');
+  assert(h.includes('💰 金币↑'), 'T10a 默认显示「💰 金币↑」');
+  assert(h.indexOf('飞镖') < h.indexOf('石块') && h.indexOf('石块') < h.indexOf('燃烧瓶'), 'T10b 默认按金币从低到高（8→12→22）');
+  assert(/justify-content:flex-start[^>]*>\s*<button[^>]*toggleCraftSort/.test(h), 'T10c 排序按钮靠左');
   UI.toggleCraftSort();
   h = body();
-  assert(h.includes('金币升序'), 'T10b 首次点击切换为升序');
-  assert(h.indexOf('飞镖') < h.indexOf('石块') && h.indexOf('石块') < h.indexOf('燃烧瓶'), 'T10c 升序按金币从低到高（8→12→22）');
+  assert(h.includes('💰 金币↓') && h.indexOf('燃烧瓶') < h.indexOf('飞镖'), 'T10d 点击切换为降序');
   UI.toggleCraftSort();
-  h = body();
-  assert(h.includes('金币降序') && h.indexOf('燃烧瓶') < h.indexOf('飞镖'), 'T10d 再次点击切换为降序');
+  assert(body().includes('💰 金币↑'), 'T10e 再次点击回到升序');
 
   // T11 成本移入说明列，允许换行（两行显示），不再挤压右侧按钮
   h = body();
@@ -89,6 +89,29 @@ g.chars.push(smith); g.workshopLv = 1; Game.assignWorkshop(smith.id);
   // T13 兔兔调整：体力+20 / 防御+10
   const bunny = DATA.EQUIPS.bunny;
   assert(bunny.stats.stamina===20 && bunny.stats.def===10, 'T13 兔兔：体力+20 / 防御+10');
+
+  // T14 弹窗内快速指派工匠
+  Game.unassignWorkshop(); UI.craftAssign = false; UI.openCraftModal();
+  h = body();
+  assert(h.includes('👤 指派') && h.includes('UI.toggleCraftAssign()'), 'T14a 未指派时显示「指派」按钮');
+  UI.toggleCraftAssign();
+  h = body();
+  assert(h.includes('craft-pick') && h.includes("UI.quickAssignWorkshop('"), 'T14b 展开角色选择列表');
+  assert(h.includes(smith.name) && h.includes('工匠甲'), 'T14c 列表含可选成员与职业');
+  UI.quickAssignWorkshop(smith.id);
+  h = body();
+  assert(g.workshopChef === smith.id, 'T14d 点击角色直接指派成功');
+  assert(h.includes('🔄 更换') && !h.includes('craft-pick'), 'T14e 指派后收起列表并显示「更换」');
+
+  // T15 指派守门：已有职务的成员会被拦截（一人一职）
+  Game.unassignWorkshop(); Game.unassignFarm();
+  const other = g.chars.find(c=>!c.dead && c.id!==smith.id);
+  other.stamina = 80; g.farmLv = 1; Game.assignDuty('farm', other.id);
+  assert(g.farmWorker === other.id, 'T15a 前置：成员已在农场耕作');
+  UI.craftAssign = false; UI.renderCraftModal();
+  UI.quickAssignWorkshop(other.id);
+  assert(g.workshopChef !== other.id, 'T15b 已当值的成员无法直接改派工匠');
+  Game.unassignFarm();
 
   console.log('--- done ---');
   process.exit(0);
