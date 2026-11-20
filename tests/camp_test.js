@@ -5,17 +5,17 @@ Game.g = Game.newGame(); Game.currentSlot = 1;
 const g = Game.g;
 
 (async () => {
-  // T1 场景渲染：3 列建筑网格（7 建筑 + 招募/职务），无装饰元素
+  // T1 场景渲染：3 列建筑网格（7 建筑 + 2 防御工事 + 广播站/职务），无装饰元素
   UI.campSel = null;
   UI.renderBuild();
   let bp = elems['build-page'].innerHTML;
-  assert((bp.match(/class="camp-tile/g)||[]).length===9, 'T1a 场景为 9 格网格（7 建筑 + 招募/职务）');
+  assert((bp.match(/class="camp-tile/g)||[]).length===11, 'T1a 场景为 11 格网格（7 建筑 + 2 工事 + 广播站/职务）');
   assert(bp.includes('🍳') && bp.includes('🛏️') && bp.includes('🏋️') && bp.includes('🏭') && bp.includes('🌾') && bp.includes('🏥') && bp.includes('🧪'), 'T1b 七建筑图标齐备');
   assert(bp.includes('camp-grid') && !bp.includes('camp-sun') && !bp.includes('camp-deco') && !bp.includes('camp-fire'), 'T1c 无太阳/树/帐篷/砖墙/篝火等装饰');
 
   // T2 新档全未建造：全部置灰 + 待建造角标，无 Lv
-  assert((bp.match(/camp-tile off/g)||[]).length===7, 'T2a 新档 7 建筑全部置灰');
-  assert((bp.match(/待建造/g)||[]).length===7 && !/clv/.test(bp), 'T2b 全部显示待建造且无等级');
+  assert((bp.match(/camp-tile[^"]*off/g)||[]).length===9, 'T2a 新档 9 座可建造建筑（7 建筑 + 2 工事）全部置灰');
+  assert((bp.match(/待建造/g)||[]).length===9 && !/clv/.test(bp), 'T2b 全部显示待建造且无等级');
 
   // T3 默认提示：无选中时不渲染任何功能按钮
   assert(bp.includes('点击营地中的建筑'), 'T3a 默认引导提示');
@@ -26,13 +26,13 @@ const g = Game.g;
   bp = elems['build-page'].innerHTML;
   assert(bp.includes('Game.buildKitchen()') && bp.includes('烤面包'), 'T4a 点击厨房显示厨房卡（含建造按钮）');
   assert(/class="camp-tile[^"]*sel"/.test(bp), 'T4b 建筑选中态高亮');
-  assert((bp.match(/camp-tile off/g)||[]).length===7, 'T4c 厨房仍未建造保持置灰');
+  assert((bp.match(/camp-tile[^"]*off/g)||[]).length===9, 'T4c 厨房仍未建造保持置灰');
 
   // T5 建造后：贴图恢复彩色 + 显示 Lv，卡变功能态
   g.kitchenLv = 2; g.res.gold = 1000;
   UI.renderBuild();
   bp = elems['build-page'].innerHTML;
-  assert((bp.match(/camp-tile off/g)||[]).length===6, 'T5a 建造后厨房不再置灰（其余 6 个置灰）');
+  assert((bp.match(/camp-tile[^"]*off/g)||[]).length===8, 'T5a 建造后厨房不再置灰（其余 8 个置灰）');
   assert(bp.includes('Lv.2'), 'T5b 贴图显示等级');
   assert(bp.includes('Game.upgradeKitchen()') && bp.includes('未指派厨师'), 'T5c 厨房卡为功能态（升级/当值提示）');
 

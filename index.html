@@ -156,6 +156,8 @@ button:disabled { opacity:.45; cursor:not-allowed; }
 .camp-tile.off .cn { color:var(--dim); }
 .camp-tile.util { background:rgba(20,26,15,.35); border-style:dashed; }
 .camp-tile.util .cn { color:var(--txt2); }
+.camp-tile.def { border-color:#7d8a45; background:rgba(52,60,32,.5); }
+.camp-tile.def .cn { color:#c9d18a; }
 /* 底排功能热点：横向等分 */
 .camp-spots { display:flex; gap:8px; margin-top:8px; }
 .camp-spot {
@@ -297,6 +299,7 @@ button:disabled { opacity:.45; cursor:not-allowed; }
 .unit.ally  { background:linear-gradient(180deg,#3a4a35,#2a3526); border-color:var(--ally); }
 .unit.enemy { background:linear-gradient(180deg,#4a2f2a,#331f1a); border-color:var(--enemy); }
 .unit.defending::after { content:'🛡'; position:absolute; top:-8px; right:-6px; font-size:11px; }
+.unit.tower { border-color:#c9a227; box-shadow:0 0 6px rgba(201,162,39,.55); }
 .unit .psn { position:absolute; top:-9px; left:-4px; font-size:10px; letter-spacing:-2px; text-shadow:0 0 3px #000; animation:psnPulse 1.2s infinite; }
 @keyframes psnPulse { 0%,100%{opacity:1} 50%{opacity:.45} }
 .unit.acted { filter:grayscale(.75) brightness(.6); }
@@ -909,6 +912,18 @@ DATA.EMPTY_EQUIP = { weapon:null, head:null, armor:null, shoes:null, acc:null, i
 
 /* 工坊：制造装备 */
 DATA.WORKSHOP = { name:'工坊', icon:'🏭', buildCost:130, upgradeCost:200, maxLv:5, desc:'消耗金币、木材、布料与金属制造装备和消耗品，造好的物品放入背包后可在人物信息中穿戴或携带。每升一级，制造与升级装备的材料消耗减少 10%（向上取整）。' };
+/* 防御工事：营地建造后自动参战，不占出战位、无体力、不可移动、随机落在战场底部两行，被摧毁仅本场消失 */
+DATA.TOWERS = {
+  arrow: { id:'arrow', name:'箭塔', icon:'🏹', lvKey:'towerArrowLv', maxLv:5,
+    buildCost:{ gold:80, wood:20, metal:8 }, upgradeCost:120,
+    hp:200, atk:50, def:0, range:3, critRate:0.05, critDmg:1.5,
+    desc:'固定自动射击，无法移动，每回合自动攻击射程内最近的敌人。' },
+  ballista: { id:'ballista', name:'弩塔', icon:'🎯', lvKey:'towerBallistaLv', maxLv:5,
+    buildCost:{ gold:100, wood:15, metal:12 }, upgradeCost:150,
+    hp:180, atk:40, def:0, range:2, critRate:0.05, critDmg:1.5,
+    skill:{ name:'穿射', desc:'沿上下左右一个方向，对直线 2 格内所有敌人造成 100% 攻击力的伤害。冷却 3 回合。无体力消耗。', cost:0, cd:3, type:'attack', shape:'line', lineLen:2, mult:1.0 },
+    desc:'固定弩机，无法移动，每回合自动攻击；技能「穿射」可贯穿一条直线上的所有敌人（冷却 3 回合）。' },
+};
 DATA.RECIPES = [
   { id:'stone',  cost:{ gold:12, metal:3 }, stamina:5 },
   { id:'dart',   cost:{ gold:8, metal:2 }, stamina:5 },
@@ -1190,6 +1205,8 @@ const Game = {
         { uid:'e1005', id:'stone',  lv:0 }, { uid:'e1006', id:'stone',  lv:0 },
       ],
       workshopLv: 0,
+      towerArrowLv: 0,
+      towerBallistaLv: 0,
       tutorial: true,
     };
     // 初始三名角色：职业随机（互不重复）、名字随机（互不重复）
@@ -1820,7 +1837,31 @@ const Game = {
     if (P.craft) UI.openCraftModal(); else UI.renderBuild();
     Game.renderHome();
   },
-  /* ---- 各建筑薄包装（onclick 与测试沿用原函数名，逻辑统一走上方入口） ---- */
+  /* ---- 防御工事：多资源建造，最多 1 座，可升级（每级属性 +10%） ---- */
+  towerCostStr(c){ return `${c.gold}💰+${c.wood}🪵+${c.metal}⚙️`; },
+  canAfford(c){ const r = Game.g.res; return r.gold>=c.gold && r.wood>=c.wood && r.metal>=c.metal; },
+  buildTower(key) {
+    const g = Game.g, T = DATA.TOWERS[key];
+    if (!T || g[T.lvKey] > 0) return;
+    if (!Game.canAfford(T.buildCost)) { UI.toast(`💰 资源不足，建造${T.name}需要 ${Game.towerCostStr(T.buildCost)}`); return; }
+    g.res.gold -= T.buildCost.gold; g.res.wood -= T.buildCost.wood; g.res.metal -= T.buildCost.metal;
+    g[T.lvKey] = 1;
+    Game.saveToSlot(Game.currentSlot, true);
+    UI.toast(`🏰 ${T.name}建造完成！外出探索时会自动出现在战场底部两行`);
+    UI.renderBuild(); Game.renderHome();
+  },
+  upTower(key) {
+    const g = Game.g, T = DATA.TOWERS[key];
+    const lv = g[T.lvKey] || 0;
+    if (lv <= 0 || lv >= T.maxLv) return;
+    const cost = Game.upCost({ upgradeCost:T.upgradeCost }, lv);
+    if (g.res.gold < cost) { UI.toast(`💰 金币不足，升级到 Lv.${lv+1} 需要 ${cost} 金币`); return; }
+    g.res.gold -= cost;
+    g[T.lvKey] = lv + 1;
+    Game.saveToSlot(Game.currentSlot, true);
+    UI.toast(`🏰 ${T.name}升级到 Lv.${lv+1}，属性提升 10%`);
+    UI.renderBuild(); Game.renderHome();
+  },
   buildWorkshop(){ Game.buildBuilding('workshop'); },
   craft(recipeId){ Game.produce(recipeId); },
   /* 营地使用急救丸：恢复 60 生命 + 解除重伤（背包消耗；战斗中则走「服用急救丸」技能） */
@@ -1954,6 +1995,8 @@ const Game = {
     Game.g.chars.forEach(c=>Game.migrateChar(c));
     // 旧档迁移营地建筑字段
     if (typeof Game.g.kitchenLv !== 'number') Game.g.kitchenLv = 0;
+    if (typeof Game.g.towerArrowLv !== 'number') Game.g.towerArrowLv = 0;
+    if (typeof Game.g.towerBallistaLv !== 'number') Game.g.towerBallistaLv = 0;
     if (Game.g.kitchenChef === undefined) Game.g.kitchenChef = null;
     if (Game.g.workshopChef === undefined) Game.g.workshopChef = null;
     if (typeof Game.g.dormLv !== 'number') Game.g.dormLv = 0;
@@ -2413,6 +2456,30 @@ const UI = {
           `消耗金币/木材/布料/金属制造装备与消耗品；每升一级材料消耗 -10%。`,
           wBody);
       };
+
+      // 防御工事：箭塔 / 弩塔（最多各 1 座，可升级，每级属性 +10%）
+      ['arrow','ballista'].forEach(k=>{
+        const T = DATA.TOWERS[k];
+        CARDS[k] = () => {
+          const lv = g[T.lvKey] || 0, grow = 1 + 0.1 * Math.max(0, lv-1);
+          const stats = `<div class="row" style="margin-top:8px;flex-wrap:wrap">
+            <span class="tag red">❤️ ${Math.round(T.hp*grow)}</span>
+            <span class="tag">🗡️ ${Math.round(T.atk*grow)}</span>
+            <span class="tag">🎯 ${T.range}</span>
+            <span class="tag">💥 ${Math.round(T.critRate*100)}% / ${Math.round(T.critDmg*100)}%</span>
+            <span class="tag yellow">🏰 防御工事</span></div>`;
+          const body = lv === 0
+            ? `${stats}
+              <div class="wiki-p" style="margin-top:8px">建造成本：<b>${Game.towerCostStr(T.buildCost)}</b>${Game.canAfford(T.buildCost)?'':'　<span style="color:var(--red2)">资源不足</span>'}</div>
+              <button class="btn primary" style="margin-top:8px" ${Game.canAfford(T.buildCost)?'':'disabled'} onclick="Game.buildTower('${k}')">🏰 建造${T.name}</button>
+              <div class="wiki-p" style="margin-top:8px;font-size:12px;color:var(--txt2)">建成后自动参战：随机落在战场底部两行，无体力、不可移动、每回合自动攻击；被摧毁只在本场消失，下次探索重新出现。</div>`
+            : `${stats}
+              ${T.skill?`<div class="wiki-p" style="margin-top:8px">🎯 技能「${T.skill.name}」：${T.skill.desc}</div>`:''}
+              ${upRow(lv, { upgradeCost:T.upgradeCost, maxLv:T.maxLv }, `Game.upTower('${k}')`, lv>1?`<span class="tag yellow">属性 +${(lv-1)*10}%</span>`:'')}
+              <div class="wiki-p" style="margin-top:8px;font-size:12px;color:var(--txt2)">每级生命/攻击 +10%；战斗中无需操作，每回合自动选择射程内最近敌人开火。</div>`;
+          return cardShell(T.icon, T.name, lv, lv>0, T.desc, body);
+        };
+      });
     }
 
     /* 营地场景：3 列建筑网格（未建造置灰、点击选中查看功能）；无装饰元素 */
@@ -2437,6 +2504,14 @@ const UI = {
           return `<div class="camp-tile${built?'':' off'}${sel===b.id?' sel':''}" onclick="UI.campSel='${b.id}';UI.renderBuild()">
             <div class="ci">${b.icon}</div>
             <div class="cn">${b.name}${built?` <span class="clv">Lv.${lv}</span>`:''}</div>
+            ${built?'':'<div class="cb">待建造</div>'}
+          </div>`;
+        }).join('')}
+        ${['arrow','ballista'].map(k=>{
+          const T = DATA.TOWERS[k], lv = g[T.lvKey]||0, built = lv>0;
+          return `<div class="camp-tile def${built?'':' off'}${sel===k?' sel':''}" onclick="UI.campSel='${k}';UI.renderBuild()">
+            <div class="ci">${T.icon}</div>
+            <div class="cn">${T.name}${built?` <span class="clv">Lv.${lv}</span>`:''}</div>
             ${built?'':'<div class="cb">待建造</div>'}
           </div>`;
         }).join('')}
@@ -3045,6 +3120,19 @@ const UI = {
         ].map(({icon,d,out,note})=>`<tr><td><b>${icon} ${d.name}</b></td><td>建造 ${d.buildCost}｜升级 ${[1,2,3,4].map(l=>Game.upCost(d,l)).join('/')}</td><td>${out}</td><td>${note}</td></tr>`).join('')}</table>
         <div class="wiki-p" style="margin-top:6px">建筑产出于每日过夜结算；换人/撤职随时免费。升级费用随当前等级递增：基准价 ×(1+0.5×当前等级)。装备详情见「🧰 装备」页。</div>
       </div>`;
+    const secTower = `
+      <div class="wiki-sec panel"><h4>🏰 防御工事</h4>
+        <table class="wiki-table"><tr><th>工事</th><th>建造 / 升级（💰）</th><th>生命 / 攻击 / 射程 / 暴击</th><th>要点</th></tr>
+        ${['arrow','ballista'].map(k=>{
+          const T = DATA.TOWERS[k];
+          return `<tr><td><b>${T.icon} ${T.name}</b></td>
+            <td>建造 ${Game.towerCostStr(T.buildCost)}<br>升级 ${[1,2,3,4].map(l=>Game.upCost({upgradeCost:T.upgradeCost}, l)).join('/')}</td>
+            <td>${T.hp} / ${T.atk} / ${T.range} 格 / ${Math.round(T.critRate*100)}%（暴伤 ${Math.round(T.critDmg*100)}%）</td>
+            <td>${T.skill?`技能「${T.skill.name}」：直线 ${T.skill.lineLen} 格内所有敌人受到 100% 攻击力伤害，冷却 ${T.skill.cd} 回合；`:'每回合自动攻击射程内最近的敌人；'}无体力、不可移动</td></tr>`;
+        }).join('')}
+        </table>
+        <div class="wiki-p" style="margin-top:6px">每类最多建造 <b>1 座</b>，可升级至 Lv.5（每级生命/攻击 +10%，基准价 ×(1+0.5×当前等级)）。建造后<b>不占出战位</b>：外出探索时随机部署在战场<b>底部两行</b>的空位，玩家行动结束后自动开火，弩塔在直线可命中 ≥2 名敌人时会优先施放「穿射」。工事没有体力限制；被摧毁只在本场消失，下次探索自动重建，也不会造成角色重伤。</div>
+      </div>`;
     const secSave = `
       <div class="wiki-sec panel"><h4>💾 存档说明</h4>
         <div class="wiki-p">游戏进度自动保存在当前存档槽；也可在存档管理中手动保存 / 读取 / 删除，或导出文本存档码跨设备备份。</div>
@@ -3180,7 +3268,7 @@ const UI = {
       { id:'enemy',  name:'🧟 敌人' },
     ];
     const groups = {
-      play:   secGoal + secLoop + secBuild + secSave,
+      play:   secGoal + secLoop + secBuild + secTower + secSave,
       map:    secMap,
       cls:    secCls + secSkill,
       talent: secTalent,
@@ -3556,6 +3644,7 @@ const Battle = {
 
     Battle.buildTerrain(b, Z);
     Battle.spawnTeam(b, team);
+    Battle.spawnTowers(b);
     Battle.spawnEnemies(b, Z, zLevel, extra);
     const flood = Game.g.weather==='rain' ? Battle.rainRiver(b) : 0;
 
@@ -3653,6 +3742,45 @@ const Battle = {
       skills: zskills,
       row, col, isDefending:false, sts:{}, cds:{},   // cds：丧尸主动技能冷却（尖啸者等）
     };
+  },
+
+  /* 防御工事单位：无体力、不可移动、自动开火；被摧毁只在本场消失 */
+  mkTower(key, lv, row, col) {
+    const T = DATA.TOWERS[key];
+    const grow = 1 + 0.1*Math.max(0, lv-1);
+    return {
+      uid:'t'+uidCounter++, side:'ally', isTower:true, towerType:key, name:T.name, icon:T.icon, clsTag:'防御工事', level:lv,
+      hp:Math.round(T.hp*grow), maxHp:Math.round(T.hp*grow),
+      atk:Math.round(T.atk*grow), def:T.def||0, range:T.range, move:0,
+      critRate:T.critRate, critDmg:T.critDmg,
+      skills:T.skill ? [T.skill] : [], sts:{}, cds:{},
+      row, col, hasMoved:true, hasAttacked:false, isDefending:false,
+    };
+  },
+  /* 随机落在战场底部两行的可通行空格（避开已占格与河水等障碍） */
+  randomBottomCell() {
+    const cands = [];
+    for (const r of [Battle.ROWS-2, Battle.ROWS-1]) {
+      for (let c=0;c<Battle.COLS;c++) {
+        if (!Battle.isPassable(r,c)) continue;
+        if (Battle.unitAt(r,c)) continue;
+        cands.push([r,c]);
+      }
+    }
+    if (!cands.length) return null;
+    const [r,c] = cands[Math.floor(Math.random()*cands.length)];
+    return { r, c };
+  },
+  spawnTowers(b) {
+    const g = Game.g;
+    ['arrow','ballista'].forEach(k=>{
+      const lv = g[DATA.TOWERS[k].lvKey] || 0;
+      if (lv <= 0) return;
+      const pos = Battle.randomBottomCell();
+      if (!pos) return;
+      b.units.push(Battle.mkTower(k, lv, pos.r, pos.c));
+      Battle.log(`🏰 ${DATA.TOWERS[k].name}已部署（Lv.${lv}）`, 'good');
+    });
   },
 
   /* ---------- 查询工具 ---------- */
@@ -3778,7 +3906,7 @@ const Battle = {
         inner += `<span class="terr">${T.icon}${left}</span>`;
       }
       if (u) {
-        inner += `<div class="unit ${u.side} ${u===b.selected?'selected-unit':''} ${u._acting?'acting-unit':''} ${u.isDefending?'defending':''} ${(u.side==='ally'&&u.hasAttacked&&u.hasMoved)?'acted':''}" onclick="Battle.cellClick(${r},${c})">
+        inner += `<div class="unit ${u.side} ${u.isTower?'tower':''} ${u===b.selected?'selected-unit':''} ${u._acting?'acting-unit':''} ${u.isDefending?'defending':''} ${(u.side==='ally'&&u.hasAttacked&&u.hasMoved)?'acted':''}" onclick="Battle.cellClick(${r},${c})">
           ${u.icon}${(u.sts&&Object.keys(u.sts).length)?`<div class="psn">${Object.keys(u.sts).map(k=>DATA.STATUSES[k].icon).join('')}</div>`:''}<div class="uhp"><div style="width:${Math.max(0,Math.round(u.hp/u.maxHp*100))}%"></div></div>
         </div>`;
       } else {
@@ -3798,14 +3926,16 @@ const Battle = {
   renderPanels() {
     const b = Battle.b;
     const es = b.units.filter(u=>u.side==='enemy'&&u.hp>0);
-    const as = b.units.filter(u=>u.side==='ally'&&u.hp>0);
+    const allAs = b.units.filter(u=>u.side==='ally'&&u.hp>0);
+    const as = allAs.filter(u=>!u.isTower);
+    const twCount = allAs.length - as.length;
     const ehp = es.reduce((s,u)=>s+u.hp,0), eMax = es.reduce((s,u)=>s+u.maxHp,0);
-    const ahp = as.reduce((s,u)=>s+u.hp,0), aMax = as.reduce((s,u)=>s+u.maxHp,0);
+    const ahp = allAs.reduce((s,u)=>s+u.hp,0), aMax = allAs.reduce((s,u)=>s+u.maxHp,0);
     document.getElementById('panel-enemy').innerHTML =
       `<div class="pt"><span>💀 敌方</span><span>${es.length} 只</span></div>
        <div class="stat-line"><span>总血量</span><div class="mini-bar"><div style="width:${eMax?Math.round(ehp/eMax*100):0}%"></div></div><span>${ehp}</span></div>`;
     document.getElementById('panel-ally').innerHTML =
-      `<div class="pt"><span>🧍 我方</span><span>${as.length} 人</span></div>
+      `<div class="pt"><span>🧍 我方</span><span>${as.length} 人${twCount?` · 🏰${twCount}`:''}</span></div>
        <div class="stat-line"><span>总血量</span><div class="mini-bar"><div style="width:${aMax?Math.round(ahp/aMax*100):0}%"></div></div><span>${ahp}</span></div>
        <div class="stat-line"><span>🧰 已拾取</span><span style="color:var(--yellow)">${UI.resIcon('gold')}${b.loot.gold} ${UI.resIcon('med')}${b.loot.med} ${UI.resIcon('metal')}${b.loot.metal} ${UI.resIcon('food')}${b.loot.food} ${UI.resIcon('fabric')}${b.loot.fabric||0} ${UI.resIcon('wood')}${b.loot.wood||0}</span></div>`;
     document.getElementById('b-turn').textContent = b.turn;
@@ -3819,6 +3949,22 @@ const Battle = {
     if (!u) { el.innerHTML = '<div class="hint">点击你的角色开始行动；全员行动后按「结束行动」</div>'; return; }
     const skillBtn = document.getElementById('btn-skill');
     skillBtn.textContent = '技能';
+    /* 防御工事：自动作战，不提供操作指令 */
+    if (u.isTower) {
+      skillBtn.disabled = true;
+      const cdTags = (u.skills||[]).map(sk=>{
+        const cd = (u.cds && u.cds[sk.name]) || 0;
+        return `<span class="tag ${cd>0?'red':'green'}">${sk.name}${cd>0?` 冷却 ${cd} 回合`:' 就绪'}</span>`;
+      }).join(' ');
+      el.innerHTML = `<div class="u-name">${u.icon} <b>${u.name}</b> <span class="tag yellow">防御工事 Lv.${u.level}</span><span class="tag blue">🏰 自动开火</span></div>
+        <div class="u-stats">
+          <span>❤️<b>${u.hp}/${u.maxHp}</b></span>
+          <span>🗡️<b>${Battle.effAtk(u)}</b></span><span>🛡️<b>${u.def}</b></span>
+          <span>🚫<b>不可移动</b></span><span>🎯<b>${Battle.effRange(u)}</b></span>
+        </div>
+        <div class="hint" style="margin-top:4px">无需体力、无需操作；每回合结束后自动攻击射程内最近的敌人。${cdTags?`<br>${cdTags}`:''}</div>`;
+      return;
+    }
     skillBtn.disabled = !(u.side==='ally' && Battle.unitSkills(u).length);
     const acted = u.hasAttacked ? (u.hasMoved ? ' <span class="tag">行动完毕</span>' : ' <span class="tag yellow">已攻击 · 还可移动</span>') : '';
     el.innerHTML = `<div class="u-name">${u.icon} <b>${u.name}</b> <span class="tag ${u.side==='enemy'?'red':''}">${u.clsTag} Lv.${u.level}</span>${u.isDefending?'<span class="tag yellow">💤 休息中</span>':''}${acted}</div>
@@ -3931,6 +4077,7 @@ const Battle = {
   cmdMove() {
     const b = Battle.b, u = b.selected;
     if (!u || u.side!=='ally' || b.phase!=='player') return;
+    if (u.isTower) { UI.toast('防御工事无法移动，会自动开火'); return; }
     if (u.hasMoved) { UI.toast(u.hasAttacked ? '本回合已移动且攻击过，行动完毕' : '该角色本回合已移动过'); return; }   // 攻击/技能后仍可移动
     b.mode='move'; b.moveSet = Battle.reachable(u); b.targetSet = null;
     Battle.renderMap();
@@ -3938,6 +4085,7 @@ const Battle = {
   cmdAttack() {
     const b = Battle.b, u = b.selected;
     if (!u || u.side!=='ally' || b.phase!=='player') return;
+    if (u.isTower) { UI.toast('防御工事会自动攻击，无需手动操作'); return; }
     if (u.hasAttacked) { UI.toast('该角色本回合已攻击过'); return; }
     b.mode='attack';
     b.targetSet = Battle.attackCells(u).filter(([r,c])=>{
@@ -3955,6 +4103,7 @@ const Battle = {
   cmdSkill() {
     const b = Battle.b, u = b.selected;
     if (!u || u.side!=='ally' || b.phase!=='player') return;
+    if (u.isTower) { UI.toast('防御工事会自动施放技能，无需手动操作'); return; }
     const list = Battle.unitSkills(u);
     if (!list.length) { UI.toast('该角色没有可用技能'); return; }
     if (u.hasAttacked) { UI.toast('本回合已攻击过'); return; }
@@ -4063,6 +4212,7 @@ const Battle = {
   cmdDefend() {
     const b = Battle.b, u = b.selected;
     if (!u || u.side!=='ally' || b.phase!=='player') return;
+    if (u.isTower) { UI.toast('防御工事无需体力，也不能休息'); return; }
     if (u.hasAttacked) { UI.toast('该角色本回合已行动完毕'); return; }   // 与置灰规则一致，防重复白嫖体力
     u.isDefending = true;
     u.stamina = Math.min(u.maxStamina, u.stamina+8);
@@ -4081,7 +4231,7 @@ const Battle = {
   },
   checkAllActed() {
     const b = Battle.b;
-    const alive = b.units.filter(u=>u.side==='ally'&&u.hp>0);
+    const alive = b.units.filter(u=>u.side==='ally'&&!u.isTower&&u.hp>0);
     if (alive.length && alive.every(u=>u.hasAttacked && u.hasMoved)) {
       UI.toast('全员行动完毕，点击「结束行动」让丧尸行动');
     }
@@ -4181,8 +4331,9 @@ const Battle = {
     Battle.floatDmg(u.row, u.col, '-'+got, S.color);
     if (u.hp <= 0) {
       u.hp = 0;
-      if (src) Battle.stat(src, 'kill', 1);
+      if (src && !u.isTower) Battle.stat(src, 'kill', 1);   // 击毁工事不计击杀
       if (u.side==='enemy') { Battle.log(`☠️ ${u.name} ${label}身亡`, 'kill'); Battle.subtitle(`☠️ ${u.name} 倒地`); }
+      else if (u.isTower) { Battle.towerDown(u); }
       else { Battle.downAlly(u, '因'+label+'倒下了', `🩸 ${u.name} 倒下！`); }
     } else {
       const verb = { '毒发':'中毒发作', '燃烧':'被烈焰灼烧', '流血':'流血不止' }[label] || `受到${label}侵蚀`;
@@ -4206,6 +4357,7 @@ const Battle = {
     Battle.b.units.filter(x=>x.hp>0 && x.side==='ally' && Battle.manhattan(x,u)<=1).forEach(v=>{
       Battle.rawDamage(v, DMG, u);
       if (v.hp <= 0) {
+        if (v.isTower) { Battle.towerDown(v); return; }   // 工事被炸毁：本场消失，不计击杀
         Battle.stat(u, 'kill', 1);
         Battle.downAlly(v, '被爆炸波及，倒下了', null);
       } else {
@@ -4287,7 +4439,7 @@ const Battle = {
         Battle.statusDamage(u, 'burn', '燃烧');
         const s = Math.max(1, Math.round((u.maxStamina||30) * DATA.STATUSES.burn.dmgPct));
         u.stamina = Math.max(0, (u.stamina||0) - s);
-        if (u.side==='ally') Battle.log(`🔥 ${u.name} 燃烧烧灼，体力 -${s}`, 'bad');
+        if (u.side==='ally' && !u.isTower) Battle.log(`🔥 ${u.name} 燃烧烧灼，体力 -${s}`, 'bad');
         dirty = true;
       }
       // 全部状态计时递减（含强/眩晕等纯修正状态）
@@ -4367,7 +4519,7 @@ const Battle = {
   async applyDamage(att, def, dmg, crit, mult, skillName) {
     const b = Battle.b;
     const got = Battle.rawDamage(def, dmg, att);   // 实际生效的伤害（不超量计算）
-    if (def.hp <= 0) Battle.stat(att, 'kill', 1);
+    if (def.hp <= 0 && !def.isTower) Battle.stat(att, 'kill', 1);   // 击毁工事不计击杀
     /* sangshi 风格完整句子字幕：我方【张三】使用技能【奋力一击】，对敌方【丧尸】造成 35 点伤害 */
     const sideOf = u => u.side==='ally' ? '我方' : '敌方';
     const act = skillName ? `使用技能【${skillName}】` : '攻击';
@@ -4380,9 +4532,10 @@ const Battle = {
       Battle.killEnemy(def);
       if (DATA.ZOMBIES[def.zombieType]?.explodeDmg) Battle.explode(def);   // 自爆丧尸濒死引爆
     }
-    // 我方倒下 → 重伤撤离战场
+    // 我方倒下 → 重伤撤离战场；防御工事被摧毁 → 本场消失（不重伤、不回写）
     if (def.side==='ally' && def.hp<=0) {
-      Battle.downAlly(def, '倒下了', `🩸 ${def.name} 重伤倒地！`);
+      if (def.isTower) Battle.towerDown(def);
+      else Battle.downAlly(def, '倒下了', `🩸 ${def.name} 重伤倒地！`);
     }
     Battle.renderMap(); Battle.renderPanels();   // 死亡清理后定稿 DOM
     /* 受击特效挂到定稿后的节点（renderMap 重建 innerHTML 会连类带飘字一起清掉，先挂会被冲掉） */
@@ -4395,7 +4548,7 @@ const Battle = {
   async doAttack(att, def) {
     const b = Battle.b;
     if (att.side==='ally' && att.hasAttacked) { UI.toast('本回合已攻击过'); return; }
-    if (att.range<=1) Battle.fxLunge(att, def);   // 近战前冲（双方共用）
+    if (att.range<=1 && !att.isTower) Battle.fxLunge(att, def);   // 近战前冲（双方共用）
     else await Battle.fxProjectile(att, def, att.side==='ally' ? '✦' : '🟢');   // 远程弹道
     const r1 = Battle.calcDamage(att, def);
     await Battle.applyDamage(att, def, r1.dmg, r1.crit, 1);
@@ -4637,12 +4790,56 @@ const Battle = {
     // 击杀经验在结算时统一发放，这里仅记录
   },
 
+  /* ---------- 防御工事自动作战 ---------- */
+  /* 玩家行动结束后统一开火：弩塔优先穿射（直线内 ≥2 敌），否则各自普攻射程内最近敌人 */
+  async towerPhase() {
+    const b = Battle.b;
+    const towers = b.units.filter(u=>u.isTower && u.hp>0);
+    if (!towers.length) return;
+    Battle.log('🏰 防御工事自动开火', '');
+    for (const t of towers) {
+      if (b.over) return;
+      if (t.hp<=0) continue;
+      try { await Battle.towerAct(t); } catch (err) { console.error('towerAct error:', err); }
+      await Battle.sleep(260);
+    }
+  },
+  async towerAct(t) {
+    const b = Battle.b;
+    if (b.over || t.hp<=0) return;
+    const foes = b.units.filter(u=>u.side==='enemy'&&u.hp>0);
+    if (!foes.length) return;
+    /* 弩塔「穿射」：冷却就绪且某方向直线 2 格内敌人 ≥2 时施放 */
+    const sk = (t.skills||[]).find(s=>s.shape==='line');
+    if (sk && (t.cds[sk.name]||0)<=0) {
+      let best = null;
+      [[1,0],[-1,0],[0,1],[0,-1]].forEach(([dr,dc])=>{
+        const hits = Battle.lineCells(t.row, t.col, dr, dc, sk.lineLen||2)
+          .map(([r,c])=>Battle.unitAt(r,c))
+          .filter(u=>u&&u.side==='enemy'&&u.hp>0);
+        if (hits.length>=2 && (!best || hits.length>best.hits.length)) best = { dr, dc, hits };
+      });
+      if (best) return Battle.execSkill(t, { sk, dir:[t.row+best.dr, t.col+best.dc] });
+    }
+    /* 普攻：射程内最近的敌人（血量低者优先） */
+    const cands = foes.filter(f=>Battle.manhattan(t,f)<=Battle.effRange(t));
+    if (!cands.length) { Battle.log(`🏰 ${t.name} 射程内没有敌人`, ''); return; }
+    cands.sort((a,b2)=>Battle.manhattan(t,a)-Battle.manhattan(t,b2) || a.hp-b2.hp);
+    return Battle.doAttack(t, cands[0]);
+  },
+  /* 工事被摧毁：本场消失，不触发重伤/经验/击杀，下次战斗自动重建 */
+  towerDown(t) {
+    t.hp = 0;
+    Battle.log(`💥 ${t.name} 被摧毁，本场战斗中失去该防御工事（下次探索会自动重建）`, 'bad');
+    Battle.subtitle(`💥 ${t.name} 被摧毁！`);
+  },
+
   /* ---------- 回合流转 ---------- */
   async endPlayerTurn() {
     const b = Battle.b;
     if (b.over || b.phase!=='player') return;
-    /* 未行动的己方角色自动行动（主动追击 AI，不使用技能；打完置灰） */
-    const idle = b.units.filter(u=>u.side==='ally'&&u.hp>0&&!u.hasAttacked);
+    /* 未行动的己方角色自动行动（主动追击 AI，不使用技能；打完置灰；工事由 towerPhase 统一处理） */
+    const idle = b.units.filter(u=>u.side==='ally'&&!u.isTower&&u.hp>0&&!u.hasAttacked);
     if (idle.length) {
       UI.toast(`🤖 ${idle.length} 名角色未行动，自动追击中…`);
       b.phase = 'auto';
@@ -4655,6 +4852,8 @@ const Battle = {
         await Battle.sleep(260);
       }
     }
+    /* 防御工事自动开火（玩家行动结束后、丧尸行动前） */
+    if (!b.over) { await Battle.towerPhase(); if (b.over) return; }
     b.phase = 'enemy';
     b.mode=null; b.moveSet=null; b.targetSet=null; b.selected=null;
     Battle.renderPanels(); Battle.renderInfo(null); Battle.renderMap();
@@ -4958,7 +5157,7 @@ const Battle = {
     const b = Battle.b;
     if (b.over) return;
     const enemiesAlive = b.units.some(u=>u.side==='enemy'&&u.hp>0);
-    const alliesAlive = b.units.some(u=>u.side==='ally'&&u.hp>0);
+    const alliesAlive = b.units.some(u=>u.side==='ally'&&!u.isTower&&u.hp>0);   // 仅角色决定胜负，工事不算存活
     if (!enemiesAlive) return Battle.finish('win');
     if (!alliesAlive) return Battle.finish('lose');
   },
@@ -4977,9 +5176,9 @@ const Battle = {
     const loot = b.loot;
     const doubled = b.doubledReward ? 2 : 1;
 
-    // 我方状态回写
+    // 我方状态回写（防御工事不是角色，不参与回写与结算）
     const downed = [];
-    b.units.filter(u=>u.side==='ally').forEach(u=>{
+    b.units.filter(u=>u.side==='ally' && !u.isTower).forEach(u=>{
       const c = u.ref;
       if (u.hp<=0) { c.injured = true; c.hp = 1; downed.push(c.name); }
       else c.hp = u.hp;
@@ -4993,7 +5192,7 @@ const Battle = {
     if (result==='lose') expEach = Math.ceil(expEach/2);
     const expHalf = Math.ceil(expEach*0.5);
     const lvNotes = [];
-    b.units.filter(u=>u.side==='ally').forEach(u=>{
+    b.units.filter(u=>u.side==='ally' && !u.isTower).forEach(u=>{
       const r = Game.gainExp(u.ref, u.hp>0 ? expEach : expHalf);
       if (r.lv) lvNotes.push(u.ref.name+'→Lv.'+u.ref.level);
     });
