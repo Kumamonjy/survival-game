@@ -859,7 +859,9 @@ DATA.SLOTS = [
 DATA.EQUIPS = {
   cloth:  { id:'cloth',  name:'布衣', slot:'armor',  icon:'👕', stats:{hp:25, def:5},                 desc:'生命值 +25，防御力 +5' },
   cshoes: { id:'cshoes', name:'布鞋', slot:'shoes',  icon:'👟', stats:{hp:10, stamina:10, def:3},     desc:'生命值 +10，体力值 +10，防御力 +3' },
-  chood:  { id:'chood',  name:'布帽', slot:'head',   icon:'🧢', stats:{hp:20, def:5},                 desc:'生命值 +20，防御力 +5' },
+  chood:  { id:'chood',  name:'布帽', slot:'head',   icon:'👒', stats:{hp:20, def:5},                 desc:'生命值 +20，防御力 +5' },
+  cap:    { id:'cap',    name:'棒球帽', slot:'head', icon:'🧢', stats:{hp:10, stamina:10},            desc:'生命值 +10，体力值 +10' },
+  helmet: { id:'helmet', name:'安全帽', slot:'head', icon:'🪖', stats:{hp:25, def:10},               desc:'生命值 +25，防御力 +10' },
   stick:  { id:'stick',  name:'木棍', slot:'weapon', icon:'🪵', stats:{atk:5}, range:1,
             skill:{ name:'棍棒打击', desc:'消耗15体力，对 1 格内的一名敌人造成 140% 攻击力的伤害。', cost:15, cd:3, type:'attack', shape:'target', mult:1.4, range:1 },
             desc:'攻击力 +5，射程 1；自带技能「棍棒打击」：1 格内单体 140% 伤害（冷却 3 回合，消耗 15 体力）' },
@@ -884,7 +886,7 @@ DATA.EQUIPS = {
   thermos:{ id:'thermos',name:'保温杯', slot:'acc',  icon:'🥛', stats:{stamina:25},                  desc:'体力值 +25' },
   bracer: { id:'bracer', name:'护腕', slot:'acc',    icon:'💪', stats:{hp:5, def:5},                 desc:'生命值 +5 / 防御力 +5' },
   bear:   { id:'bear',   name:'熊熊', slot:'acc',    icon:'🧸', special:true, stats:{critRate:5, critDmg:10}, desc:'暴击率 +5% / 暴伤 +10%（特殊饰品）' },
-  bunny:  { id:'bunny',  name:'兔兔', slot:'acc',    icon:'🐰', special:true, stats:{stamina:15, def:5},   desc:'体力值 +15 / 防御力 +5（特殊饰品）' },
+  bunny:  { id:'bunny',  name:'兔兔', slot:'acc',    icon:'🐰', special:true, stats:{stamina:20, def:10},  desc:'体力值 +20 / 防御力 +10（特殊饰品）' },
   stone:  { id:'stone',  name:'石块', slot:'item',   icon:'🪨', consumable:true,
             skill:{ name:'投掷石头', desc:'消耗10体力，选择 3 格内的一名敌人，奋力掷出石块，造成 50% 攻击力的伤害。使用后消耗 1 个石块。', cost:10, cd:0, type:'attack', shape:'target', mult:0.5, range:3, equipSkill:true, eqName:'石块' },
             desc:'消耗品 · 不提供属性；自带技能「投掷石头」（消耗10体力）：对 3 格内一名敌人造成 50% 攻击力的伤害，使用后消耗 1 个' },
@@ -952,6 +954,8 @@ DATA.RECIPES = [
   { id:'spear',  cost:{ gold:60, wood:4, metal:3 }, stamina:25 },
   { id:'sweater', cost:{ gold:75, fabric:8 }, stamina:15 },
   { id:'chood',  cost:{ gold:32, fabric:4 }, stamina:10 },
+  { id:'cap',    cost:{ gold:18, fabric:2 }, stamina:8 },
+  { id:'helmet', cost:{ gold:48, metal:3 }, stamina:12 },
   { id:'cshoes', cost:{ gold:40, fabric:4 }, stamina:10 },
   { id:'cloth',  cost:{ gold:48, fabric:5 }, stamina:15 },
 ];

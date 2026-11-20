@@ -14,7 +14,7 @@ g.chars.push(smith); g.workshopLv = 1; Game.assignWorkshop(smith.id);
   UI.craftTab = null;
   UI.openCraftModal();
   let h = body();
-  assert(['🧪 消耗品 5','🗡️ 武器 8','🛡️ 防具 4','📿 饰品 3'].every(t=>h.includes(t)), 'T1a 四类子标签与数量正确');
+  assert(['🧪 消耗品 5','🗡️ 武器 8','🛡️ 防具 6','📿 饰品 3'].every(t=>h.includes(t)), 'T1a 四类子标签与数量正确');
   assert(/wiki-subtab active[^>]*>🧪 消耗品/.test(h), 'T1b 默认选中消耗品页');
 
   // T2 默认页只渲染消耗品
@@ -29,7 +29,7 @@ g.chars.push(smith); g.workshopLv = 1; Game.assignWorkshop(smith.id);
   // T4 防具页合并 头盔/衣服/鞋子
   UI.openCraftTab('armor');
   h = body();
-  assert(h.includes('毛衣') && h.includes('布衣') && h.includes('布帽') && h.includes('布鞋') && !h.includes('长矛') && !h.includes('水瓶'), 'T4 防具页含头/衣/鞋且不含武器饰品');
+  assert(h.includes('毛衣') && h.includes('布衣') && h.includes('布帽') && h.includes('布鞋') && h.includes('棒球帽') && h.includes('安全帽') && !h.includes('长矛') && !h.includes('水瓶'), 'T4 防具页含头/衣/鞋且不含武器饰品');
 
   // T5 饰品页
   UI.openCraftTab('acc');
@@ -77,6 +77,18 @@ g.chars.push(smith); g.workshopLv = 1; Game.assignWorkshop(smith.id);
   // T11 成本移入说明列，允许换行（两行显示），不再挤压右侧按钮
   h = body();
   assert(/<div class="craft-info">[\s\S]*?craft-cost[\s\S]*?<div class="craft-act">/.test(h), 'T11 成本位于说明列内、按钮独占右列');
+
+  // T12 新头盔：棒球帽 / 安全帽 数据与配方
+  const cap = DATA.EQUIPS.cap, helmet = DATA.EQUIPS.helmet;
+  assert(cap && cap.slot==='head' && cap.stats.hp===10 && cap.stats.stamina===10, 'T12a 棒球帽：生命+10 / 体力+10');
+  assert(helmet && helmet.slot==='head' && helmet.stats.hp===25 && helmet.stats.def===10, 'T12b 安全帽：生命+25 / 防御+10');
+  const rc = DATA.RECIPES.find(r=>r.id==='cap'), rh = DATA.RECIPES.find(r=>r.id==='helmet');
+  assert(rc && rc.cost.gold===18 && rc.cost.fabric===2, 'T12c 棒球帽配方 18💰+2🧵');
+  assert(rh && rh.cost.gold===48 && rh.cost.metal===3, 'T12d 安全帽配方 48💰+3⚙️');
+
+  // T13 兔兔调整：体力+20 / 防御+10
+  const bunny = DATA.EQUIPS.bunny;
+  assert(bunny.stats.stamina===20 && bunny.stats.def===10, 'T13 兔兔：体力+20 / 防御+10');
 
   console.log('--- done ---');
   process.exit(0);
