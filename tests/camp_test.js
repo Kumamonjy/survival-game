@@ -88,6 +88,32 @@ const g = Game.g;
   assert((zh.match(/zone-card"/g)||[]).length===DATA.ZONES.length, 'T12c 全部区域可点击进入');
   assert(zh.includes('⛽') && zh.includes('🌲') && zh.includes('🎖️'), 'T12d 加油站/林场/基地均出现在列表');
 
+  // T13 主界面即营地（方案B）：建筑场景并入首页，独立建筑页移除
+  assert(html.includes('id="build-page"') && html.includes('id="home-body"'), 'T13a 首页内嵌营地场景容器');
+  assert(!html.includes('id="scr-build"'), 'T13b 独立建筑页已移除');
+  assert(bp.includes('home-scene'), 'T13c 首页使用大营地场景');
+
+  // T14 场景热点：大门/仓库/人物/招募/职务，且大门为主 CTA
+  ["UI.openZones()","UI.openInv()","UI.openChars()","UI.openRecruit()","UI.openDuty()"].forEach(fn=>{
+    assert(bp.includes(fn), `T14 场景热点 ${fn}`);
+  });
+  assert(/camp-spot main[^>]*onclick="UI.openZones\(\)"/.test(bp), 'T14b 外出探险为大门主热点');
+
+  // T15 访客热点按状态显隐
+  g.visitors = null; UI.renderBuild();
+  assert(!elems['build-page'].innerHTML.includes('今日到访'), 'T15a 无访客时不显示访客热点');
+  g.visitors = { day:g.day, merchant:null, wanderer:null }; UI.renderBuild();
+  assert(elems['build-page'].innerHTML.includes('今日到访') && elems['build-page'].innerHTML.includes('UI.openVisitors()'), 'T15b 有访客时出现热点');
+  g.visitors = null; UI.renderBuild();
+
+  // T16 重伤角标 + 天气压暗
+  g.chars[0].injured = true; UI.renderBuild();
+  assert(elems['build-page'].innerHTML.includes('1 重伤'), 'T16a 营地热点显示重伤数');
+  g.chars[0].injured = false;
+  g.weather = 'rain'; UI.renderBuild();
+  assert(elems['home-camp-scene'].style.filter.includes('brightness'), 'T16b 雨天场景压暗');
+  g.weather = 'sunny'; UI.renderBuild();
+
   console.log('--- done ---');
   process.exit(0);
 })().catch(e=>{ console.log('TEST ERROR', e); process.exit(1); });
