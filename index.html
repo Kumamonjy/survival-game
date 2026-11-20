@@ -913,6 +913,12 @@ DATA.EQUIPS = {
   molotov: { id:'molotov', name:'燃烧瓶', slot:'item', icon:'🔥', consumable:true,
             skill:{ name:'投掷燃烧瓶', desc:'消耗15体力，向 2 格内任意一格投掷，对以该格为中心的十字范围（含中心共 5 格）内所有角色（敌我双方）造成 40 点伤害，并使其陷入燃烧状态 2 回合。使用后消耗 1 个燃烧瓶。', cost:15, cd:0, type:'attack', shape:'aoe', range:2, area:1, fixedDmg:40, burn:{turns:2}, hitsAll:true, equipSkill:true, eqName:'燃烧瓶' },
             desc:'消耗品 · 不提供属性；自带技能「投掷燃烧瓶」：向 2 格内一格投掷，对十字 5 格内所有角色（含敌我双方）造成 40 点伤害并附加燃烧 2 回合；使用后消耗 1 个' },
+  cigarette: { id:'cigarette', name:'香烟', slot:'item', icon:'🚬', consumable:true,
+            skill:{ name:'抽烟', desc:'使用后恢复 15 点体力，并进入调息状态 2 回合（每回合恢复 5% 体力）。使用后消耗 1 支香烟。', cost:0, cd:0, type:'regen', shape:'target', regenAmt:15, range:1, includeSelf:true, selfOnly:true, regenStatus:{turns:2}, equipSkill:true, eqName:'香烟' },
+            desc:'消耗品 · 不提供属性；自带技能「抽烟」：恢复 15 点体力并进入调息 2 回合，使用后消耗 1 支' },
+  soup:  { id:'soup', name:'药汤', slot:'item', icon:'🥣', consumable:true,
+            skill:{ name:'喝药汤', desc:'使用后恢复 20 点生命值，并进入治愈状态 3 回合（每回合恢复 5% 生命）。使用后消耗 1 碗药汤。', cost:0, cd:0, type:'heal', shape:'target', flatHeal:20, mult:0, range:1, includeSelf:true, selfOnly:true, healStatus:{turns:3}, equipSkill:true, eqName:'药汤' },
+            desc:'消耗品 · 不提供属性；自带技能「喝药汤」：恢复 20 点生命并进入治愈 3 回合，使用后消耗 1 碗' },
 };
 /* 新角色装备全空（需在工坊制作装备穿戴） */
 DATA.EMPTY_EQUIP = { weapon:null, head:null, armor:null, shoes:null, acc:null, item:null };
@@ -925,6 +931,8 @@ DATA.RECIPES = [
   { id:'bottle', cost:{ gold:20, metal:1, fabric:1 }, stamina:8 },
   { id:'thermos', cost:{ gold:35, metal:2, fabric:1 }, stamina:12 },
   { id:'molotov', cost:{ gold:22, metal:1, fabric:2 }, stamina:10 },
+  { id:'cigarette', cost:{ gold:10, fabric:1 }, stamina:5 },
+  { id:'soup',   cost:{ gold:18, med:1, fabric:1 }, stamina:10 },
   { id:'bracer', cost:{ gold:5, fabric:3 }, stamina:8 },
   { id:'stick',  cost:{ gold:20, wood:5 }, stamina:10 },
   { id:'slingshot', cost:{ gold:20, wood:3, fabric:1 }, stamina:12 },
@@ -3936,7 +3944,7 @@ const Battle = {
       // 回复体力：选择射程内体力不满的友方（sk.includeSelf 时含自己）
       b.mode='skill'; b.targetMode='regen';
       const rc = Battle.attackCells(u, skRange).concat(sk.includeSelf ? [[u.row,u.col]] : []);
-      b.targetSet = rc.filter(([r,c])=>{ const t=Battle.unitAt(r,c); return t && t.side==='ally' && t.stamina<t.maxStamina; });
+      b.targetSet = rc.filter(([r,c])=>{ const t=Battle.unitAt(r,c); return t && t.side==='ally' && (!sk.selfOnly || t.uid===u.uid) && t.stamina<t.maxStamina; });
       if (!b.targetSet.length) { UI.toast('射程内没有需要回复体力的友方'); b.mode=null; b.targetMode=null; return; }
     } else if (sk.shape==='aoe') {
       // 选择落点（默认空地或敌人均可；sk.emptyCell 时仅限空格），对落点周围 area 格内所有敌人造成伤害
@@ -4502,6 +4510,7 @@ const Battle = {
     const sent = `我方【${doc.name}】使用技能【${sk.name}】，我方【${target.name}】恢复 ${heal} 点生命${cured}`;
     Battle.log(`⚕️ ${sent}`, 'good');
     Battle.subtitle(`⚕️ ${sk.name}：+${heal} ❤${cured?' ✨':''}`);
+    if (sk.healStatus) Battle.applyStatus(target, 'heal', sk.healStatus.turns, doc.uid);   // 药汤：治愈状态
     await Battle.endSupport(doc);   // 已行动标记 → 清空瞄准态 → 渲染 → 流血 → 全员检查
   },
 
@@ -4523,6 +4532,7 @@ const Battle = {
     Battle.fxAt(target.row, target.col, 'heal-glow', 250);   // 恢复绿光脉冲
     Battle.subtitle(`🍲 ${sk.name} +${got}⚡`);
     Battle.log(`🍲 ${doc.name} 使用技能【${sk.name}】，我方【${target.name}】恢复 ${got} 点体力`, 'good');
+    if (sk.regenStatus) Battle.applyStatus(target, 'regen', sk.regenStatus.turns, doc.uid);   // 香烟：调息状态
     await Battle.endSupport(doc);   // 已行动标记 → 清空瞄准态 → 渲染 → 流血 → 全员检查
   },
 
