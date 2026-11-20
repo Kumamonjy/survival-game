@@ -8,18 +8,18 @@ const [s1, s2] = g.chars;
 (async () => {
   // ===== T1 配置层 =====
   const D = DATA.GYM;
-  assert(D && D.buildCost===200 && D.upgradeCost===200 && D.maxLv===5 && D.expAmt===40 && D.staminaCost===50, 'T1a 健身房配置 200/200/Lv5/+40/-50');
+  assert(D && D.buildCost===90 && D.upgradeCost===150 && D.maxLv===5 && D.expAmt===40 && D.staminaCost===50, 'T1a 健身房配置 90/150/Lv5/+40/-50');
   assert(g.gymLv===0 && Array.isArray(g.gymSlots) && !g.gymSlots.length, 'T1b 初始状态未建造');
 
   // ===== T2 建造与升级 =====
   g.res.gold = 200;
   Game.buildGym();
-  assert(g.gymLv===1 && g.res.gold===0, 'T2a 建造成功 200→0 金币 Lv.1');
+  assert(g.gymLv===1 && g.res.gold===110, 'T2a 建造成功 200→110 金币 Lv.1');
   Game.upgradeGym();
   assert(g.gymLv===1, 'T2b 金币不足升级被拒');
   g.res.gold = 200;
   Game.upgradeGym();
-  assert(g.gymLv===2 && g.res.gold===0, 'T2c 升级到 Lv.2 扣200');
+  assert(g.gymLv===2 && g.res.gold===50, 'T2c 升级到 Lv.2 扣 150');
 
   // ===== T3 指派校验 =====
   s1.stamina = 100; s1.injured = false;

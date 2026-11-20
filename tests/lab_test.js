@@ -14,7 +14,7 @@ function mkB(units){
 
 (async () => {
   // ===== T1 实验室定义 =====
-  assert(DATA.LAB && DATA.LAB.name==='实验室' && DATA.LAB.buildCost===200, 'T1 实验室定义（200 金币建造）');
+  assert(DATA.LAB && DATA.LAB.name==='实验室' && DATA.LAB.buildCost===110 && DATA.LAB.upgradeCost===180 && DATA.LAB.maxLv===5, 'T1 实验室定义（110 建造 / 180 基准升级 / Lv5）');
 
   // ===== T2 解毒针定义 =====
   const AN = DATA.EQUIPS.antidote;
@@ -29,7 +29,7 @@ function mkB(units){
   assert(g.labLv===0, 'T3a 金币不足拒绝建造');
   g.res.gold = 500;
   Game.buildLab();
-  assert(g.labLv===1 && g.res.gold===300, 'T3b 建造成功扣 200');
+  assert(g.labLv===1 && g.res.gold===390, 'T3b 建造成功扣 110');
 
   // ===== T4 指派 =====
   const sci = Game.createChar('scientist', '老陈');

@@ -8,15 +8,15 @@ const [s1, s2] = g.chars;
 (async () => {
   // ===== T1 定义 =====
   const F = DATA.FARM;
-  assert(F.buildCost===150 && F.upgradeCost===150 && F.maxLv===5 && F.workCost===50, 'T1a 农场参数（150建/150升/Lv5/50⚡）');
+  assert(F.buildCost===90 && F.upgradeCost===150 && F.maxLv===5 && F.workCost===50, 'T1a 农场参数（90建/150升/Lv5/50⚡）');
   assert(F.out(1)===2 && F.out(3)===6 && F.out(5)===10, 'T1b 每级产出 2/4/6/8/10');
 
   // ===== T2 建造/升级 =====
   g.res.gold = 300;
   Game.buildFarm();
-  assert(g.farmLv===1 && g.res.gold===150, 'T2a 建造扣 150 金币');
+  assert(g.farmLv===1 && g.res.gold===210, 'T2a 建造扣 90 金币');
   Game.upgradeFarm();
-  assert(g.farmLv===2 && g.res.gold===0, 'T2b 升级扣 150 金币到 Lv.2');
+  assert(g.farmLv===2 && g.res.gold===60, 'T2b 升级扣 150 金币到 Lv.2');
   Game.upgradeFarm();   // 金币不足
   assert(g.farmLv===2, 'T2c 金币不足不升级');
 

@@ -900,7 +900,7 @@ DATA.EQUIPS = {
 DATA.EMPTY_EQUIP = { weapon:null, head:null, armor:null, shoes:null, acc:null, item:null };
 
 /* 工坊：制造装备 */
-DATA.WORKSHOP = { name:'工坊', icon:'🏭', buildCost:250, upgradeCost:250, maxLv:5, desc:'消耗金币、木材、布料与金属制造装备，造好的装备放入背包后可在人物信息中穿戴。每升一级，制造与升级装备的材料消耗减少 10%（向上取整）。' };
+DATA.WORKSHOP = { name:'工坊', icon:'🏭', buildCost:130, upgradeCost:200, maxLv:5, desc:'消耗金币、木材、布料与金属制造装备，造好的装备放入背包后可在人物信息中穿戴。每升一级，制造与升级装备的材料消耗减少 10%（向上取整）。' };
 DATA.RECIPES = [
   { id:'stone',  cost:{ gold:12, metal:3 }, stamina:5 },
   { id:'dart',   cost:{ gold:8, metal:2 }, stamina:5 },
@@ -1009,24 +1009,24 @@ DATA.NAMES = [
 /* 营地建筑 */
 DATA.KITCHEN = {
   name:'厨房', icon:'🍳',
-  buildCost:200, upgradeCost:200, maxLv:5,
+  buildCost:100, upgradeCost:160, maxLv:5,
   out:lv=>lv*4,            // 每级产出 4/8/12/16/20
   workCost:50,             // 当值厨师每天消耗的体力
 };
 DATA.DORM = {
   name:'寝室', icon:'🛏️',
-  buildCost:150, upgradeCost:150, maxLv:5,
+  buildCost:80, upgradeCost:140, maxLv:5,
   regenAmt:50,             // 床位成员每天额外恢复的体力与生命
 };
 DATA.GYM = {
   name:'健身房', icon:'🏋️',
-  buildCost:200, upgradeCost:200, maxLv:5,
+  buildCost:90, upgradeCost:150, maxLv:5,
   expAmt:40,               // 训练位成员每天获得的经验
   staminaCost:50,          // 训练每天消耗的体力
 };
 DATA.FARM = {
   name:'农场', icon:'🌾',
-  buildCost:150, upgradeCost:150, maxLv:5,
+  buildCost:90, upgradeCost:150, maxLv:5,
   out:lv=>lv*2,            // 每级产出 2/4/6/8/10
   workCost:50,             // 农场当值每天消耗的体力
 };
@@ -1038,11 +1038,11 @@ DATA.VISITOR = {
 };
 DATA.LAB = {
   name:'实验室', icon:'🧪',
-  buildCost:200, upgradeCost:200, maxLv:5,   // 每级生产体力 -2（最低 5）
+  buildCost:110, upgradeCost:180, maxLv:5,   // 每级生产体力 -2（最低 5）
 };
 DATA.HOSPITAL = {
   name:'医院', icon:'🏥',
-  buildCost:180, upgradeCost:180, maxLv:5,   // 每级生产体力 -2（最低 5）
+  buildCost:100, upgradeCost:170, maxLv:5,   // 每级生产体力 -2（最低 5）
 };
 
 /* 建筑统一配置：Game.buildBuilding / Game.upgradeBuilding 数据驱动入口 */
@@ -1689,11 +1689,14 @@ const Game = {
     UI.toast(C.buildMsg(D, 1));
     UI.renderBuild(); Game.renderHome();
   },
+  /* 升级费用随当前等级递增：Lv.1→2 收基准价，Lv.2→3 收 2 倍，以此类推 */
+  upCost(D, lv) { return D.upgradeCost * Math.max(1, lv); },
   upgradeBuilding(key) {
     const g = Game.g, C = BUILD_CONFIG[key], D = C.data();
     if (g[C.lv] <= 0 || g[C.lv] >= D.maxLv) return;
-    if (g.res.gold < D.upgradeCost) { UI.toast('💰 金币不足，升级需要 ' + D.upgradeCost + ' 金币'); return; }
-    g.res.gold -= D.upgradeCost;
+    const cost = Game.upCost(D, g[C.lv]);
+    if (g.res.gold < cost) { UI.toast('💰 金币不足，升级到 Lv.' + (g[C.lv]+1) + ' 需要 ' + cost + ' 金币'); return; }
+    g.res.gold -= cost;
     g[C.lv]++;
     Game.saveToSlot(Game.currentSlot, true);
     UI.toast(C.upMsg(g[C.lv], D));
@@ -2263,12 +2266,15 @@ const UI = {
     const buildRow = (D, onclick, label) => `<div class="row" style="margin-top:10px">
         <button class="btn primary" ${g.res.gold<D.buildCost?'disabled':''} onclick="${onclick}">🔨 ${label}（${D.buildCost} 💰）</button>
       </div>`;
-    const upRow = (lv, D, onclick, firstTag) => `<div class="row" style="margin-top:10px;flex-wrap:wrap">
+    const upRow = (lv, D, onclick, firstTag) => {
+      const cost = Game.upCost(D, lv);
+      return `<div class="row" style="margin-top:10px;flex-wrap:wrap">
         ${firstTag}
         ${lv < D.maxLv
-          ? `<button class="btn primary small" ${g.res.gold<D.upgradeCost?'disabled':''} onclick="${onclick}">⬆️ 升级到 Lv.${lv+1}（${D.upgradeCost} 💰）</button>`
+          ? `<button class="btn primary small" ${g.res.gold<cost?'disabled':''} onclick="${onclick}">⬆️ 升级到 Lv.${lv+1}（${cost} 💰）</button>`
           : '<span class="tag">已满级</span>'}
       </div>`;
+    };
     const occNote = (occHtml, warn, trailing) => `<div class="wiki-p" style="margin-top:8px">${occHtml || `<span style="color:var(--red2)">${warn}</span>`}${trailing}</div>`;
     const dutyHint = (word) => `${word}在主界面「职务指派」。`;
 

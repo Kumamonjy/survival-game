@@ -8,18 +8,18 @@ const [s1, s2] = g.chars;
 (async () => {
   // ===== T1 配置层 =====
   const D = DATA.DORM;
-  assert(D && D.buildCost===150 && D.upgradeCost===150 && D.maxLv===5 && D.regenAmt===50, 'T1a 寝室配置 150/150/Lv5/+50');
+  assert(D && D.buildCost===80 && D.upgradeCost===140 && D.maxLv===5 && D.regenAmt===50, 'T1a 寝室配置 80/140/Lv5/+50');
   assert(g.dormLv===0 && Array.isArray(g.dormBeds) && !g.dormBeds.length, 'T1b 初始状态未建造');
 
   // ===== T2 建造与升级 =====
   g.res.gold = 200;
   Game.buildDorm();
-  assert(g.dormLv===1 && g.res.gold===50, 'T2a 建造成功 200→50 金币 Lv.1');
+  assert(g.dormLv===1 && g.res.gold===120, 'T2a 建造成功 200→120 金币 Lv.1');
   Game.upgradeDorm();
   assert(g.dormLv===1, 'T2b 金币不足升级被拒');
   g.res.gold = 500;
   Game.upgradeDorm();
-  assert(g.dormLv===2 && g.res.gold===350, 'T2c 升级到 Lv.2 扣150');
+  assert(g.dormLv===2 && g.res.gold===360, 'T2c 升级到 Lv.2 扣 140');
 
   // ===== T3 床位分配 =====
   Game.assignBed(s1.id);

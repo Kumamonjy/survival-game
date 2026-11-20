@@ -11,7 +11,7 @@ const g = Game.g;
 
 (() => {
   // T1 工坊可升级配置
-  assert(DATA.WORKSHOP.maxLv===5 && DATA.WORKSHOP.upgradeCost===250, 'T1a 工坊 maxLv5 / 升级 250💰');
+  assert(DATA.WORKSHOP.maxLv===5 && DATA.WORKSHOP.upgradeCost===200 && DATA.WORKSHOP.buildCost===130, 'T1a 工坊 maxLv5 / 建造 130 / 升级基准 200💰');
   assert(DATA.WORKSHOP.desc.includes('10%'), 'T1b 描述含折扣说明');
 
   // T2 Lv1 无折扣（木棍 20💰+5🪵）
@@ -64,10 +64,10 @@ const g = Game.g;
   const bh = elems['build-page'].innerHTML;
   assert(bh.includes('材料 -20%') && bh.includes('升级到 Lv.4'), 'T7 工坊卡折扣标签 + 升级按钮');
 
-  // T8 Lv4 -30% → Lv5 -40% → 满级拦截
-  g.res.gold = 1000;
+  // T8 Lv4 -30% → Lv5 -40% → 满级拦截（升级费随当前等级递增：3×200 / 4×200）
+  g.res.gold = 2500;
   Game.upgradeBuilding('workshop');
-  assert(g.workshopLv===4, 'T8a 升工坊 Lv4');
+  assert(g.workshopLv===4 && g.res.gold===1900, 'T8a 升工坊 Lv4 扣 600');
   const c4 = Game.craftCost('stick');
   assert(c4.gold===14 && c4.wood===4, `T8b Lv4 打造 -30%：ceil(20×0.7)=14💰+ceil(5×0.7)=4🪵（${c4.gold}+${c4.wood}）`);
   Game.upgradeBuilding('workshop');

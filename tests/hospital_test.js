@@ -14,7 +14,7 @@ function mkB(units){
 
 (async () => {
   // ===== T1 医院定义 =====
-  assert(DATA.HOSPITAL && DATA.HOSPITAL.name==='医院' && DATA.HOSPITAL.buildCost===180, 'T1 医院定义（180 金币建造，不可升级）');
+  assert(DATA.HOSPITAL && DATA.HOSPITAL.name==='医院' && DATA.HOSPITAL.buildCost===100 && DATA.HOSPITAL.upgradeCost===170 && DATA.HOSPITAL.maxLv===5, 'T1 医院定义（100 建造 / 170 基准升级 / Lv5）');
   const PB = DATA.PRODUCE.bandage;
   assert(PB && PB.building==='hospitalLv' && PB.duty==='hospitalDoc' && PB.stamina===10, 'T1b 生产配置（hospitalLv/hospitalDoc/10⚡）');
   assert(PB.mats.fabric===2 && PB.mats.med===1, 'T1c 材料 2🧵+1💊');
@@ -27,12 +27,12 @@ function mkB(units){
   assert(Array.isArray(sk.cureList) && sk.cureList.length===1 && sk.cureList[0]==='bleed', 'T2c cureList 只解流血');
 
   // ===== T3 建造 =====
-  g.res.gold = 100;
+  g.res.gold = 90;
   Game.buildHospital();
   assert(g.hospitalLv===0, 'T3a 金币不足拒绝建造');
   g.res.gold = 500;
   Game.buildHospital();
-  assert(g.hospitalLv===1 && g.res.gold===320, 'T3b 建造成功扣 180');
+  assert(g.hospitalLv===1 && g.res.gold===400, 'T3b 建造成功扣 100');
 
   // ===== T4 指派（医生或护士，cls 数组） =====
   const doc = Game.createChar('doctor', '白大夫');
