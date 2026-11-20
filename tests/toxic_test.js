@@ -15,7 +15,8 @@ const mkB=(units)=>({ units, selected:units[0], terrain:Array.from({length:Battl
   assert(B.base.move===2 && B.explodeDmg===80 && B.exp===20 && B.base.maxHp===160, 'T1a 自爆丧尸配置');
   assert(G.base.move===1 && G.gasMult===1.1 && G.exp===25 && G.base.maxHp===200, 'T1b 毒气丧尸配置');
   assert(Object.keys(DATA.ZOMBIES).length===10, 'T1c 丧尸种类共 10 种');
-  assert(DATA.ZONES[2].pool.bomber===15 && DATA.ZONES[3].pool.gasbag===10 && DATA.ZONES[4].pool.gasbag===12, 'T1d 区域池已加入新丧尸');
+  const zc = id => DATA.ZONES.find(z=>z.id===id);
+  assert(zc('factory').pool.bomber===15 && zc('street').pool.gasbag===10 && zc('base').pool.gasbag===12, 'T1d 区域池已加入新丧尸');
 
   // ===== T2 自爆：攻击致死触发 =====
   const a1 = mkA('老兵','a1',5,5);

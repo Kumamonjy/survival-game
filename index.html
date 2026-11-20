@@ -242,6 +242,8 @@ button:disabled { opacity:.45; cursor:not-allowed; }
   transition:transform .08s;
 }
 .zone-card:active { transform:scale(.98); }
+.zone-card.locked { opacity:.5; filter:grayscale(.7); }
+.zone-card.locked:active { transform:none; }
 .zone-card .zic {
   width:52px; height:52px; border-radius:12px; font-size:26px; display:flex; align-items:center; justify-content:center;
   background:rgba(212,167,44,.1); border:1px solid var(--line2); flex-shrink:0;
@@ -759,7 +761,7 @@ DATA.CLASSES = {
   }
 };
 
-/* 丧尸图鉴：基础值同步角色加强；等级成长 = HP+30 / ATK+6 / DEF+3 每级（每8天丧尸等级+1） */
+/* 丧尸图鉴：基础值同步角色加强；等级成长 = 生命/攻击/防御按基础值 +10% 每级（丧尸等级 = 出战平均等级 - 1） */
 DATA.ZOMBIES = {
   walker:  { name:'游荡丧尸', icon:'🧟', desc:'最常见的丧尸，行动迟缓但成群出没。',
              base:{ maxHp:200, atk:30, def:5, range:1, move:2, critRate:5, critDmg:150 }, exp:15, weight:40 },
@@ -789,21 +791,27 @@ DATA.ZOMBIES = {
              skills:[{ name:'毁灭重击', desc:'对 2 格内一名敌人造成 180% 攻击力的伤害。', cost:0, cd:4, type:'attack', shape:'target', mult:1.8, range:2 }] }
 };
 
-/* 探险区域：pool 为丧尸类型概率池（权重），count 为丧尸数量区间；丧尸等级 = 出战队伍平均等级 */
+/* 探险区域：pool 为丧尸类型概率池（权重），count 为丧尸数量区间；丧尸等级 = 出战队伍平均等级 - 1（最低 1） */
 DATA.ZONES = [
-  { id:'market',  name:'废弃超市', icon:'🛒', danger:1, desc:'货架上还残留着末日前的物资，衣物货架或许还保有布料。',
+  { id:'market',  name:'废弃超市', icon:'🛒', danger:1, unlockDay:1, desc:'货架上还残留着末日前的物资，衣物货架或许还保有布料。',
     main:{food:[8,14]}, sub:{gold:[4,8],fabric:[2,4]}, count:[4,5], pool:{walker:60, runner:40}, boss:false,
     terrain:{ water:10, rubble:8, ruin:6, crate:8, barrel:1 } },
-  { id:'hospital',name:'市中心医院', icon:'🏥', danger:2, desc:'药房或许还有没被搜刮的药品。',
+  { id:'gas',     name:'废弃加油站', icon:'⛽', danger:1, unlockDay:1, desc:'便利店收银台里还留着零钱，拆下来的木托盘堆在后院；散落的油桶随时可能被引爆。',
+    main:{gold:[16,28]}, sub:{wood:[1,3],food:[2,4]}, count:[4,5], pool:{walker:65, runner:23, bomber:12}, boss:false,
+    terrain:{ water:4, rubble:9, ruin:5, crate:7, barrel:24 } },
+  { id:'hospital',name:'市中心医院', icon:'🏥', danger:2, unlockDay:3, desc:'药房或许还有没被搜刮的药品。',
     main:{med:[4,7]}, sub:{food:[3,6],fabric:[1,3]}, count:[5,6], pool:{walker:20, runner:30, licker:25, bomber:12, shrieker:8, witch:5}, boss:false,
     terrain:{ water:12, rubble:8, ruin:7, crate:7, barrel:2 } },
-  { id:'factory', name:'旧钢铁工厂', icon:'🏭', danger:3, desc:'废墟中散落着大量可用的金属材料，废弃木托盘与包装箱能拆出木材。深处偶尔能听到沉重的脚步声……',
+  { id:'forest',  name:'林场', icon:'🌲', danger:2, unlockDay:3, desc:'伐木场堆满原木与木托盘，木材取之不尽；但林间游荡着成群的丧尸。',
+    main:{wood:[6,10]}, sub:{food:[2,4],metal:[1,2]}, count:[5,6], pool:{walker:30, runner:25, brute:20, licker:15, bomber:10}, boss:false,
+    terrain:{ water:6, rubble:16, ruin:12, crate:5, barrel:6 } },
+  { id:'factory', name:'旧钢铁工厂', icon:'🏭', danger:3, unlockDay:5, desc:'废墟中散落着大量可用的金属材料，废弃木托盘与包装箱能拆出木材。深处偶尔能听到沉重的脚步声……',
     main:{metal:[5,9]}, sub:{gold:[8,15],fabric:[1,2],wood:[1,3]}, count:[5,7], pool:{walker:15, runner:15, brute:30, licker:15, bomber:15, behemoth:5, shrieker:5}, boss:false,
     terrain:{ water:4, rubble:15, ruin:8, crate:4, barrel:10 } },
-  { id:'street',  name:'商业街废墟', icon:'🏙️', danger:3, desc:'银行的保险柜还没有被完全搬空。服装店废墟里能翻到布料，倒塌的商铺木架是木材来源。',
+  { id:'street',  name:'商业街废墟', icon:'🏙️', danger:3, unlockDay:5, desc:'银行的保险柜还没有被完全搬空。服装店废墟里能翻到布料，倒塌的商铺木架是木材来源。',
     main:{gold:[35,60]}, sub:{metal:[3,6],fabric:[1,2],wood:[1,2]}, count:[5,7], pool:{runner:19, brute:18, licker:18, savage:15, bomber:10, gasbag:10, shrieker:7, witch:3}, boss:false,
     terrain:{ water:6, rubble:10, ruin:14, crate:6, barrel:3 } },
-  { id:'base',    name:'军事基地', icon:'🎖️', danger:4, desc:'武装到牙齿，但驻守的已不是人类。有大变异体坐镇。',
+  { id:'base',    name:'军事基地', icon:'🎖️', danger:4, unlockDay:8, desc:'武装到牙齿，但驻守的已不是人类。有大变异体坐镇。',
     main:{metal:[7,11]}, sub:{med:[2,4],gold:[15,25],fabric:[1,2]}, count:[6,8], pool:{brute:20, licker:18, runner:14, savage:16, bomber:8, gasbag:12, shrieker:7, witch:5}, boss:true,
     terrain:{ water:6, rubble:14, ruin:12, crate:5, barrel:6 } },
 ];
@@ -1028,11 +1036,11 @@ DATA.VISITOR = {
 };
 DATA.LAB = {
   name:'实验室', icon:'🧪',
-  buildCost:200,           // 不可升级：建造后指派科学家当值即可生产解毒针
+  buildCost:200, upgradeCost:200, maxLv:5,   // 每级生产体力 -2（最低 5）
 };
 DATA.HOSPITAL = {
   name:'医院', icon:'🏥',
-  buildCost:180,           // 不可升级：建造后指派医生或护士当值即可生产绷带
+  buildCost:180, upgradeCost:180, maxLv:5,   // 每级生产体力 -2（最低 5）
 };
 
 /* 建筑统一配置：Game.buildBuilding / Game.upgradeBuilding 数据驱动入口 */
@@ -1044,9 +1052,11 @@ const BUILD_CONFIG = {
     buildMsg:()=>'🍳 厨房建造完成！指派厨师当值后开始产出食物',
     upMsg:(lv,K)=>`🍳 厨房升级到 Lv.${lv}，每日产出提升到 ${K.out(lv)} 份食物` },
   lab:      { data:()=>DATA.LAB, lv:'labLv', name:'实验室',
-    buildMsg:()=>'🧪 实验室建造完成！指派科学家当值，即可生产解毒针' },
+    buildMsg:()=>'🧪 实验室建造完成！指派科学家当值，即可生产解毒针',
+    upMsg:lv=>`🧪 实验室升级到 Lv.${lv}，生产体力消耗 -${(lv-1)*2}⚡` },
   hospital: { data:()=>DATA.HOSPITAL, lv:'hospitalLv', name:'医院',
-    buildMsg:()=>'🏥 医院建造完成！指派医生或护士当值，即可生产绷带' },
+    buildMsg:()=>'🏥 医院建造完成！指派医生或护士当值，即可生产绷带',
+    upMsg:lv=>`🏥 医院升级到 Lv.${lv}，生产体力消耗 -${(lv-1)*2}⚡` },
   dorm:     { data:()=>DATA.DORM, lv:'dormLv', name:'寝室',
     buildMsg:D=>`🛏️ 寝室建造完成！分配床位让成员入住，每天额外恢复 ${D.regenAmt} 体力/生命`,
     upMsg:lv=>`🛏️ 寝室升级到 Lv.${lv}，床位增加到 ${lv} 个` },
@@ -1756,16 +1766,24 @@ const Game = {
     const chans = (Array.isArray(P.building)?P.building:[P.building]).map((lv,i)=>({ lv, duty:Array.isArray(P.duty)?P.duty[i]:P.duty }));
     const chan = chans.find(ch=>(g[ch.lv]||0) > 0);
     if (!chan) return { ok:false, why:P.buildToast, P };
+    const st = Game.produceStamina(P, chan.lv);
     let worker = null;
     if (chan.duty) {
       worker = g.chars.find(c=>c.id===g[chan.duty] && !c.dead);
       if (!worker) return { ok:false, why:P.noDuty, P };
       if (worker.injured) return { ok:false, why:`${worker.name} 重伤，无法${P.action||'生产'}`, P };
-      if ((worker.stamina||0) < (P.stamina||0)) return { ok:false, why:`${worker.name} 体力不足 ${P.stamina}⚡，无法${P.action2||P.action||'生产'}`, P };
+      if ((worker.stamina||0) < st) return { ok:false, why:`${worker.name} 体力不足 ${st}⚡，无法${P.action2||P.action||'生产'}`, P };
     }
     const lack = Game.costLackText(mats);
     if (lack) return { ok:false, why:P.lackMsg || lack, lack:true, P };
-    return { ok:true, mats, worker, P };
+    return { ok:true, mats, worker, P, stamina:st };
+  },
+  /* 生产体力消耗：医院/实验室每升一级 -2⚡（最低 5）；其余建筑按基础值 */
+  produceStamina(P, lvKey) {
+    const base = P.stamina||0;
+    if (lvKey !== 'hospitalLv' && lvKey !== 'labLv') return base;
+    const lv = (Game.g && Game.g[lvKey]) || 1;
+    return Math.max(5, base - 2*(lv-1));
   },
   /* 生产执行：判定（canProduce）→ 扣材料/体力 → 入背包 */
   produce(id) {
@@ -1773,7 +1791,7 @@ const Game = {
     if (!chk.ok) { if (chk.why) UI.toast(chk.why); return; }
     const P = chk.P;
     Object.entries(chk.mats).forEach(([k,v])=>{ Game.g.res[k] -= v; });
-    if (chk.worker) chk.worker.stamina -= (P.stamina||0);
+    if (chk.worker) chk.worker.stamina -= chk.stamina;
     Game.addEquip(id, 1);
     Game.saveToSlot(Game.currentSlot, true);
     UI.toast(P.okMsg(chk.worker));
@@ -2163,10 +2181,10 @@ const UI = {
         staminaCost:K.workCost, fullTag:null, assignLabel:'指派',
         assignCall:c=>`Game.assignKitchen('${c.id}')` },
       { built: g.labLv > 0,
-        title:'🧪 实验室当值（生产解毒针：15⚡ + 15💰 + 1⚙️ + 3💊 → 背包）',
+        title:`🧪 实验室当值（生产解毒针：${Game.produceStamina(DATA.PRODUCE.antidote,'labLv')}⚡ + 15💰 + 1⚙️ + 3💊 → 背包）`,
         occupants: occOf(g.labChef),
         occBadge:()=>'<span class="tag blue">实验员</span>',
-        occSub:o=>`⚡ ${o.stamina}/${o.maxStamina}（体力 &lt;15 时无法生产，不影响出战）`,
+        occSub:o=>`⚡ ${o.stamina}/${o.maxStamina}（体力 &lt;${Game.produceStamina(DATA.PRODUCE.antidote,'labLv')} 时无法生产，不影响出战）`,
         unLabel:'撤职', unCall:()=>'Game.unassignLab()',
         empty:`⚠️ 实验室空置——没有科学家当值就无法生产解毒针。${alive.some(c=>c.cls==='scientist')?'从下方名单指派。':'去招募广播找一位科学家（250 💰）。'}`,
         cands: alive.filter(c=>c.cls==='scientist' && c.id!==g.labChef),
@@ -2185,10 +2203,10 @@ const UI = {
         staminaCost:0, fullTag:null, assignLabel:'指派',
         assignCall:c=>`Game.assignWorkshop('${c.id}')` },
       { built: g.hospitalLv > 0,
-        title:'🏥 医院当值（生产绷带：10⚡ + 2🧵 + 1💊 → 背包）',
+        title:`🏥 医院当值（生产绷带：${Game.produceStamina(DATA.PRODUCE.bandage,'hospitalLv')}⚡ + 2🧵 + 1💊 → 背包）`,
         occupants: occOf(g.hospitalDoc),
         occBadge:()=>'<span class="tag blue">医务员</span>',
-        occSub:o=>`⚡ ${o.stamina}/${o.maxStamina}（体力 &lt;10 时无法生产，不影响出战）`,
+        occSub:o=>`⚡ ${o.stamina}/${o.maxStamina}（体力 &lt;${Game.produceStamina(DATA.PRODUCE.bandage,'hospitalLv')} 时无法生产，不影响出战）`,
         unLabel:'撤职', unCall:()=>'Game.unassignHospital()',
         empty:`⚠️ 医院空置——没有医生或护士当值就无法生产绷带。${alive.some(c=>c.cls==='doctor'||c.cls==='nurse')?'从下方名单指派。':'去招募广播找一位医生（200 💰）或护士（180 💰）。'}`,
         cands: alive.filter(c=>(c.cls==='doctor'||c.cls==='nurse') && c.id!==g.hospitalDoc),
@@ -2305,7 +2323,7 @@ const UI = {
           : upRow(flv, F, 'Game.upgradeFarm()', `<span class="tag yellow">每日产出 ${F.out(flv)} 🍞</span>`)
             + occNote(fw ? `🌾 耕作：<b>${fw.name}</b>（⚡ ${fw.stamina}/${fw.maxStamina}）` : null, '⚠️ 无人耕作，农场没有产出。', dutyHint('人员安排')));
 
-      // 实验室：建造 + 生产（不可升级）
+      // 实验室：建造 + 生产（可升级：每级生产体力 -2⚡）
       const L = DATA.LAB;
       CARDS.lab = () => {
         let labBody;
@@ -2314,20 +2332,24 @@ const UI = {
         } else {
           const sci = g.labChef ? g.chars.find(c=>c.id===g.labChef && !c.dead) : null;
           const chkAnt = Game.canProduce('antidote'), chkPain = Game.canProduce('painkiller'), chkAid = Game.canProduce('firstaid');
+          const sAnt = Game.produceStamina(DATA.PRODUCE.antidote, 'labLv');
+          const sPain = Game.produceStamina(DATA.PRODUCE.painkiller, 'labLv');
+          const sAid = Game.produceStamina(DATA.PRODUCE.firstaid, 'labLv');
           labBody = `<div class="row" style="margin-top:10px;flex-wrap:wrap">
-          <button class="btn primary" ${chkAnt.ok?'':'disabled'} title="${chkAnt.why||''}" onclick="Game.makeAntidote()">💉 生产解毒针（15⚡ + 15💰 + 1⚙️ + 3💊）</button>
-          <button class="btn primary" ${chkPain.ok?'':'disabled'} title="${chkPain.why||''}" onclick="Game.makePainkiller()">💊 生产止痛药（10⚡ + 2💊 + 10💰）</button>
-          <button class="btn primary" ${chkAid.ok?'':'disabled'} title="${chkAid.why||''}" onclick="Game.makeFirstaid()">⛑️ 生产急救丸（15⚡ + 2💊 + 20💰）</button>
+          <button class="btn primary" ${chkAnt.ok?'':'disabled'} title="${chkAnt.why||''}" onclick="Game.makeAntidote()">💉 生产解毒针（${sAnt}⚡ + 15💰 + 1⚙️ + 3💊）</button>
+          <button class="btn primary" ${chkPain.ok?'':'disabled'} title="${chkPain.why||''}" onclick="Game.makePainkiller()">💊 生产止痛药（${sPain}⚡ + 2💊 + 10💰）</button>
+          <button class="btn primary" ${chkAid.ok?'':'disabled'} title="${chkAid.why||''}" onclick="Game.makeFirstaid()">⛑️ 生产急救丸（${sAid}⚡ + 2💊 + 20💰）</button>
           ${(!chkAnt.ok||!chkPain.ok||!chkAid.ok)?`<span style="color:var(--red2);font-size:12px">${chkAnt.why||chkPain.why||chkAid.why}</span>`:''}
         </div>`
+            + upRow(g.labLv, L, "Game.upgradeBuilding('lab')", `<span class="tag yellow">生产体力 ${sAid}⚡</span>`)
             + (sci ? `<div class="wiki-p" style="margin-top:8px">🔬 实验员：<b>${sci.name}</b>（⚡ ${sci.stamina}/${sci.maxStamina}${sci.injured?'，重伤停产':''}）</div>` : '');
         }
-        return cardShell('🧪', '实验室', g.labLv, false,
-          `指派科学家当值，生产解毒针 / 止痛药 / 急救丸，成品入背包。`,
+        return cardShell('🧪', '实验室', g.labLv, true,
+          `指派科学家当值，生产解毒针 / 止痛药 / 急救丸，成品入背包。` + (g.labLv>0?`<br>升级：每级生产体力 -2⚡（当前 -${(g.labLv-1)*2}⚡，最低 5⚡）。`:''),
           labBody);
       };
 
-      // 医院：建造 + 生产（不可升级）
+      // 医院：建造 + 生产（可升级：每级生产体力 -2⚡）
       const H = DATA.HOSPITAL;
       CARDS.hospital = () => {
         let hospBody;
@@ -2336,16 +2358,20 @@ const UI = {
         } else {
           const doc = g.hospitalDoc ? g.chars.find(c=>c.id===g.hospitalDoc && !c.dead) : null;
           const chkBan = Game.canProduce('bandage'), chkPain = Game.canProduce('painkiller'), chkAid = Game.canProduce('firstaid');
+          const sBan = Game.produceStamina(DATA.PRODUCE.bandage, 'hospitalLv');
+          const sPain = Game.produceStamina(DATA.PRODUCE.painkiller, 'hospitalLv');
+          const sAid = Game.produceStamina(DATA.PRODUCE.firstaid, 'hospitalLv');
           hospBody = `<div class="row" style="margin-top:10px;flex-wrap:wrap">
-          <button class="btn primary" ${chkBan.ok?'':'disabled'} title="${chkBan.why||''}" onclick="Game.makeBandage()">🩹 生产绷带（10⚡ + 2🧵 + 1💊）</button>
-          <button class="btn primary" ${chkPain.ok?'':'disabled'} title="${chkPain.why||''}" onclick="Game.makePainkiller()">💊 生产止痛药（10⚡ + 2💊 + 10💰）</button>
-          <button class="btn primary" ${chkAid.ok?'':'disabled'} title="${chkAid.why||''}" onclick="Game.makeFirstaid()">⛑️ 生产急救丸（15⚡ + 2💊 + 20💰）</button>
+          <button class="btn primary" ${chkBan.ok?'':'disabled'} title="${chkBan.why||''}" onclick="Game.makeBandage()">🩹 生产绷带（${sBan}⚡ + 2🧵 + 1💊）</button>
+          <button class="btn primary" ${chkPain.ok?'':'disabled'} title="${chkPain.why||''}" onclick="Game.makePainkiller()">💊 生产止痛药（${sPain}⚡ + 2💊 + 10💰）</button>
+          <button class="btn primary" ${chkAid.ok?'':'disabled'} title="${chkAid.why||''}" onclick="Game.makeFirstaid()">⛑️ 生产急救丸（${sAid}⚡ + 2💊 + 20💰）</button>
           ${(!chkBan.ok||!chkPain.ok||!chkAid.ok)?`<span style="color:var(--red2);font-size:12px">${chkBan.why||chkPain.why||chkAid.why}</span>`:''}
         </div>`
+            + upRow(g.hospitalLv, H, "Game.upgradeBuilding('hospital')", `<span class="tag yellow">生产体力 ${sAid}⚡</span>`)
             + (doc ? `<div class="wiki-p" style="margin-top:8px">⚕️ 医务员：<b>${doc.name}</b>（⚡ ${doc.stamina}/${doc.maxStamina}${doc.injured?'，重伤停产':''}）</div>` : '');
         }
-        return cardShell('🏥', '医院', g.hospitalLv, false,
-          `指派医生或护士当值，生产绷带 / 止痛药 / 急救丸，成品入背包。`,
+        return cardShell('🏥', '医院', g.hospitalLv, true,
+          `指派医生或护士当值，生产绷带 / 止痛药 / 急救丸，成品入背包。` + (g.hospitalLv>0?`<br>升级：每级生产体力 -2⚡（当前 -${(g.hospitalLv-1)*2}⚡，最低 5⚡）。`:''),
           hospBody);
       };
 
@@ -2718,19 +2744,21 @@ const UI = {
   /* ---- 探险区域 ---- */
   openZones() {
     const el = document.getElementById('zone-list');
+    const day = (Game.g && Game.g.day) || 1;
     el.innerHTML = DATA.ZONES.map(z=>{
       const mainStr = Object.entries(z.main).map(([k,v])=>`${UI.resIcon(k)} ${v[0]}-${v[1]}`).join('　');
       const subStr = Object.entries(z.sub).map(([k,v])=>`${UI.resIcon(k)} ${v[0]}-${v[1]}`).join('　');
       const terrStr = z.terrain ? Object.entries(z.terrain).map(([k,v])=>`${DATA.TERRAIN[k].icon}${v}`).join(' ') : '';
-      return `<div class="zone-card" onclick="UI.openTeam('${z.id}')">
-        <div class="zic">${z.icon}</div>
+      const locked = (z.unlockDay||1) > day;
+      return `<div class="zone-card${locked?' locked':''}" ${locked?'':`onclick="UI.openTeam('${z.id}')"`}>
+        <div class="zic">${locked?'🔒':z.icon}</div>
         <div style="flex:1">
           <div class="zt">${z.name} <span class="danger-stars">${'★'.repeat(z.danger)}</span></div>
-          <div class="zd">${z.desc}</div>
-          <div class="zd" style="margin-top:4px"><b style="color:var(--txt)">主要产出：</b>${mainStr}<br><b style="color:var(--txt)">次要产出：</b>${subStr}　＋ 战斗中拾取物资箱</div>
-          <div class="zd" style="margin-top:3px"><b style="color:var(--txt)">战场地形：</b>${terrStr}</div>
+          <div class="zd">${locked ? `第 ${z.unlockDay} 天解锁（当前第 ${day} 天）` : z.desc}</div>
+          ${locked?'':`<div class="zd" style="margin-top:4px"><b style="color:var(--txt)">主要产出：</b>${mainStr}<br><b style="color:var(--txt)">次要产出：</b>${subStr}　＋ 战斗中拾取物资箱</div>
+          <div class="zd" style="margin-top:3px"><b style="color:var(--txt)">战场地形：</b>${terrStr}</div>`}
         </div>
-        <div style="color:var(--green2)">›</div>
+        <div style="color:${locked?'var(--dim)':'var(--green2)'}">${locked?'':'›'}</div>
       </div>`;
     }).join('');
     UI.showScreen('scr-zones');
@@ -2943,8 +2971,8 @@ const UI = {
           <tr><td><b>🛏️ 寝室</b></td><td>150 建造 / 每 150 升级，每级 1 床位</td><td>入住者每日额外 +50⚡+50❤️（与晚饭叠加，重伤睡满自愈）</td><td>不影响出战；床位免费换人</td></tr>
           <tr><td><b>🏋️ 健身房</b></td><td>200 建造 / 每 200 升级，每级 1 训练位</td><td>训练者每日 -50⚡、+40 经验</td><td>需体力≥50 且未重伤；不影响出战</td></tr>
           <tr><td><b>🌱 农场</b></td><td>150 建造 / 每 150 升级，Lv.5 封顶</td><td>每日 +2×等级 份食物</td><td>任意职业当值（-50⚡/天）；不影响出战</td></tr>
-          <tr><td><b>🏥 医院</b></td><td>180 建造（不可升级）</td><td>生产绷带/止痛药/急救丸</td><td>医生或护士当值；不影响出战</td></tr>
-          <tr><td><b>🧪 实验室</b></td><td>200 建造（不可升级）</td><td>生产解毒针/止痛药/急救丸</td><td>科学家当值；不影响出战</td></tr>
+          <tr><td><b>🏥 医院</b></td><td>180 建造 / 每 180 升级，Lv.5 封顶</td><td>生产绷带/止痛药/急救丸</td><td>医生或护士当值；每级生产体力 -2⚡（最低 5⚡）</td></tr>
+          <tr><td><b>🧪 实验室</b></td><td>200 建造 / 每 200 升级，Lv.5 封顶</td><td>生产解毒针/止痛药/急救丸</td><td>科学家当值；每级生产体力 -2⚡（最低 5⚡）</td></tr>
         </table>
         <div class="wiki-p" style="margin-top:6px">建筑产出于每日过夜结算；换人/撤职随时免费。装备详情见「🧰 装备」页。</div>
       </div>`;
@@ -3005,7 +3033,7 @@ const UI = {
       <div class="wiki-sec panel"><h4>🧟 丧尸图鉴</h4>
         <div class="table-scroll"><table class="wiki-table zom-table"><colgroup><col style="width:8%"><col style="width:6%"><col style="width:6%"><col style="width:6%"><col style="width:6%"><col style="width:6%"><col style="width:9%"><col style="width:7%"><col style="width:23%"><col style="width:23%"></colgroup><tr><th>类型</th><th>生命</th><th>攻击</th><th>防御</th><th>移速</th><th>射程</th><th>暴击/暴伤</th><th>经验</th><th>特性</th><th>技能</th></tr>${zomRows}</table></div>
         <div class="wiki-p" style="margin-top:4px">👉 表格可<b>左右滑动</b>查看完整内容</div>
-        <div class="wiki-p" style="margin-top:6px">丧尸强度与队伍实力挂钩：<b>丧尸等级 = 出战角色的平均等级</b>（向下取整），每级生命 +30 / 攻击 +6 / 防御 +3。每个区域有各自的丧尸数量区间与类型概率——<b>旧钢铁工厂有约 5% 概率遭遇暴君变异体</b>，军事基地必定有暴君坐镇。丧尸潮预警会额外增加 2 只丧尸并使奖励翻倍。</div>
+        <div class="wiki-p" style="margin-top:6px">丧尸强度与队伍实力挂钩：<b>丧尸等级 = 出战角色平均等级 - 1</b>（向下取整，最低 1），每级<b>生命 / 攻击 / 防御按基础值 +10%</b>（与角色成长一致）。地图按天数逐步解锁：1★ 第 1 天、2★ 第 3 天、3★ 第 5 天、4★ 第 8 天。每个区域有各自的丧尸数量区间与类型概率——<b>旧钢铁工厂有约 5% 概率遭遇暴君变异体</b>，军事基地必定有暴君坐镇。丧尸潮预警会额外增加 2 只丧尸并使奖励翻倍。</div>
       </div>`;
     const slotName = id => (DATA.SLOTS.find(s=>s.id===id)||{name:id}).name;
     const craftMap = {}; DATA.RECIPES.forEach(r=>{ craftMap[r.id] = `${r.cost.gold}💰` + (r.cost.wood?` + ${r.cost.wood}🪵`:'') + (r.cost.metal?` + ${r.cost.metal}⚙️`:'') + (r.cost.fabric?` + ${r.cost.fabric}🧵`:'') + ` + ${r.stamina}⚡`; });
@@ -3252,8 +3280,8 @@ const Battle = {
     // 出战消耗体力
     team.forEach(c=>{ c.stamina = Math.max(0, c.stamina - 15); });
 
-    // 丧尸等级 = 出战角色平均等级（向下取整，最低 1）
-    const zLevel = Math.max(1, Math.floor(team.reduce((s,c)=>s+c.level,0) / Math.max(1,team.length)));
+    // 丧尸等级 = 出战角色平均等级 - 1（向下取整，最低 1）
+    const zLevel = Math.max(1, Math.floor(team.reduce((s,c)=>s+c.level,0) / Math.max(1,team.length)) - 1);
     const extra = g.hordeWarning ? 2 : 0;
     g.hordeWarning = false;   // 丧尸潮为一次性效果，应用后消费
 
@@ -3362,12 +3390,12 @@ const Battle = {
   },
   mkZombie(zt, row, col, lv) {
     const Z = DATA.ZOMBIES[zt];
-    const lvf = lv-1;
+    const grow = 1 + 0.1*(lv-1);   // 与角色一致：每级按基础值 +10% 成长
     const zskills = Z.skills || (Z.skill ? [Z.skill] : []);   // 丧尸主动技能（与玩家技能同字段体系；cost 恒 0，敌方无体力限制）
     return {
       uid:'z'+uidCounter++, side:'enemy', zombieType:zt, name:Z.name+(Z.boss?' ·BOSS':''), icon:Z.icon, clsTag:Z.boss?'变异体':'丧尸', level:lv,
-      hp:Z.base.maxHp+30*lvf, maxHp:Z.base.maxHp+30*lvf,
-      atk:Z.base.atk+6*lvf, def:Z.base.def+3*lvf, range:Z.base.range, move:Z.base.move,
+      hp:Math.round(Z.base.maxHp*grow), maxHp:Math.round(Z.base.maxHp*grow),
+      atk:Math.round(Z.base.atk*grow), def:Math.round(Z.base.def*grow), range:Z.base.range, move:Z.base.move,
       critRate:Z.base.critRate, critDmg:Z.base.critDmg,
       skills: zskills,
       row, col, isDefending:false, sts:{}, cds:{},   // cds：丧尸主动技能冷却（尖啸者等）

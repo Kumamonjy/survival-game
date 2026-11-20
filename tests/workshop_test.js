@@ -14,7 +14,7 @@ const g = Game.g;
   // ===== T1 布料资源初始化 =====
   assert(typeof g.res.fabric === 'number' && g.res.fabric === 3, 'T1a 新档布料初始 3');
   assert(DATA.ZONES[0].sub.fabric && DATA.ZONES[0].sub.fabric[0]>=2, 'T1b 废弃超市奖励含布料');
-  assert(DATA.ZONES.every(z=>z.sub.fabric || z.main.fabric), 'T1c 五个区域均有布料产出');
+  assert(['market','hospital','factory','street'].every(id=>{const z=DATA.ZONES.find(x=>x.id===id); return z.sub.fabric||z.main.fabric;}), 'T1c 主要区域均有布料产出');
 
   // ===== T2 建造工坊 =====
   g.res.gold = 300;

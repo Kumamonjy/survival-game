@@ -55,6 +55,41 @@ const g = Game.g;
   UI.campSel = 'dorm'; UI.renderBuild();
   assert(elems['build-page'].innerHTML.includes('Game.buildDorm()'), 'T8 切换到寝室卡');
 
+  // T9 医院/实验室可升级：卡内含升级按钮 + 等级显示
+  g.hospitalLv = 1; g.labLv = 1; g.res.gold = 9999;
+  UI.campSel = 'hospital'; UI.renderBuild();
+  let bh = elems['build-page'].innerHTML;
+  assert(bh.includes("Game.upgradeBuilding('hospital')") && bh.includes('医院 Lv.1'), 'T9a 医院卡含升级按钮与等级');
+  assert(bh.includes('生产绷带（10⚡'), 'T9b Lv1 绷带仍 10⚡');
+  UI.campSel = 'lab'; UI.renderBuild();
+  bh = elems['build-page'].innerHTML;
+  assert(bh.includes("Game.upgradeBuilding('lab')") && bh.includes('实验室 Lv.1'), 'T9c 实验室卡含升级按钮与等级');
+
+  // T10 升级后生产体力递减：医院 Lv3 绷带 10→6⚡，实验室 Lv3 解毒针 15→11⚡
+  g.hospitalLv = 3; g.labLv = 3;
+  assert(Game.produceStamina(DATA.PRODUCE.bandage, 'hospitalLv')===6, 'T10a 医院 Lv3 绷带 6⚡');
+  assert(Game.produceStamina(DATA.PRODUCE.antidote, 'labLv')===11, 'T10b 实验室 Lv3 解毒针 11⚡');
+  g.hospitalLv = 5;
+  assert(Game.produceStamina(DATA.PRODUCE.bandage, 'hospitalLv')===5, 'T10c 最低 5⚡');
+  assert(Game.produceStamina(DATA.PRODUCE.firstaid, 'kitchenLv')===15, 'T10d 非医院/实验室不受影响');
+
+  // T11 实际生产按等级扣体力
+  const doc = Game.createChar('doctor','医生甲'); doc.stamina = 100; doc.injured = false; g.chars.push(doc);
+  g.hospitalDoc = doc.id; g.res.fabric = 10; g.res.med = 10;
+  g.hospitalLv = 3;
+  Game.makeBandage();
+  assert(doc.stamina === 100 - 6, `T11 医院 Lv3 生产绷带实扣 6⚡（余 ${doc.stamina}）`);
+
+  // T12 地图按天数锁定
+  g.day = 1; UI.openZones();
+  let zh = elems['zone-list'].innerHTML;
+  assert((zh.match(/zone-card locked/g)||[]).length===5, 'T12a 第1天锁定 5 张图（医院/林场/工厂/商业街/基地）');
+  assert(zh.includes('第 3 天解锁') && zh.includes('🔒'), 'T12b 锁定卡显示解锁天数与锁');
+  g.day = 10; UI.openZones();
+  zh = elems['zone-list'].innerHTML;
+  assert((zh.match(/zone-card locked/g)||[]).length===0, 'T12c 第10天全部解锁');
+  assert(zh.includes('⛽') && zh.includes('🌲'), 'T12d 加油站/林场出现在列表');
+
   console.log('--- done ---');
   process.exit(0);
 })().catch(e=>{ console.log('TEST ERROR', e); process.exit(1); });

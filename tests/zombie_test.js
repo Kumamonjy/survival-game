@@ -7,7 +7,11 @@ const Z = id => DATA.ZONES.find(z=>z.id===id);
 
 (async () => {
   // ===== T1 区域配置 =====
-  assert(DATA.ZONES.length===5 && DATA.ZONES.every(z=>z.pool && z.count && z.count[0]<=z.count[1]), 'T1a 5 区域均有概率池与数量区间');
+  assert(DATA.ZONES.length===7 && DATA.ZONES.every(z=>z.pool && z.count && z.count[0]<=z.count[1]), 'T1a 7 区域均有概率池与数量区间');
+  assert(Z('gas') && Z('gas').danger===1 && Z('gas').main.gold, 'T1d 新增 1★ 加油站（金币主产）');
+  assert(Z('forest') && Z('forest').danger===2 && Z('forest').main.wood[0]>=6, 'T1e 新增 2★ 林场（木材主产）');
+  assert(DATA.ZONES.every(z=>z.unlockDay>=1), 'T1f 全部区域带解锁天数');
+  assert(Z('base').unlockDay===8 && Z('market').unlockDay===1, 'T1g 解锁门槛：超市第1天 / 基地第8天');
   assert(Z('factory').pool.behemoth===5 && !Z('factory').boss, 'T1b 工厂 5% 权重暴君且非必出');
   assert(Z('base').boss===true, 'T1c 军事基地 boss 必出');
 
@@ -18,10 +22,12 @@ const Z = id => DATA.ZONES.find(z=>z.id===id);
   UI.teamSelected = [a.id, b0.id, c2.id];
   a.stamina = b0.stamina = c2.stamina = 100;
   Battle.start(Z('market'));
-  assert(Battle.b.zLevel === 2, 'T2a 平均 (1+4+2)/3=2.33 → Lv.2');
+  assert(Battle.b.zLevel === 1, 'T2a 平均 (1+4+2)/3=2.33 → floor 2 -1 = Lv.1');
   assert(Battle.b.units.filter(u=>u.side==='ally').length===3, 'T2b 出战3人');
   const zlv = Battle.b.units.filter(u=>u.side==='enemy')[0].level;
-  assert(zlv === 2, 'T2c 丧尸等级=2');
+  assert(zlv === 1, 'T2c 丧尸等级=1');
+  const z5 = Battle.mkZombie('walker', 0, 0, 5);
+  assert(z5.maxHp===Math.round(DATA.ZOMBIES.walker.base.maxHp*1.4) && z5.atk===Math.round(DATA.ZOMBIES.walker.base.atk*1.4), 'T2d 丧尸属性按基础值 +10%/级');
 
   // ===== T3 工厂编队：概率池 + 数量区间 =====
   let sawBehemoth = 0, counts = new Set();

@@ -13,7 +13,9 @@ let g = Game.g;
   const fz = DATA.ZONES.find(z=>z.id==='factory'), sz = DATA.ZONES.find(z=>z.id==='street');
   assert(fz && Array.isArray(fz.sub.wood) && fz.sub.wood[0]===1 && fz.sub.wood[1]===3, 'T2a 工厂副产出 木材 1-3');
   assert(sz && Array.isArray(sz.sub.wood) && sz.sub.wood[0]===1 && sz.sub.wood[1]===2, 'T2b 商业街副产出 木材 1-2');
-  assert(DATA.ZONES.filter(z=>z.sub.wood).length===2, 'T2c 仅 2 个区域产出木材');
+  const fs2 = DATA.ZONES.find(z=>z.id==='forest');
+  assert(fs2 && fs2.main.wood[0]>=6, 'T2e 林场木材主产 6-10');
+  assert(DATA.ZONES.filter(z=>z.sub.wood).length===3, 'T2c 三个区域副产出木材（加油站/工厂/商业街）');
   assert(fz.terrain && sz.terrain, 'T2d 地形配方不受影响');
 
   // T3 旧档迁移：res 缺 wood 字段 → applySave 后补 0

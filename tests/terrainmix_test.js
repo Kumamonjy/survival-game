@@ -6,10 +6,13 @@ const g = Game.g;
 
 (async () => {
   // T1 配方数据
-  const EXP = { market:{water:10,rubble:8,ruin:6,crate:8,barrel:1}, hospital:{water:12,rubble:8,ruin:7,crate:7,barrel:2},
+  const EXP = { market:{water:10,rubble:8,ruin:6,crate:8,barrel:1},
+    gas:{water:4,rubble:9,ruin:5,crate:7,barrel:24},
+    hospital:{water:12,rubble:8,ruin:7,crate:7,barrel:2},
+    forest:{water:6,rubble:16,ruin:12,crate:5,barrel:6},
     factory:{water:4,rubble:15,ruin:8,crate:4,barrel:10}, street:{water:6,rubble:10,ruin:14,crate:6,barrel:3},
     base:{water:6,rubble:14,ruin:12,crate:5,barrel:6} };
-  assert(DATA.ZONES.length===5 && DATA.ZONES.every(z=>JSON.stringify(z.terrain)===JSON.stringify(EXP[z.id])), 'T1 五区域地形配方正确');
+  assert(DATA.ZONES.length===7 && DATA.ZONES.every(z=>JSON.stringify(z.terrain)===JSON.stringify(EXP[z.id])), 'T1 七区域地形配方正确');
 
   // T2 start 按配方散布：工厂应出现 10 桶
   const c = Game.createChar('soldier','兵',false); g.chars.push(c);
@@ -36,8 +39,9 @@ const g = Game.g;
   await Battle.start(stale);
   assert(cnt('barrel')===6 && cnt('ruin')===12, `T4 老存档快照回查配方 barrel6/ruin12（${cnt('barrel')}/${cnt('ruin')}）`);
 
-  // T5 区域卡展示战场地形行
+  // T5 区域卡展示战场地形行（调到第 10 天解锁全部区域）
   elems['zone-list'] = mkEl();
+  g.day = 10;
   UI.openZones();
   assert(elems['zone-list'].innerHTML.includes('战场地形') && elems['zone-list'].innerHTML.includes('🛢️10'), 'T5 区域卡展示地形配方');
 
