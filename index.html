@@ -3041,7 +3041,7 @@ const UI = {
       <div class="wiki-sec panel"><h4>🧟 丧尸图鉴</h4>
         <div class="table-scroll"><table class="wiki-table zom-table"><colgroup><col style="width:8%"><col style="width:6%"><col style="width:6%"><col style="width:6%"><col style="width:6%"><col style="width:6%"><col style="width:9%"><col style="width:7%"><col style="width:23%"><col style="width:23%"></colgroup><tr><th>类型</th><th>生命</th><th>攻击</th><th>防御</th><th>移速</th><th>射程</th><th>暴击/暴伤</th><th>经验</th><th>特性</th><th>技能</th></tr>${zomRows}</table></div>
         <div class="wiki-p" style="margin-top:4px">👉 表格可<b>左右滑动</b>查看完整内容</div>
-        <div class="wiki-p" style="margin-top:6px">丧尸强度与队伍实力挂钩：<b>丧尸等级 = 出战角色平均等级 - 1</b>（向下取整，最低 1），每级<b>生命 / 攻击 / 防御按基础值 +10%</b>（与角色成长一致）。地图按天数逐步解锁：1★ 第 1 天、2★ 第 3 天、3★ 第 5 天、4★ 第 8 天。每个区域有各自的丧尸数量区间与类型概率——<b>旧钢铁工厂有约 5% 概率遭遇暴君变异体</b>，军事基地必定有暴君坐镇。丧尸潮预警会额外增加 2 只丧尸并使奖励翻倍。</div>
+        <div class="wiki-p" style="margin-top:6px">丧尸强度与队伍实力挂钩：<b>丧尸等级 = 出战角色平均等级 - 1</b>（向下取整，最低 1），每级<b>生命 / 攻击 / 防御按基础值 +10%</b>（与角色成长一致）；「丧尸潮」额外增加 2 只并使奖励翻倍。各区域的丧尸构成、数量与 Boss 见「🗺️ 地图」页。</div>
       </div>`;
     const slotName = id => (DATA.SLOTS.find(s=>s.id===id)||{name:id}).name;
     const craftMap = {}; DATA.RECIPES.forEach(r=>{ craftMap[r.id] = `${r.cost.gold}💰` + (r.cost.wood?` + ${r.cost.wood}🪵`:'') + (r.cost.metal?` + ${r.cost.metal}⚙️`:'') + (r.cost.fabric?` + ${r.cost.fabric}🧵`:'') + ` + ${r.stamina}⚡`; });
@@ -3063,8 +3063,46 @@ const UI = {
         · <b>道具（消耗品）</b>：不提供属性、不可升级；战斗中使用其技能后消耗 1 个，每人最多携带 3 个同类道具<br>
         · 探险胜利有概率获得装备掉落，直接放入背包</div>
       </div>`;
+    /* 地图页：区域门槛/产出 + 敌情/地形 + 通用规则（数据全部来自 DATA.ZONES，新增地图自动出现在此处） */
+    const secMap = (() => {
+      const zRows = DATA.ZONES.map(z=>{
+        const Z = Battle.zoneDef(z);
+        return `<tr>
+          <td><b>${z.icon} ${z.name}</b><br><span style="font-size:11px">${z.desc}</span></td>
+          <td>${'★'.repeat(Z.danger)}<br><span style="font-size:11px">第 ${Z.unlockDay} 天</span></td>
+          <td>${UI.lootRangeStr(Z.main)}<br>＋ ${UI.lootRangeStr(Z.sub)}</td>
+        </tr>`;
+      }).join('');
+      const eRows = DATA.ZONES.map(z=>{
+        const Z = Battle.zoneDef(z);
+        const pool = Object.entries(Z.pool).sort((a,b)=>b[1]-a[1]).map(([k,w])=>{
+          const zb = DATA.ZOMBIES[k];
+          return `${zb ? zb.icon+' '+zb.name : k} ${w}%`;
+        }).join('　');
+        const boss = Z.boss ? `<br><b style="color:var(--yellow)">Boss：${(DATA.ZOMBIES[Z.bossType||'behemoth']||{}).name||''}</b>` : '';
+        return `<tr><td><b>${z.icon} ${z.name}</b><br><span style="font-size:11px">${Z.count[0]}-${Z.count[1]} 只</span></td>
+          <td>${pool}${boss}</td><td>${UI.terrainStr(Z.terrain)}</td></tr>`;
+      }).join('');
+      return `
+      <div class="wiki-sec panel"><h4>🗺️ 探险地图（${DATA.ZONES.length} 张）</h4>
+        <table class="wiki-table"><tr><th>区域</th><th>危险度<br>解锁</th><th>产出（主要 ＋ 次要）</th></tr>${zRows}</table>
+      </div>
+      <div class="wiki-sec panel"><h4>🧭 敌情与地形</h4>
+        <table class="wiki-table"><tr><th>区域</th><th>丧尸构成（概率）</th><th>地形</th></tr>${eRows}</table>
+        <div class="wiki-p" style="margin-top:6px">概率为该区域抽到该类型丧尸的权重；<b>N-M 只</b>为每局丧尸数量区间。丧尸属性成长见「🧟 敌人」页。</div>
+      </div>
+      <div class="wiki-sec panel"><h4>📌 探险规则</h4>
+        <div class="wiki-p">
+        · 编队最多 <b>6 人</b>，每人出发消耗 <b>15⚡</b> 体力；探险<b>不消耗天数</b><br>
+        · 胜利可获得该区域的<b>主要 + 次要产出</b>；主动撤离保留已拾取物资但无通关奖励；全员倒下则物资减半<br>
+        · 每局固定 1 个<b>精品物资箱</b>（地图最上方三行）：90% 双倍物资 / 10% 特殊饰品<br>
+        · 地形互动：废墟可翻找 1 次、瓦砾可攻击清除并留下石头箱、油桶被攻击会爆炸且可连锁引爆<br>
+        · 丧尸等级 = <b>出战平均等级 − 1</b>（最低 1），每级生命/攻击/防御按基础值 +10%；「丧尸潮」额外 +2 只且奖励翻倍</div>
+      </div>`;
+    })();
     const TABS = [
       { id:'play',   name:'📖 玩法' },
+      { id:'map',    name:'🗺️ 地图' },
       { id:'cls',    name:'🧍 职业' },
       { id:'talent', name:'🍀 天赋' },
       { id:'equip',  name:'🧰 装备' },
@@ -3074,6 +3112,7 @@ const UI = {
     ];
     const groups = {
       play:   secGoal + secLoop + secBuild + secSave,
+      map:    secMap,
       cls:    secCls + secSkill,
       talent: secTalent,
       equip:  secEquip,
