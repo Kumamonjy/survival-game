@@ -508,12 +508,18 @@ button:disabled { opacity:.45; cursor:not-allowed; }
     <div class="page" id="char-list"></div>
   </div>
 
-  <!-- ============ 招募广播 ============ -->
+  <!-- ============ 广播站 ============ -->
   <div class="screen" id="scr-recruit">
-    <div class="topbar"><button class="back" onclick="UI.backHome()">←</button><h2>招募广播</h2><div class="spacer"></div><button class="btn small" onclick="Recruit.refreshCandidates()">📡 播报 (20💰)</button></div>
+    <div class="topbar"><button class="back" onclick="UI.backHome()">←</button><h2>广播站</h2><div class="spacer"></div><button class="btn small" onclick="Recruit.refreshCandidates()">📡 播报 (20💰)</button></div>
     <div class="page">
-      <div class="panel"><h3>📡 广播站</h3><div class="wiki-p">向无线电频道发出幸存者招募信号，回应者职业与能力各异。选中候选者后花费金币将其招募入队。每次播报刷新 3 名候选者。</div></div>
-      <div id="recruit-list"></div>
+      <div class="panel"><h3>📻 广播站</h3><div class="wiki-p">营地与外界的唯一联络渠道。目前开放<b>幸存者招募</b>，后续会解锁更多用途。</div></div>
+      <div class="panel"><h3>👥 幸存者招募</h3><div class="wiki-p">向无线电频道发出招募信号，回应者职业与能力各异。选中候选者后花费金币将其招募入队，每次播报刷新 3 名候选者。</div><div id="recruit-list"></div></div>
+      <div class="panel"><h3>🔒 更多功能</h3>
+        <div class="wiki-p">广播站的其他用途将在后续版本开放：</div>
+        <div class="row" style="justify-content:space-between"><span>📨 求援信号 · 向外界请求物资支援</span><span class="tag">即将开放</span></div>
+        <div class="row" style="justify-content:space-between;margin-top:6px"><span>📦 物资广播 · 定位远处的空投补给</span><span class="tag">即将开放</span></div>
+        <div class="row" style="justify-content:space-between;margin-top:6px"><span>🛰️ 远程情报 · 提前查看区域敌情</span><span class="tag">即将开放</span></div>
+      </div>
     </div>
   </div>
 
@@ -2181,7 +2187,7 @@ const UI = {
         occBadge:()=>'<span class="tag blue">当值厨师</span>',
         occSub:o=>`⚡ ${o.stamina}/${o.maxStamina}（体力 &lt;${K.workCost} 时停产）`,
         unLabel:'撤职', unCall:()=>'Game.unassignKitchen()',
-        empty:`⚠️ 厨师空缺——厨房没有产出。${alive.some(c=>c.cls==='chef')?'从下方名单指派。':'去招募广播找一位厨师（200 💰）。'}`,
+        empty:`⚠️ 厨师空缺——厨房没有产出。${alive.some(c=>c.cls==='chef')?'从下方名单指派。':'去广播站招募一位厨师（200 💰）。'}`,
         cands: alive.filter(c=>c.cls==='chef' && c.id!==g.kitchenChef),
         candTitle:n=>`可指派厨师（${n}）：`, candSub:effSub, candBad:c=>c.injured||c.stamina<K.workCost,
         staminaCost:K.workCost, fullTag:null, assignLabel:'指派',
@@ -2192,7 +2198,7 @@ const UI = {
         occBadge:()=>'<span class="tag blue">实验员</span>',
         occSub:o=>`⚡ ${o.stamina}/${o.maxStamina}（体力 &lt;${Game.produceStamina(DATA.PRODUCE.antidote,'labLv')} 时无法生产，不影响出战）`,
         unLabel:'撤职', unCall:()=>'Game.unassignLab()',
-        empty:`⚠️ 实验室空置——没有科学家当值就无法生产解毒针。${alive.some(c=>c.cls==='scientist')?'从下方名单指派。':'去招募广播找一位科学家（250 💰）。'}`,
+        empty:`⚠️ 实验室空置——没有科学家当值就无法生产解毒针。${alive.some(c=>c.cls==='scientist')?'从下方名单指派。':'去广播站招募一位科学家（250 💰）。'}`,
         cands: alive.filter(c=>c.cls==='scientist' && c.id!==g.labChef),
         candTitle:n=>`可指派科学家（${n}）：`, candSub:effSub, candBad:c=>c.injured,
         staminaCost:0, fullTag:null, assignLabel:'指派',
@@ -2214,7 +2220,7 @@ const UI = {
         occBadge:()=>'<span class="tag blue">医务员</span>',
         occSub:o=>`⚡ ${o.stamina}/${o.maxStamina}（体力 &lt;${Game.produceStamina(DATA.PRODUCE.bandage,'hospitalLv')} 时无法生产，不影响出战）`,
         unLabel:'撤职', unCall:()=>'Game.unassignHospital()',
-        empty:`⚠️ 医院空置——没有医生或护士当值就无法生产绷带。${alive.some(c=>c.cls==='doctor'||c.cls==='nurse')?'从下方名单指派。':'去招募广播找一位医生（200 💰）或护士（180 💰）。'}`,
+        empty:`⚠️ 医院空置——没有医生或护士当值就无法生产绷带。${alive.some(c=>c.cls==='doctor'||c.cls==='nurse')?'从下方名单指派。':'去广播站招募一位医生（200 💰）或护士（180 💰）。'}`,
         cands: alive.filter(c=>(c.cls==='doctor'||c.cls==='nurse') && c.id!==g.hospitalDoc),
         candTitle:n=>`可指派医务人员（${n}）：`, candSub:effSub, candBad:c=>c.injured,
         staminaCost:0, fullTag:null, assignLabel:'指派',
@@ -2435,7 +2441,7 @@ const UI = {
           </div>`;
         }).join('')}
         <div class="camp-tile util" onclick="UI.openRecruit()">
-          <div class="ci">📡</div><div class="cn">招募</div>
+          <div class="ci">📻</div><div class="cn">广播站</div>
         </div>
         <div class="camp-tile util" onclick="UI.openDuty()">
           <div class="ci">📋</div><div class="cn">职务</div>
@@ -2699,7 +2705,7 @@ const UI = {
   renderChars() {
     const g = Game.g;
     const el = document.getElementById('char-list');
-    if (!g.chars.some(c=>!c.dead)) { el.innerHTML = '<div class="panel">所有成员都牺牲了…通过招募广播寻找新的幸存者吧。</div>'; return; }
+    if (!g.chars.some(c=>!c.dead)) { el.innerHTML = '<div class="panel">所有成员都牺牲了…通过广播站寻找新的幸存者吧。</div>'; return; }
     el.innerHTML = g.chars.filter(c=>!c.dead).map(c=>{
       const C = DATA.CLASSES[c.cls];
       const eHp = Game.effHp(c), eSt = Game.effSt(c), eAtk = Game.effAtk(c), eDef = Game.effDef(c);
@@ -2776,7 +2782,7 @@ const UI = {
         : '<div class="wiki-p" style="color:var(--txt2)">背包中没有可穿戴的该部位装备（探险胜利有概率获得装备掉落）</div>'}
       ${UI.closeRow()}`);
   },
-  /* ---- 招募广播 ---- */
+  /* ---- 广播站 · 招募 ---- */
   openRecruit() { Recruit.ensureCandidates(); UI.renderRecruit(); UI.showScreen('scr-recruit'); },
   renderRecruit() {
     const g = Game.g;
@@ -2976,7 +2982,7 @@ const UI = {
         })()}
       </div>
       <div class="panel"><h3>⚙️ 金属 / 💰 金币用途</h3>
-        <div class="wiki-p">· <b>金币</b>：招募幸存者、刷新招募广播、里程碑交易、工坊打造与装备升级<br>· <b>金属</b>：工坊打造/装备升级、里程碑事件中的营地加固等用途<br>（物资主要通过外出探险获得）</div>
+        <div class="wiki-p">· <b>金币</b>：广播站招募/刷新、里程碑交易、工坊打造与装备升级<br>· <b>金属</b>：工坊打造/装备升级、里程碑事件中的营地加固等用途<br>（物资主要通过外出探险获得）</div>
       </div>`;
   },
 
@@ -3014,6 +3020,7 @@ const UI = {
           <tr><td><b>⏳ 时间</b></td><td>探险不过夜；「进入下一天」过夜才结算晚餐、恢复、建筑产出，并刷新天气与家园访客；同一天可多次探索</td></tr>
           <tr><td><b>❤️ 生命</b></td><td>吃到晚饭每天 +50（重伤者回满自动解除重伤）；急救丸可立即回 60 并解重伤</td></tr>
           <tr><td><b>🍞 食物</b></td><td>每名成员按职业日耗（见「🧍 职业」页表格；贪吃 +1 / 节俭 −1）；不够全营吃时弹晚餐分配勾选谁吃——吃到 +50⚡+50❤️，没吃到当天不恢复（不会饿死）</td></tr>
+          <tr><td><b>📻 广播站</b></td><td>营地与外界的联络渠道。目前开放「幸存者招募」：免费看 3 名候选者，20💰 刷新播报，招募无人数上限；后续将解锁求援、空投、情报等用途</td></tr>
           <tr><td><b>🚶 家园访客</b></td><td>每天一位流动商人（回收 2 种物资换金币、出售 1 种物资，各限成交一次）+ 一位流浪者（120💰+20🍞 招募）；随过夜刷新，无法付费重刷</td></tr>
           <tr><td><b>🏥 医院</b></td><td>建造后指派医生/护士当值可生产绷带、止痛药、急救丸（配方见「🧰 装备」页）</td></tr>
         </table>
@@ -3309,7 +3316,7 @@ const UI = {
 };
 
 /* =====================================================
- *  招募广播
+ *  广播站（招募）
  * ===================================================== */
 const Recruit = {
   candidates: [],
