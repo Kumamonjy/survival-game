@@ -2480,6 +2480,8 @@ const UI = {
           return cardShell(T.icon, T.name, lv, lv>0, T.desc, body);
         };
       });
+      // 防御工事总入口：一次展示箭塔与弩塔两张卡
+      CARDS.defense = () => CARDS.arrow() + CARDS.ballista();
     }
 
     /* 营地场景：3 列建筑网格（未建造置灰、点击选中查看功能）；无装饰元素 */
@@ -2496,6 +2498,8 @@ const UI = {
     const sel = UI.campSel;
     const injured = g.chars.filter(c=>c.injured && !c.dead).length;
     const visitor = !!g.visitors;
+    /* 防御工事总入口：显示已建数量，点击后展开箭塔/弩塔 */
+    const twBuilt = ['arrow','ballista'].filter(k=>(g[DATA.TOWERS[k].lvKey]||0)>0).length;
     const scene = `<div class="camp-scene" id="home-camp-scene">
       <div class="camp-grid">
         ${LAYOUT.map(b=>{
@@ -2507,14 +2511,11 @@ const UI = {
             ${built?'':'<div class="cb">待建造</div>'}
           </div>`;
         }).join('')}
-        ${['arrow','ballista'].map(k=>{
-          const T = DATA.TOWERS[k], lv = g[T.lvKey]||0, built = lv>0;
-          return `<div class="camp-tile def${built?'':' off'}${sel===k?' sel':''}" onclick="UI.campSel='${k}';UI.renderBuild()">
-            <div class="ci">${T.icon}</div>
-            <div class="cn">${T.name}${built?` <span class="clv">Lv.${lv}</span>`:''}</div>
-            ${built?'':'<div class="cb">待建造</div>'}
-          </div>`;
-        }).join('')}
+        <div class="camp-tile def${twBuilt?'':' off'}${sel==='defense'?' sel':''}" onclick="UI.campSel='defense';UI.renderBuild()">
+          <div class="ci">🏰</div>
+          <div class="cn">防御工事${twBuilt?` <span class="clv">已建${twBuilt}/2</span>`:''}</div>
+          ${twBuilt?'':'<div class="cb">待建造</div>'}
+        </div>
         <div class="camp-tile util" onclick="UI.openRecruit()">
           <div class="ci">📻</div><div class="cn">广播站</div>
         </div>
