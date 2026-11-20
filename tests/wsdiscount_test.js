@@ -64,10 +64,10 @@ const g = Game.g;
   const bh = elems['build-page'].innerHTML;
   assert(bh.includes('材料 -20%') && bh.includes('升级到 Lv.4'), 'T7 工坊卡折扣标签 + 升级按钮');
 
-  // T8 Lv4 -30% → Lv5 -40% → 满级拦截（升级费随当前等级递增：3×200 / 4×200）
+  // T8 Lv4 -30% → Lv5 -40% → 满级拦截（升级费 ×(1+0.5×等级)：Lv3→4 收 2.5×200=500，Lv4→5 收 3×200=600）
   g.res.gold = 2500;
   Game.upgradeBuilding('workshop');
-  assert(g.workshopLv===4 && g.res.gold===1900, 'T8a 升工坊 Lv4 扣 600');
+  assert(g.workshopLv===4 && g.res.gold===2000, 'T8a 升工坊 Lv4 扣 500');
   const c4 = Game.craftCost('stick');
   assert(c4.gold===14 && c4.wood===4, `T8b Lv4 打造 -30%：ceil(20×0.7)=14💰+ceil(5×0.7)=4🪵（${c4.gold}+${c4.wood}）`);
   Game.upgradeBuilding('workshop');

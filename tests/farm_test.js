@@ -12,11 +12,11 @@ const [s1, s2] = g.chars;
   assert(F.out(1)===2 && F.out(3)===6 && F.out(5)===10, 'T1b 每级产出 2/4/6/8/10');
 
   // ===== T2 建造/升级 =====
-  g.res.gold = 300;
+  g.res.gold = 400;
   Game.buildFarm();
-  assert(g.farmLv===1 && g.res.gold===210, 'T2a 建造扣 90 金币');
+  assert(g.farmLv===1 && g.res.gold===310, 'T2a 建造扣 90 金币');
   Game.upgradeFarm();
-  assert(g.farmLv===2 && g.res.gold===60, 'T2b 升级扣 150 金币到 Lv.2');
+  assert(g.farmLv===2 && g.res.gold===85, 'T2b 升级扣 1.5×150=225 金币到 Lv.2');
   Game.upgradeFarm();   // 金币不足
   assert(g.farmLv===2, 'T2c 金币不足不升级');
 
