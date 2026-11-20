@@ -1470,6 +1470,7 @@ const Game = {
     Game.saveToSlot(Game.currentSlot, true);
     const cstr = UI.fmtMats(cost);
     UI.toast(`⬆️ ${e.icon} ${e.name} 升级到 +${lv+1}（花费 ${cstr}）`);
+    Game.renderHome();
     UI.openUpgradeModal();
   },
   /* 道具（消耗品）：c.item={id,count≤3} 占用背包；战斗中使用技能消耗 1 个；不可升级 */
@@ -1487,6 +1488,7 @@ const Game = {
     Game.saveToSlot(Game.currentSlot, true);
     UI.toast(`🎒 ${c.name} 携带 ${E.icon} ${E.name} ×${c.item.count}`);
     UI.renderChars();
+    if (UI.itemSlotCid) UI.openItemSlot(UI.itemSlotCid);   // 弹窗内库存同步刷新
   },
   uncarryItem(cid, all) {
     const g = Game.g, c = g.chars.find(x=>x.id===cid);
@@ -1498,6 +1500,7 @@ const Game = {
     Game.saveToSlot(Game.currentSlot, true);
     UI.toast(`🧳 放回背包：${DATA.EQUIPS[id].icon} ${DATA.EQUIPS[id].name} ×${n}`);
     UI.renderChars();
+    if (UI.itemSlotCid) UI.openItemSlot(UI.itemSlotCid);   // 弹窗内库存同步刷新
   },
   salvageEquip(uid) {
     const g = Game.g;
@@ -1513,6 +1516,7 @@ const Game = {
     Game.saveToSlot(Game.currentSlot, true);
     const bstr = UI.fmtMats(back);
     UI.toast(`♻️ 分解 ${e.icon} ${e.name}，返还 ${bstr}`);
+    Game.renderHome();
     UI.openSalvageModal();
   },
   /* 白天工作暂存（厨房/农场统一）：检查当值者状态，产出暂存待过夜确认才结算 */
@@ -1574,6 +1578,7 @@ const Game = {
     }
     o.done = true;
     Game.saveToSlot(Game.currentSlot, true);
+    Game.renderHome();          // 主界面资源面板即时刷新
     UI.openVisitors();
   },
   /* 流浪者招募：120金+20食物，职业天赋当日固定（无人数上限） */
@@ -1590,6 +1595,7 @@ const Game = {
     w.recruited = true;
     g.chars.push(w);
     Game.saveToSlot(Game.currentSlot, true);
+    Game.renderHome();          // 主界面资源/人数面板即时刷新
     UI.openVisitors();
     UI.toast(`${w.av||''} ${w.name}（${DATA.CLASSES[w.cls].name}）加入了队伍！`);
   },
@@ -1919,12 +1925,13 @@ const Game = {
   /* 营地使用急救丸：恢复 60 生命 + 解除重伤（背包消耗；战斗中则走「服用急救丸」技能） */
   useFirstaid(id) {
     const c = Game.g.chars.find(x=>x.id===id);
-    const cnt = Game.g.bag.firstaid||0;
-    if (!c || cnt<1) { UI.toast('没有急救丸——先在医院或实验室生产'); return; }
-    Game.g.bag.firstaid = cnt-1;
+    const inst = (Game.g.bagInst||[]).find(e=>e.id==='firstaid');
+    if (!c || !inst) { UI.toast('没有急救丸——先在医院或实验室生产'); return; }
+    Game.removeEquipInst(inst.uid);   // 同步移除实例与计数投影
+    const wasInjured = c.injured;
     c.hp = Math.min(Game.effHp(c), c.hp + 60);
     c.injured = false;
-    UI.toast(`⛑️ ${c.name} 服用急救丸：恢复 60 生命，伤势已愈，恢复战斗能力`);
+    UI.toast(`⛑️ ${c.name} 服用急救丸：恢复 60 生命${wasInjured?'，伤势已愈':''}`);
     Game.saveToSlot(Game.currentSlot, true);
     UI.renderChars();
   },
@@ -2157,11 +2164,12 @@ const UI = {
     UI.toastTimer = setTimeout(()=>{ t.style.display='none'; }, 2200);
   },
   modal(html) {
+    UI.itemSlotCid = null;      // 打开其它弹窗时，取消道具弹窗的自动刷新
     const m = document.getElementById('modal-body');
     m.innerHTML = html;
     document.getElementById('modal-mask').classList.add('show');
   },
-  closeModal() { document.getElementById('modal-mask').classList.remove('show'); },
+  closeModal() { UI.itemSlotCid = null; document.getElementById('modal-mask').classList.remove('show'); },
 
   weatherInfo() { return DATA.WEATHERS.find(w=>w.id===Game.g.weather) || DATA.WEATHERS[0]; },
 
@@ -2705,6 +2713,7 @@ const UI = {
         </div>`;
       }).join('') : '<div class="wiki-p" style="color:var(--txt2);margin-top:8px">背包里没有消耗品道具，可在工坊打造或探险拾取。</div>'}
       ${UI.closeRow()}`);
+    UI.itemSlotCid = cid;       // 携带/放回后自动刷新本弹窗库存
   },
 
   /* 技能一行摘要：名称 + 射程/伤害/附加状态/体力，供打造与道具界面压缩显示 */
@@ -2951,7 +2960,7 @@ const UI = {
           <span class="ic">${e?e.icon:s.icon}</span><span>${e?e.name+lvTag:s.name}</span></div>`;
       }).join('') + '</div>';
       const inj = c.injured ? '<span class="tag red">重伤</span>' : '';
-      const faCnt = g.bag.firstaid||0;
+      const faCnt = Game.bagCount('firstaid');
       const healBtn = c.injured
         ? (faCnt>0
           ? `<button class="btn small primary" onclick="Game.useFirstaid('${c.id}')">⛑️ 使用急救丸 (${faCnt})</button>`
@@ -3157,7 +3166,7 @@ const UI = {
     const bagRows = (g.bagInst||[]).filter(e=>DATA.EQUIPS[e.id] && !DATA.EQUIPS[e.id].consumable)
       .sort((a,b)=>a.id===b.id?(a.lv||0)-(b.lv||0):a.id.localeCompare(b.id));
     const carriedRows = []; g.chars.forEach(c=>{ if(!c.dead && c.item && c.item.count>0) carriedRows.push({c, it:c.item}); });
-    const itemBagRows = Object.keys(DATA.EQUIPS).filter(id=>DATA.EQUIPS[id].consumable && (g.bag[id]||0)>0);
+    const itemBagRows = Object.keys(DATA.EQUIPS).filter(id=>DATA.EQUIPS[id].consumable && Game.bagCount(id)>0);
     const itemPanel = `
       <div class="panel"><h3>🎒 物品模块（装备与道具）</h3>
         <div class="wiki-p" style="font-size:12px;color:var(--txt2)">已穿戴的装备可一键卸下放回背包；背包中的装备点击「穿戴」选择角色（替换时原装备自动回包）；道具为消耗品，每人同类最多携带 3 个。</div>
@@ -3172,7 +3181,7 @@ const UI = {
           return `<div class="loot-line"><span>${e.icon} ${e.name} ×${it.count} <span class="tag yellow">👤 ${c.name} 携带中</span></span><button class="btn small" onclick="Game.uncarryItem('${c.id}',false);UI.renderInv()">放回 1</button></div>`; }).join('')}
         ${itemBagRows.length?`<div class="wiki-p" style="margin-top:8px">📦 <b>背包道具（${itemBagRows.length} 类）</b></div>`:''}
         ${itemBagRows.map(id=>{ const e=DATA.EQUIPS[id];
-          return `<div class="loot-line"><span>${e.icon} ${e.name} ×${g.bag[id]} <span style="color:var(--txt2);font-size:12px">${e.skill?('自带技能 · '+e.skill.name):(e.desc||'')}</span></span><button class="btn primary small" onclick="UI.invPickCarry('${id}')">携带</button></div>`; }).join('')}
+          return `<div class="loot-line"><span>${e.icon} ${e.name} ×${Game.bagCount(id)} <span style="color:var(--txt2);font-size:12px">${e.skill?('自带技能 · '+e.skill.name):(e.desc||'')}</span></span><button class="btn primary small" onclick="UI.invPickCarry('${id}')">携带</button></div>`; }).join('')}
         ${(!wornRows.length && !bagRows.length && !carriedRows.length && !itemBagRows.length)?'<div class="wiki-p" style="color:var(--txt2);margin-top:8px">暂无物品——建造工坊制造装备，或外出探险获取（胜利有概率掉落装备）</div>':''}
       </div>`;
     document.getElementById('inv-list').innerHTML = `

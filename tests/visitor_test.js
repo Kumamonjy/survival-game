@@ -28,6 +28,8 @@ const g = Game.g;
   const gold0 = g.res.gold, res0 = g.res[b0.res];
   Game.tradeMerchant('buys', 0);
   assert(g.res.gold === gold0 + b0.gold && g.res[b0.res] === res0 - b0.amt, 'T3a 回收成交：资源变金币');
+  assert(String(elems['res-gold'].textContent) === String(g.res.gold) && String(elems['res-'+b0.res].textContent) === String(g.res[b0.res]),
+    'T3e 成交后主界面资源面板即时刷新');
   assert(b0.done === true && v.merchant.buys[1].done === false, 'T3b 该笔标记成交、另一笔不受影响');
   const g1 = g.res.gold;
   Game.tradeMerchant('buys', 0);
@@ -44,6 +46,7 @@ const g = Game.g;
   const gold1 = g.res.gold, res1 = g.res[s0.res]||0;
   Game.tradeMerchant('sell');
   assert(g.res.gold === gold1 - s0.gold && (g.res[s0.res]||0) === res1 + s0.amt, 'T4a 出售成交：金币变资源');
+  assert(String(elems['res-gold'].textContent) === String(g.res.gold), 'T4d 买入后主界面金币即时刷新');
   assert(s0.done === true, 'T4b 已成交');
   Game.tradeMerchant('sell');
   assert((g.res[s0.res]||0) === res1 + s0.amt, 'T4c 二次拦截');
@@ -57,6 +60,8 @@ const g = Game.g;
   assert(w.recruited === true, 'T5b 招募标记');
   assert(g.chars.filter(c=>!c.dead).length === alive0+1 && g.chars.includes(w), 'T5c 流浪者入队');
   assert(g.res.gold === 500-100 && g.res.food === 100-20, 'T5d 扣 100金+20食物');
+  assert(String(elems['res-gold'].textContent) === String(g.res.gold) && String(elems['res-food'].textContent) === String(g.res.food),
+    'T5f 招募后主界面资源面板即时刷新');
   Game.recruitWanderer();
   assert(g.chars.filter(c=>!c.dead).length === alive0+1, 'T5e 二次招募拦截');
 

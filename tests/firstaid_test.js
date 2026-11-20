@@ -33,15 +33,14 @@ function mkDuty(cls, name){ const c = Game.createChar(cls, name); c.stamina = 99
   g.res.med = 10;
 
   // T5 营地使用：重伤角色 → 回 60 血 + 解除重伤 + 背包 -1
-  g.bagInst.push({ uid:'fa_t', id:'firstaid', lv:0 });
-  Game.unequipToBag ? null : null;
-  g.bag.firstaid = (g.bag.firstaid||0);   // 背包道具为投影：直接构造 bag 计数
-  g.bag.firstaid = 1;
+  g.bagInst = (g.bagInst||[]).filter(e=>e.id!=='firstaid');   // 清空旧急救丸，保证数量确定
+  g.bag.firstaid = 0;
+  Game.addEquip('firstaid', 1);
   const hurt = g.chars[0];
   hurt.injured = true; hurt.hp = 10;
   Game.useFirstaid(hurt.id);
   assert(!hurt.injured && hurt.hp===70, `T5a 服用急救丸：解除重伤 + 回 60 血（${hurt.hp}）`);
-  assert(g.bag.firstaid===0, 'T5b 背包急救丸 -1');
+  assert(Game.bagCount('firstaid')===0 && g.bag.firstaid===0, 'T5b 背包急救丸 -1（实例与计数同步）');
 
   // T6 无药拦截
   hurt.injured = true; hurt.hp = 10;

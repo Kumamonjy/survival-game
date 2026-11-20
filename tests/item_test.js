@@ -85,6 +85,16 @@ const [s1, s2] = g.chars;
   assert(!itHtml.includes('面包') && !itHtml.includes('解毒针') && !itHtml.includes('绷带'), 'T8c 背包 ×0 的道具不显示');
   assert(!itHtml.includes('背包 ×0'), 'T8d 不再出现「背包 ×0」行');
   assert(itHtml.includes('背包 ×'), 'T8e 有库存道具正常显示库存');
+  // T8f 弹窗内携带最后一件后，库存行即时消失（弹窗自动刷新）
+  g.bagInst = (g.bagInst||[]).filter(e=>e.id!=='stone'); g.bag.stone = 0;
+  Game.addEquip('stone', 1);
+  s2.item = null;
+  UI.openItemSlot(s2.id);
+  assert(elems['modal-body'].innerHTML.includes('石块'), 'T8f 有库存时显示石块行');
+  Game.carryItem(s2.id, 'stone');
+  const h2 = elems['modal-body'].innerHTML;
+  assert(Game.bagCount('stone')===0 && !h2.includes('背包 ×') && h2.includes('石块 ×1'),
+    'T8g 携带最后一件后列表行消失，仅保留已携带卡片');
 
   // T9 携带道具不提供属性
   const a0 = Game.effAtk(s2);
