@@ -82,6 +82,9 @@ const [s1, s2] = g.chars;
   const itHtml = elems['modal-body'] ? elems['modal-body'].innerHTML : '';
   assert(itHtml.includes('道具管理') && itHtml.includes('石块 ×1'), 'T8a 道具管理弹窗渲染');
   assert(itHtml.includes('携带') && itHtml.includes('放回'), 'T8b 数量调整按钮');
+  assert(!itHtml.includes('面包') && !itHtml.includes('解毒针') && !itHtml.includes('绷带'), 'T8c 背包 ×0 的道具不显示');
+  assert(!itHtml.includes('背包 ×0'), 'T8d 不再出现「背包 ×0」行');
+  assert(itHtml.includes('背包 ×'), 'T8e 有库存道具正常显示库存');
 
   // T9 携带道具不提供属性
   const a0 = Game.effAtk(s2);
