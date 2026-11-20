@@ -26,20 +26,20 @@ const waterCnt = () => Battle.b.terrain.flat().filter(x=>x==='water').length;
   await Battle.start(Z('market'));
   assert(waterCnt()===Z('market').terrain.water, `T3 晴天水量 = 区域配方（${waterCnt()}）`);
 
-  // T4 雨天额外河水：数量增加、日志提示、单位不被淹、全场连通
-  let allOK = true, extraMin = 99;
+  // T4 雨天额外河水：随机 6-8 格、日志提示、单位不被淹、我方保持连通
+  let allOK = true, extraMin = 99, extraMax = 0;
   for (let i=0;i<8;i++) {
     g.weather = 'rain';
     UI.teamSelected = [c.id]; c.stamina = 100; c.injured = false;
     await Battle.start(Z('market'));
     const extra = waterCnt() - Z('market').terrain.water;
-    extraMin = Math.min(extraMin, extra);
-    if (extra < 4) allOK = false;
+    extraMin = Math.min(extraMin, extra); extraMax = Math.max(extraMax, extra);
+    if (extra < 6 || extra > 8) allOK = false;
     if (Battle.b.units.some(u=>Battle.b.terrain[u.row][u.col]==='water')) allOK = false;
     const reach = Battle.rainReach(Battle.b);
     if (!Battle.b.units.filter(u=>u.side==='ally').every(u=>reach.has(u.uid))) allOK = false;
   }
-  assert(allOK, `T4 雨天 8 局均生成 ≥4 格河水且不淹单位、保持连通（最少 ${extraMin}）`);
+  assert(allOK, `T4 雨天 8 局均生成 6-8 格分散河水且不淹单位、我方连通（${extraMin}-${extraMax}）`);
   assert(Battle.b.log.some(e=>e.msgs.some(m=>m.m.includes('河水'))), 'T4b 战报提示河水');
 
   // T5 rainRiver 只淹空地：障碍/箱子/单位原样保留
@@ -50,10 +50,13 @@ const waterCnt = () => Battle.b.terrain.flat().filter(x=>x==='water').length;
   b.units = [ally, foe];
   b.terrain[12][3] = 'crate'; b.terrain[0][4] = 'ruin'; b.terrain[6][2] = 'barrel';
   const n = Battle.rainRiver(b);
-  assert(n >= 4, `T5a 生成河道（${n} 格）`);
-  assert(b.terrain[12][5]==='plain' && b.terrain[0][5]==='plain', 'T5b 单位所在格不被淹');
-  assert(b.terrain[12][3]==='crate' && b.terrain[0][4]==='ruin' && b.terrain[6][2]==='barrel', 'T5c 箱子/废墟/油桶不被覆盖');
-  assert(Battle.rainConnected(b), 'T5d 河道后全体连通');
+  assert(n >= 6 && n <= 8, `T5a 生成 6-8 格分散河水（${n} 格）`);
+  const rows = new Set();
+  for (let r=0;r<Battle.ROWS;r++) for (let c=0;c<Battle.COLS;c++) if (b.terrain[r][c]==='water') rows.add(r);
+  assert(rows.size >= 2, `T5b 河水分散在多行（${rows.size} 行）`);
+  assert(b.terrain[12][5]==='plain' && b.terrain[0][5]==='plain', 'T5c 单位所在格不被淹');
+  assert(b.terrain[12][3]==='crate' && b.terrain[0][4]==='ruin' && b.terrain[6][2]==='barrel', 'T5d 箱子/废墟/油桶不被覆盖');
+  assert(Battle.rainConnected(b), 'T5e 河水后全体连通');
 
   // T6 雾天仍 -1 射程（不受本次改动影响）
   g.weather = 'fog';
