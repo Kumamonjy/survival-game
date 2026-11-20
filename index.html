@@ -912,17 +912,17 @@ DATA.EMPTY_EQUIP = { weapon:null, head:null, armor:null, shoes:null, acc:null, i
 
 /* 工坊：制造装备 */
 DATA.WORKSHOP = { name:'工坊', icon:'🏭', buildCost:130, upgradeCost:200, maxLv:5, desc:'消耗金币、木材、布料与金属制造装备和消耗品，造好的物品放入背包后可在人物信息中穿戴或携带。每升一级，制造与升级装备的材料消耗减少 10%（向上取整）。' };
-/* 防御工事：营地建造后自动参战，不占出战位、无体力、不可移动、随机落在战场底部两行，被摧毁仅本场消失 */
+/* 防御工事：营地建造后需指派操作员才会参战，不占出战位、无体力、不可移动、随机落在战场底部两行，被摧毁仅本场消失 */
 DATA.TOWERS = {
-  arrow: { id:'arrow', name:'箭塔', icon:'🏹', lvKey:'towerArrowLv', maxLv:5,
-    buildCost:{ gold:80, wood:20, metal:8 }, upgradeCost:120,
+  arrow: { id:'arrow', name:'箭塔', icon:'🏹', lvKey:'towerArrowLv', opKey:'towerArrowOp', maxLv:5,
+    buildCost:{ gold:50, wood:24, metal:10 }, upgradeCost:120,
     hp:200, atk:50, def:0, range:3, critRate:0.05, critDmg:1.5,
-    desc:'固定自动射击，无法移动，每回合自动攻击射程内最近的敌人。' },
-  ballista: { id:'ballista', name:'弩塔', icon:'🎯', lvKey:'towerBallistaLv', maxLv:5,
-    buildCost:{ gold:100, wood:15, metal:12 }, upgradeCost:150,
+    desc:'固定自动射击，无法移动，每回合自动攻击射程内最近的敌人；需指派操作员才能参战。' },
+  ballista: { id:'ballista', name:'弩塔', icon:'🎯', lvKey:'towerBallistaLv', opKey:'towerBallistaOp', maxLv:5,
+    buildCost:{ gold:60, wood:20, metal:15 }, upgradeCost:150,
     hp:180, atk:40, def:0, range:2, critRate:0.05, critDmg:1.5,
     skill:{ name:'穿射', desc:'沿上下左右一个方向，对直线 2 格内所有敌人造成 100% 攻击力的伤害。冷却 3 回合。无体力消耗。', cost:0, cd:3, type:'attack', shape:'line', lineLen:2, mult:1.0 },
-    desc:'固定弩机，无法移动，每回合自动攻击；技能「穿射」可贯穿一条直线上的所有敌人（冷却 3 回合）。' },
+    desc:'固定弩机，无法移动，每回合自动攻击；技能「穿射」可贯穿一条直线上的所有敌人（冷却 3 回合）；需指派操作员才能参战。' },
 };
 DATA.RECIPES = [
   { id:'stone',  cost:{ gold:12, metal:3 }, stamina:5 },
@@ -1137,6 +1137,14 @@ const DUTY_CONFIG = {
     fullMsg:g=>`训练位已满（Lv.${g.gymLv} 共 ${g.gymLv} 个），先撤下一位或升级健身房`,
     assignMsg:c=>`🏋️ ${c.name} 开始训练，每天 -${DATA.GYM.staminaCost}⚡ 换 +${DATA.GYM.expAmt} 经验（不影响出战）`,
     unassignMsg:c=>`${c.name} 已停止训练` },
+  towerArrow: { slot:'towerArrowOp', lv:'towerArrowLv', checks:['already','conflict','injured'], noInjured:true, action:'操控工事',
+    already:'已经在操控箭塔了',
+    assignMsg:c=>`🏹 ${c.name} 成为箭塔操作员，外出探索时箭塔会自动参战（不影响出战）`,
+    unassignMsg:c=>`${c.name} 已离开箭塔操作位，箭塔暂时无法参战` },
+  towerBallista: { slot:'towerBallistaOp', lv:'towerBallistaLv', checks:['already','conflict','injured'], noInjured:true, action:'操控工事',
+    already:'已经在操控弩塔了',
+    assignMsg:c=>`🎯 ${c.name} 成为弩塔操作员，外出探索时弩塔会自动参战（不影响出战）`,
+    unassignMsg:c=>`${c.name} 已离开弩塔操作位，弩塔暂时无法参战` },
 };
 
 /* 生产岗白天工作配置：厨房/农场「暂存产出→过夜结算」统一走 Game.workPending */
@@ -1207,6 +1215,8 @@ const Game = {
       workshopLv: 0,
       towerArrowLv: 0,
       towerBallistaLv: 0,
+      towerArrowOp: null,
+      towerBallistaOp: null,
       tutorial: true,
     };
     // 初始三名角色：职业随机（互不重复）、名字随机（互不重复）
@@ -1750,7 +1760,7 @@ const Game = {
     const errs = {
       already:  has ? c.name + ' ' + C.already : null,
       conflict: conflict ? `🙅 ${c.name} 已担任「${conflict}」，一人一天只能一个职务（先撤职再换岗）` : null,
-      injured:  (wc && c.injured) ? '🩸 ' + c.name + ' 重伤在身需静养，无法' + C.action : null,
+      injured:  ((wc || C.noInjured) && c.injured) ? '🩸 ' + c.name + ' 重伤在身需静养，无法' + C.action : null,
       stamina:  (wc && c.stamina < wc) ? `⚡ ${c.name} 体力不足 ${wc}，无法指派${C.action}` : null,
       full:     (C.capacity && (g[C.array]||[]).length >= g[C.lv]) ? C.fullMsg(g) : null,
     };
@@ -1847,7 +1857,7 @@ const Game = {
     g.res.gold -= T.buildCost.gold; g.res.wood -= T.buildCost.wood; g.res.metal -= T.buildCost.metal;
     g[T.lvKey] = 1;
     Game.saveToSlot(Game.currentSlot, true);
-    UI.toast(`🏰 ${T.name}建造完成！外出探索时会自动出现在战场底部两行`);
+    UI.toast(`🏰 ${T.name}建造完成！需指派操作员后，外出探索时才会参战`);
     UI.renderBuild(); Game.renderHome();
   },
   upTower(key) {
@@ -1914,8 +1924,19 @@ const Game = {
     if (g.hospitalDoc === cid) return '医院当值';
     if ((g.dormBeds||[]).includes(cid)) return '寝室床位';
     if ((g.gymSlots||[]).includes(cid)) return '健身房训练';
+    if (g.towerArrowOp === cid) return '箭塔操控';
+    if (g.towerBallistaOp === cid) return '弩塔操控';
     return null;
   },
+  /* 防御工事操作员：已指派、存活且未重伤才有效（重伤/死亡则工事无法参战） */
+  towerOperator(key) {
+    const T = DATA.TOWERS[key]; if (!T) return null;
+    const id = Game.g[T.opKey]; if (!id) return null;
+    const c = Game.g.chars.find(x=>x.id===id && !x.dead);
+    return c && !c.injured ? c : null;
+  },
+  assignTowerOp(key, cid){ Game.assignDuty(key==='arrow' ? 'towerArrow' : 'towerBallista', cid); },
+  unassignTowerOp(key){ Game.unassignDuty(key==='arrow' ? 'towerArrow' : 'towerBallista'); },
   buildFarm(){ Game.buildBuilding('farm'); },
   upgradeFarm(){ Game.upgradeBuilding('farm'); },
   assignFarm(cid){ Game.assignDuty('farm', cid); },
@@ -1997,6 +2018,8 @@ const Game = {
     if (typeof Game.g.kitchenLv !== 'number') Game.g.kitchenLv = 0;
     if (typeof Game.g.towerArrowLv !== 'number') Game.g.towerArrowLv = 0;
     if (typeof Game.g.towerBallistaLv !== 'number') Game.g.towerBallistaLv = 0;
+    if (Game.g.towerArrowOp === undefined) Game.g.towerArrowOp = null;
+    if (Game.g.towerBallistaOp === undefined) Game.g.towerBallistaOp = null;
     if (Game.g.kitchenChef === undefined) Game.g.kitchenChef = null;
     if (Game.g.workshopChef === undefined) Game.g.workshopChef = null;
     if (typeof Game.g.dormLv !== 'number') Game.g.dormLv = 0;
@@ -2182,6 +2205,8 @@ const UI = {
         ${g.labLv>0 ? `<span class="tag yellow">🧪 实验室：${name(g.labChef)||'空缺'}</span>` : '<span class="tag">🧪 实验室未建造</span>'}
         ${g.hospitalLv>0 ? `<span class="tag yellow">🏥 医院：${name(g.hospitalDoc)||'空缺'}</span>` : '<span class="tag">🏥 医院未建造</span>'}
         ${g.farmLv>0 ? `<span class="tag yellow">🌾 农场：${name(g.farmWorker)||'空缺'}</span>` : '<span class="tag">🌾 农场未建造</span>'}
+        ${g.towerArrowLv>0 ? `<span class="tag yellow">🏹 箭塔：${name(g.towerArrowOp)||'空缺'}</span>` : ''}
+        ${g.towerBallistaLv>0 ? `<span class="tag yellow">🎯 弩塔：${name(g.towerBallistaOp)||'空缺'}</span>` : ''}
         ${g.dormLv>0 ? `<span class="tag yellow">🛏️ 床位：${(g.dormBeds||[]).filter(id=>name(id)).length}/${g.dormLv}</span>` : '<span class="tag">🛏️ 寝室未建造</span>'}
         ${g.gymLv>0 ? `<span class="tag yellow">🏋️ 训练：${(g.gymSlots||[]).filter(id=>name(id)).length}/${g.gymLv}</span>` : '<span class="tag">🏋️ 健身房未建造</span>'}
       </div>
@@ -2301,6 +2326,28 @@ const UI = {
         candTitle:n=>`可指派成员（${n}）：`, candSub:expSub, candBad:c=>c.injured||c.stamina<Dg.staminaCost,
         staminaCost:Dg.staminaCost, fullTag:'训练位已满', capacity:()=>g.gymLv, assignLabel:'指派',
         assignCall:c=>`Game.assignGym('${c.id}')` },
+      { built: g.towerArrowLv > 0,
+        title:`🏹 箭塔操作员（Lv.${g.towerArrowLv} · 无体力消耗）`,
+        occupants: occOf(g.towerArrowOp),
+        occBadge:o=>o.injured?'<span class="tag red">重伤（无法参战）</span>':'<span class="tag blue">操控箭塔</span>',
+        occSub:o=>`❤️ ${o.hp}/${Game.effHp(o)} · ⚡ ${o.stamina}/${Game.effSt(o)}（体力不影响工事）`,
+        unLabel:'撤职', unCall:()=>`Game.unassignTowerOp('arrow')`,
+        empty:'⚠️ 箭塔无人操控——外出探索时不会参战。从下方名单指派一名操作员。',
+        cands: alive.filter(c=>c.id!==g.towerArrowOp),
+        candTitle:n=>`可指派操作员（${n}）：`, candSub:effSub, candBad:c=>c.injured,
+        staminaCost:0, fullTag:null, assignLabel:'指派',
+        assignCall:c=>`Game.assignTowerOp('arrow','${c.id}')` },
+      { built: g.towerBallistaLv > 0,
+        title:`🎯 弩塔操作员（Lv.${g.towerBallistaLv} · 无体力消耗）`,
+        occupants: occOf(g.towerBallistaOp),
+        occBadge:o=>o.injured?'<span class="tag red">重伤（无法参战）</span>':'<span class="tag blue">操控弩塔</span>',
+        occSub:o=>`❤️ ${o.hp}/${Game.effHp(o)} · ⚡ ${o.stamina}/${Game.effSt(o)}（体力不影响工事）`,
+        unLabel:'撤职', unCall:()=>`Game.unassignTowerOp('ballista')`,
+        empty:'⚠️ 弩塔无人操控——外出探索时不会参战。从下方名单指派一名操作员。',
+        cands: alive.filter(c=>c.id!==g.towerBallistaOp),
+        candTitle:n=>`可指派操作员（${n}）：`, candSub:effSub, candBad:c=>c.injured,
+        staminaCost:0, fullTag:null, assignLabel:'指派',
+        assignCall:c=>`Game.assignTowerOp('ballista','${c.id}')` },
     ].forEach(P=>{ if (P.built) html += dutyPanel(P); });
 
     document.getElementById('duty-page').innerHTML = html;
@@ -2462,6 +2509,9 @@ const UI = {
         const T = DATA.TOWERS[k];
         CARDS[k] = () => {
           const lv = g[T.lvKey] || 0, grow = 1 + 0.1 * Math.max(0, lv-1);
+          const opId = g[T.opKey] || null, opC = opId ? g.chars.find(x=>x.id===opId) : null;
+          const op = Game.towerOperator(k);
+          const opState = op ? `<b>${op.name}</b>` : (opC ? `<b>${opC.name}</b> <span style="color:var(--red2)">（${opC.dead?'已阵亡':'重伤'}，无法参战）</span>` : '<span style="color:var(--red2)">空缺</span>');
           const stats = `<div class="row" style="margin-top:8px;flex-wrap:wrap">
             <span class="tag red">❤️ ${Math.round(T.hp*grow)}</span>
             <span class="tag">🗡️ ${Math.round(T.atk*grow)}</span>
@@ -2472,9 +2522,11 @@ const UI = {
             ? `${stats}
               <div class="wiki-p" style="margin-top:8px">建造成本：<b>${Game.towerCostStr(T.buildCost)}</b>${Game.canAfford(T.buildCost)?'':'　<span style="color:var(--red2)">资源不足</span>'}</div>
               <button class="btn primary" style="margin-top:8px" ${Game.canAfford(T.buildCost)?'':'disabled'} onclick="Game.buildTower('${k}')">🏰 建造${T.name}</button>
-              <div class="wiki-p" style="margin-top:8px;font-size:12px;color:var(--txt2)">建成后自动参战：随机落在战场底部两行，无体力、不可移动、每回合自动攻击；被摧毁只在本场消失，下次探索重新出现。</div>`
+              <div class="wiki-p" style="margin-top:8px;font-size:12px;color:var(--txt2)">建成后需指派操作员才能参战：随机落在战场底部两行，无体力、不可移动、每回合自动攻击；被摧毁只在本场消失，下次探索重新出现。</div>`
             : `${stats}
               ${T.skill?`<div class="wiki-p" style="margin-top:8px">🎯 技能「${T.skill.name}」：${T.skill.desc}</div>`:''}
+              <div class="wiki-p" style="margin-top:8px">👤 操作员：${opState}${op?'':'　<span style="color:var(--red2)">— 需指派后才能参战</span>'}</div>
+              <div class="row" style="margin-top:6px"><button class="btn small" onclick="UI.openDuty()">${op?'更换 / 撤职操作员':'去指派操作员'}</button></div>
               ${upRow(lv, { upgradeCost:T.upgradeCost, maxLv:T.maxLv }, `Game.upTower('${k}')`, lv>1?`<span class="tag yellow">属性 +${(lv-1)*10}%</span>`:'')}
               <div class="wiki-p" style="margin-top:8px;font-size:12px;color:var(--txt2)">每级生命/攻击 +10%；战斗中无需操作，每回合自动选择射程内最近敌人开火。</div>`;
           return cardShell(T.icon, T.name, lv, lv>0, T.desc, body);
@@ -3132,7 +3184,7 @@ const UI = {
             <td>${T.skill?`技能「${T.skill.name}」：直线 ${T.skill.lineLen} 格内所有敌人受到 100% 攻击力伤害，冷却 ${T.skill.cd} 回合；`:'每回合自动攻击射程内最近的敌人；'}无体力、不可移动</td></tr>`;
         }).join('')}
         </table>
-        <div class="wiki-p" style="margin-top:6px">每类最多建造 <b>1 座</b>，可升级至 Lv.5（每级生命/攻击 +10%，基准价 ×(1+0.5×当前等级)）。建造后<b>不占出战位</b>：外出探索时随机部署在战场<b>底部两行</b>的空位，玩家行动结束后自动开火，弩塔在直线可命中 ≥2 名敌人时会优先施放「穿射」。工事没有体力限制；被摧毁只在本场消失，下次探索自动重建，也不会造成角色重伤。</div>
+        <div class="wiki-p" style="margin-top:6px">每类最多建造 <b>1 座</b>，可升级至 Lv.5（每级生命/攻击 +10%，基准价 ×(1+0.5×当前等级)）。建成后需在「职务」中<b>指派一名操作员</b>（无体力要求，但操作员重伤或阵亡时工事无法参战）。参战时<b>不占出战位</b>：外出探索时随机部署在战场<b>底部两行</b>的空位，玩家行动结束后自动开火，弩塔在直线可命中 ≥2 名敌人时会优先施放「穿射」。工事没有体力限制；被摧毁只在本场消失，下次探索自动重建，也不会造成角色重伤。</div>
       </div>`;
     const secSave = `
       <div class="wiki-sec panel"><h4>💾 存档说明</h4>
@@ -3775,8 +3827,13 @@ const Battle = {
   spawnTowers(b) {
     const g = Game.g;
     ['arrow','ballista'].forEach(k=>{
-      const lv = g[DATA.TOWERS[k].lvKey] || 0;
+      const T = DATA.TOWERS[k], lv = g[T.lvKey] || 0;
       if (lv <= 0) return;
+      /* 必须有健康且在岗的操作员，否则本场不部署 */
+      if (!Game.towerOperator(k)) {
+        Battle.log(`⚠️ ${T.name}无人操控（需在职务中指派操作员），本场未参战`, 'bad');
+        return;
+      }
       const pos = Battle.randomBottomCell();
       if (!pos) return;
       b.units.push(Battle.mkTower(k, lv, pos.r, pos.c));

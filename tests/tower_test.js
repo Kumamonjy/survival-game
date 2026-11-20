@@ -17,20 +17,23 @@ const mkB = (units) => ({ units, selected:units[0], terrain:mkTerrain(), mode:nu
   assert(T.ballista.name==='弩塔' && T.ballista.hp===180 && T.ballista.atk===40 && T.ballista.range===2, 'T1d 弩塔 180/40/射程2');
   assert(T.ballista.skill && T.ballista.skill.name==='穿射' && T.ballista.skill.shape==='line'
     && T.ballista.skill.lineLen===2 && T.ballista.skill.cd===3 && T.ballista.skill.cost===0, 'T1e 穿射：直线2格/冷却3/无体力消耗');
+  assert(T.arrow.buildCost.gold===50 && T.ballista.buildCost.gold===60, 'T1f 建造金币下调（50/60）');
+  assert(T.arrow.buildCost.wood===24 && T.arrow.buildCost.metal===10
+    && T.ballista.buildCost.wood===20 && T.ballista.buildCost.metal===15, 'T1g 木材/金属小幅提高');
 
   // ===== T2 建造：多资源、各限一座 =====
   g.res.gold = 1000; g.res.wood = 100; g.res.metal = 100;
   Game.buildTower('arrow');
   assert(g.towerArrowLv===1, 'T2a 建造箭塔成功 Lv.1');
-  assert(g.res.gold===920 && g.res.wood===80 && g.res.metal===92, 'T2b 按成本扣三资源');
+  assert(g.res.gold===950 && g.res.wood===76 && g.res.metal===90, 'T2b 按新成本扣三资源（50💰+24🪵+10⚙️）');
   Game.buildTower('arrow');
-  assert(g.towerArrowLv===1 && g.res.gold===920, 'T2c 箭塔最多 1 座（重复建造无效）');
+  assert(g.towerArrowLv===1 && g.res.gold===950, 'T2c 箭塔最多 1 座（重复建造无效）');
   g.res.metal = 0;
   Game.buildTower('ballista');
   assert(g.towerBallistaLv===0, 'T2d 资源不足无法建造弩塔');
   g.res.metal = 100;
   Game.buildTower('ballista');
-  assert(g.towerBallistaLv===1, 'T2e 弩塔建造成功');
+  assert(g.towerBallistaLv===1 && g.res.gold===890 && g.res.wood===56 && g.res.metal===85, 'T2e 弩塔建造成功并按新成本扣资源');
 
   // ===== T3 升级：金币递增、上限 5 =====
   const c1 = Game.upCost({ upgradeCost:T.arrow.upgradeCost }, 1);
@@ -51,20 +54,53 @@ const mkB = (units) => ({ units, selected:units[0], terrain:mkTerrain(), mode:nu
   const t2 = Battle.mkTower('ballista', 1, 12, 4);
   assert(t2.hp===180 && t2.atk===40 && t2.range===2 && t2.skills.length===1, 'T4d 弩塔属性与穿射技能');
 
-  // ===== T5 部署：随机落在底部两行 =====
+  // ===== T5 部署：必须指派操作员，且随机落在底部两行 =====
   g.towerArrowLv = 1; g.towerBallistaLv = 1;
+  const op1 = Game.createChar('soldier', '操作员甲'); op1.stamina = 50;
+  const op2 = Game.createChar('soldier', '操作员乙'); op2.stamina = 50;
+  g.chars.push(op1, op2);
+  Game.assignTowerOp('arrow', op1.id);
+  Game.assignTowerOp('ballista', op2.id);
+  assert(g.towerArrowOp===op1.id && g.towerBallistaOp===op2.id, 'T5a 可指派操作员');
+  assert(Game.dutyOf(op1.id)==='箭塔操控' && Game.dutyOf(op2.id)==='弩塔操控', 'T5b 操作员占用职务（不可一人兼两职）');
+  assert(Game.towerOperator('arrow')===op1, 'T5c 健康操作员有效');
   const bSp = mkB([]); Battle.b = bSp;
   Battle.spawnTowers(bSp);
   const tws = bSp.units.filter(u=>u.isTower);
-  assert(tws.length===2, 'T5a 已建造的工事全部部署');
+  assert(tws.length===2, 'T5d 已建造且已指派的工事全部部署');
   const bottomRows = [Battle.ROWS-2, Battle.ROWS-1];
-  assert(tws.every(u=>bottomRows.includes(u.row)), 'T5b 工事仅出现在底部两行（' + tws.map(u=>u.row+','+u.col).join(' ') + '）');
+  assert(tws.every(u=>bottomRows.includes(u.row)), 'T5e 工事仅出现在底部两行（' + tws.map(u=>u.row+','+u.col).join(' ') + '）');
   const keys = tws.map(u=>u.row+','+u.col);
-  assert(new Set(keys).size===keys.length, 'T5c 两座工事不重叠');
+  assert(new Set(keys).size===keys.length, 'T5f 两座工事不重叠');
+
+  // 未指派 / 重伤 → 不部署
+  g.towerArrowOp = null;
+  const bUn = mkB([]); Battle.b = bUn;
+  Battle.spawnTowers(bUn);
+  assert(bUn.units.filter(u=>u.isTower).length===1 && !bUn.units.some(u=>u.towerType==='arrow'), 'T5g 箭塔未指派操作员时不参战');
+  assert(bUn.log.some(e=>e.msgs.some(m=>m.m.includes('无人操控'))), 'T5h 未指派时给出提示日志');
+  g.towerArrowOp = op1.id; op1.injured = true;
+  assert(Game.towerOperator('arrow')===null, 'T5i 操作员重伤时工事失效');
+  const bInj = mkB([]); Battle.b = bInj;
+  Battle.spawnTowers(bInj);
+  assert(!bInj.units.some(u=>u.towerType==='arrow'), 'T5j 操作员重伤时不部署');
+  op1.injured = false;
+
+  // 指派校验：重伤者 / 已有职务者不可指派
+  const opInj = Game.createChar('soldier', '伤员'); opInj.injured = true; g.chars.push(opInj);
+  Game.assignTowerOp('ballista', opInj.id);
+  assert(g.towerBallistaOp===op2.id, 'T5k 重伤者不能担任操作员');
+  const opBusy = Game.createChar('soldier', '忙碌者'); opBusy.stamina = 50; g.chars.push(opBusy);
+  g.kitchenChef = opBusy.id;
+  Game.assignTowerOp('ballista', opBusy.id);
+  assert(g.towerBallistaOp===op2.id, 'T5l 已有职务者不能兼任操作员');
+  g.kitchenChef = null;
+
   g.towerArrowLv = 0; g.towerBallistaLv = 0;
+  g.towerArrowOp = null; g.towerBallistaOp = null;
   const bNo = mkB([]); Battle.b = bNo;
   Battle.spawnTowers(bNo);
-  assert(bNo.units.length===0, 'T5d 未建造则不部署');
+  assert(bNo.units.length===0, 'T5m 未建造则不部署');
 
   // ===== T6 箭塔自动普攻最近敌人 =====
   const zA = Battle.mkZombie('walker', 9, 5, 1);
