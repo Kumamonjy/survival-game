@@ -998,7 +998,7 @@ DATA.PRODUCE = {
 /* 天气 */
 DATA.WEATHERS = [
   { id:'sunny', name:'☀️ 晴朗', desc:'视野良好，无额外影响。' },
-  { id:'rain',  name:'🌧️ 下雨', desc:'雨水浸透泥泞，战斗中所有丧尸移速 -1。' },
+  { id:'rain',  name:'🌧️ 下雨', desc:'暴雨在战场汇成河流，额外出现不可通行的河水格（保留缺口可供通行）。' },
   { id:'fog',   name:'🌫️ 浓雾', desc:'能见度极低，战斗中所有单位攻击范围 -1（最低为1）。' },
 ];
 
@@ -3082,7 +3082,7 @@ const UI = {
         · 伤害公式：<b>攻击力 − 目标防御</b>，最低为 1；暴击时 × 暴击伤害倍率<br>
         · <b>休息</b>：恢复 8 点体力，且本回合受到的伤害减半（休息后本回合行动结束）<br>
         · <b>技能</b>：消耗体力，有冷却回合，详见职业图鉴<br>
-        · 天气影响：🌧️ 雨天丧尸移速 −1；🌫️ 雾天所有单位射程 −1（最低 1）<br>
+        · 天气影响：🌧️ 雨天战场额外出现不可通行的河水（留缺口）；🌫️ 雾天所有单位射程 −1（最低 1）<br>
         · <b>撤离</b>：随时可以撤离，保留已拾取物资但无通关奖励<br>
         · 角色血量归零后变为<b>重伤</b>（不真正死亡），回基地后用药物治愈才能再次出战<br>
         · 全队重伤 = 探险失败，已拾取物资损失一半
@@ -3455,6 +3455,58 @@ const Battle = {
     for (let r=0;r<Battle.ROWS;r++) for (let c=0;c<Battle.COLS;c++)
       if (b.terrain[r][c]==='ruin') b.ruins[r+','+c] = 1;   // 每处废墟可翻找 1 次
   },
+  /* 雨天：暴雨在战场中部汇成一条横贯的河水（只淹空地、避让单位），保留 1-2 个缺口；
+     生成后做连通性校验，若把任何单位隔断则回滚重试 */
+  rainRiver(b) {
+    const R = Battle.ROWS, C = Battle.COLS;
+    const base = Battle.rainReach(b);      // 河道生成前可达的单位（容忍地图原本就存在的隔绝）
+    for (let attempt=0; attempt<10; attempt++) {
+      const r = rnd(3, R-4);
+      const gaps = new Set();
+      for (let i=0, n=rnd(1,2); i<n; i++) gaps.add(rnd(0, C-1));
+      const changed = [];
+      for (let c=0;c<C;c++) {
+        if (gaps.has(c)) continue;
+        if (b.terrain[r][c] !== 'plain') continue;
+        if (Battle.unitAt(r,c)) continue;
+        b.terrain[r][c] = 'water';
+        changed.push([r,c]);
+      }
+      if (changed.length >= 4) {
+        const now = Battle.rainReach(b);
+        if ([...base].every(k=>now.has(k))) return changed.length;   // 不减少任何原本可达的单位
+      }
+      changed.forEach(([rr,cc])=>{ b.terrain[rr][cc] = 'plain'; });
+    }
+    return 0;
+  },
+  /* 从第一个存活单位出发，返回仍可达的单位标识集合 */
+  rainReach(b) {
+    const units = (b.units||[]).filter(u=>u.hp>0);
+    const out = new Set();
+    if (!units.length) return out;
+    const key = u => u.uid || (u.row+','+u.col);
+    const s = units[0], seen = new Set([s.row+','+s.col]);
+    const q = [[s.row,s.col]];
+    while (q.length) {
+      const [r,c] = q.shift();
+      [[r-1,c],[r+1,c],[r,c-1],[r,c+1]].forEach(([nr,nc])=>{
+        if (!Battle.inMap(nr,nc)) return;
+        const k = nr+','+nc;
+        if (seen.has(k)) return;
+        if (!DATA.TERRAIN[b.terrain[nr][nc]].walk) return;
+        seen.add(k); q.push([nr,nc]);
+      });
+    }
+    units.forEach(u=>{ if (seen.has(u.row+','+u.col)) out.add(key(u)); });
+    return out;
+  },
+  /* 连通性校验：所有存活单位仍处在同一片可通行区域 */
+  rainConnected(b) {
+    const units = (b.units||[]).filter(u=>u.hp>0);
+    if (units.length < 2) return true;
+    return Battle.rainReach(b).size === units.length;
+  },
   /* 我方从底部出生（最多 6 人，按固定列号就近落位） */
   spawnTeam(b, team) {
     const cols = [4,6,3,7];
@@ -3519,11 +3571,13 @@ const Battle = {
     Battle.buildTerrain(b, Z);
     Battle.spawnTeam(b, team);
     Battle.spawnEnemies(b, Z, zLevel, extra);
+    const flood = Game.g.weather==='rain' ? Battle.rainRiver(b) : 0;
 
     UI.showScreen('scr-battle');
     document.getElementById('btn-speed').textContent = '加速 x1';
     Battle.log(`── 进入 ${zone.name}（丧尸等级 Lv.${zLevel}）──`);
     if (extra) Battle.log('⚠️ 丧尸潮来袭！本次区域丧尸增多，奖励翻倍', 'bad');
+    if (flood) Battle.log(`🌧️ 暴雨汇成河水，${flood} 格被淹（不可通行）`, 'bad');
     Battle.renderMap(); Battle.cellSize(); Battle.renderPanels(); Battle.renderInfo(null);
     UI.toast(`🧭 抵达 ${zone.name}，击溃所有丧尸或撤离即可结束探险`);
   },
@@ -3639,7 +3693,6 @@ const Battle = {
   },
   effMove(u){
     let m = u.move;
-    if (u.side==='enemy' && Game.g.weather==='rain') m -= 1;
     if (u.sts && u.sts.lame) m += DATA.STATUSES.lame.moveMod;   // 瘸腿 -1
     return Math.max(1, m);
   },
