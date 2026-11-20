@@ -8,10 +8,11 @@ const g = Game.g;
   // T1 定义与生成
   const BT = DATA.TERRAIN.barrel;
   assert(BT && BT.name==='油桶' && BT.walk===false && BT.icon==='🛢️', 'T1a TERRAIN.barrel 定义（不可通行）');
-  assert(DATA.ZONES.every(z=>z.terrain && z.terrain.barrel>=1) && html.includes("scatter('barrel', tm.barrel)"), 'T1b 每图按区域配方散布油桶');
+  assert(DATA.ZONES.every(z=>z.terrain && z.terrain.barrel>=1) && html.includes("Object.entries(Z.terrain||{}).forEach"), 'T1b 每图按区域配方散布油桶（统一 buildTerrain）');
   assert(html.includes("@keyframes fxBoom") && html.includes('.cell.fx-boom'), 'T1c 爆炸特效 CSS');
-  assert(html.includes("if (t==='barrel') inner += '<span class=\"terr\">🛢️</span>'"), 'T1d 渲染挂 🛢️ 图标');
-  assert(html.includes("if (!t && b.terrain[r][c]==='barrel') return true;"), 'T1e 普攻可选油桶为目标');
+  assert(BT.cls==='barrel' && html.includes('inner += `<span class="terr">${T.icon}${left}</span>`'), 'T1d 渲染按地形表挂 🛢️ 图标');
+  assert(Battle.TILES.barrel && Battle.TILES.barrel.attackable===true
+    && html.includes('return !t && Battle.tileAttackable(r,c);'), 'T1e 普攻可选油桶为目标（地形交互表）');
   assert(html.includes('await Battle.hitBarrels(hitCells, u)'), 'T1f 技能波及引爆挂点');
 
   // T2 构造战斗：爆炸 8 格伤害（def 10 → 90）+ 燃烧 5 回合

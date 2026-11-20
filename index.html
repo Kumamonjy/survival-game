@@ -964,16 +964,20 @@ DATA.WEATHERS = [
 ];
 
 /* 地形 */
+/* cls：地图格 CSS 类；渲染与生成统一读这张表，新增地形无需改渲染代码 */
 DATA.TERRAIN = {
-  plain:  { name:'空地',  icon:'',  moveCost:1, walk:true },
-  water:  { name:'积水',  icon:'🌊', moveCost:0, walk:false, desc:'不可通行' },
-  rubble: { name:'石头',  icon:'🪨', moveCost:2, walk:false, desc:'不可通行的障碍物，双方都无法进入；用攻击可将其清除开路（1次攻击），清除后原地留下石头物资箱' },
-  stonebox:{ name:'石头物资箱', icon:'📦', moveCost:1, walk:true,  desc:'清除障碍后留下：走上拾取 1 个石块和 0-2 金属' },
-  ruin:   { name:'废墟',  icon:'🧱', moveCost:0, walk:false, desc:'阻挡通行' },
-  crate:  { name:'物资箱', icon:'🧰', moveCost:1, walk:true,  desc:'走上即拾取随机物资' },
-  pcrate: { name:'精品物资箱', icon:'🎁', moveCost:1, walk:true, desc:'走上即开启：90% 获得双倍物资，10% 获得特殊饰品（熊熊/兔兔）' },
-  barrel: { name:'油桶', icon:'🛢️', moveCost:0, walk:false, desc:'受任何攻击即爆炸：对周围 1 圈（8 格）所有单位造成 100 点伤害（结算防御）并附加燃烧 5 回合，可连锁引爆' },
+  plain:  { name:'空地',  icon:'',  moveCost:1, walk:true,  cls:'walk' },
+  water:  { name:'积水',  icon:'🌊', moveCost:0, walk:false, cls:'water', desc:'不可通行' },
+  rubble: { name:'石头',  icon:'🪨', moveCost:2, walk:false, cls:'rubble', desc:'不可通行的障碍物，双方都无法进入；用攻击可将其清除开路（1次攻击），清除后原地留下石头物资箱' },
+  stonebox:{ name:'石头物资箱', icon:'📦', moveCost:1, walk:true, cls:'crate walk', desc:'清除障碍后留下：走上拾取 1 个石块和 0-2 金属' },
+  ruin:   { name:'废墟',  icon:'🧱', moveCost:0, walk:false, cls:'ruin walk', desc:'阻挡通行' },
+  crate:  { name:'物资箱', icon:'🧰', moveCost:1, walk:true, cls:'walk', desc:'走上即拾取随机物资' },
+  pcrate: { name:'精品物资箱', icon:'🎁', moveCost:1, walk:true, cls:'walk', desc:'走上即开启：90% 获得双倍物资，10% 获得特殊饰品（熊熊/兔兔）' },
+  barrel: { name:'油桶', icon:'🛢️', moveCost:0, walk:false, cls:'barrel', desc:'受任何攻击即爆炸：对周围 1 圈（8 格）所有单位造成 100 点伤害（结算防御）并附加燃烧 5 回合，可连锁引爆' },
 };
+
+/* 资源显示名：拾取/交易/产出提示统一调用 UI.resName */
+DATA.RES_NAMES = { gold:'金币', med:'药物', metal:'金属', food:'食物', fabric:'布料', wood:'木材' };
 
 /* 里程碑事件（每10天触发，2选1） */
 DATA.MILESTONES = [
@@ -2080,7 +2084,7 @@ const UI = {
       body = '<div class="wiki-p">今天没有访客到访。</div>';
     } else {
       const m = v.merchant;
-      const resName = r => ({metal:'金属',food:'食物',wood:'木材',fabric:'布料',med:'药物'})[r]||r;
+      const resName = r => UI.resName(r);   // 统一资源显示名
       const rowBuy = o => o.done
         ? `<div class="loot-line"><span>回收报价：${UI.resIcon(o.res)} ${resName(o.res)} ×${o.amt}</span><span class="tag green">已成交</span></div>`
         : `<div class="loot-line"><div style="flex:1;min-width:0"><div>回收报价：${UI.resIcon(o.res)} ${resName(o.res)} ×${o.amt}</div><div style="font-size:11px;color:var(--txt2);margin-top:2px">你的库存 ${g.res[o.res]||0}</div></div><button class="btn small primary" ${((g.res[o.res]||0)<o.amt)?'disabled':''} onclick="Game.tradeMerchant('buys',${m.buys.indexOf(o)})">卖出<br>+${o.gold}${UI.resIcon('gold')}</button></div>`;
@@ -2746,15 +2750,14 @@ const UI = {
     const el = document.getElementById('zone-list');
     const day = (Game.g && Game.g.day) || 1;
     el.innerHTML = DATA.ZONES.map(z=>{
-      const mainStr = Object.entries(z.main).map(([k,v])=>`${UI.resIcon(k)} ${v[0]}-${v[1]}`).join('　');
-      const subStr = Object.entries(z.sub).map(([k,v])=>`${UI.resIcon(k)} ${v[0]}-${v[1]}`).join('　');
-      const terrStr = z.terrain ? Object.entries(z.terrain).map(([k,v])=>`${DATA.TERRAIN[k].icon}${v}`).join(' ') : '';
-      const locked = (z.unlockDay||1) > day;
+      const Z = Battle.zoneDef(z);
+      const mainStr = UI.lootRangeStr(Z.main), subStr = UI.lootRangeStr(Z.sub), terrStr = UI.terrainStr(Z.terrain);
+      const locked = (Z.unlockDay||1) > day;
       return `<div class="zone-card${locked?' locked':''}" ${locked?'':`onclick="UI.openTeam('${z.id}')"`}>
         <div class="zic">${locked?'🔒':z.icon}</div>
         <div style="flex:1">
           <div class="zt">${z.name} <span class="danger-stars">${'★'.repeat(z.danger)}</span></div>
-          <div class="zd">${locked ? `第 ${z.unlockDay} 天解锁（当前第 ${day} 天）` : z.desc}</div>
+          <div class="zd">${locked ? `第 ${Z.unlockDay} 天解锁（当前第 ${day} 天）` : z.desc}</div>
           ${locked?'':`<div class="zd" style="margin-top:4px"><b style="color:var(--txt)">主要产出：</b>${mainStr}<br><b style="color:var(--txt)">次要产出：</b>${subStr}　＋ 战斗中拾取物资箱</div>
           <div class="zd" style="margin-top:3px"><b style="color:var(--txt)">战场地形：</b>${terrStr}</div>`}
         </div>
@@ -2764,6 +2767,11 @@ const UI = {
     UI.showScreen('scr-zones');
   },
   resIcon(k){ return {gold:'💰',med:'💊',metal:'⚙️',food:'🍞',fabric:'🧵',wood:'🪵'}[k]||k; },
+  resName(k){ return DATA.RES_NAMES[k]||k; },
+  /* 产出区间串：{gold:[4,8]} → 「💰 4-8」 */
+  lootRangeStr(tbl){ return Object.entries(tbl||{}).map(([k,v])=>`${UI.resIcon(k)} ${v[0]}-${v[1]}`).join('　'); },
+  /* 地形配方串：{water:10} → 「🌊10」 */
+  terrainStr(tbl){ return Object.entries(tbl||{}).map(([k,v])=>`${(DATA.TERRAIN[k]||{}).icon||''}${v}`).join(' '); },
   /* 共享渲染片段：材料清单 / 弹窗关闭行 / 角色属性行（全属性 full=true 含攻击防御射程移速暴击） */
   fmtMats(mats, sep){ return Object.entries(mats||{}).map(([k,v])=>`${UI.resIcon(k)}×${v}`).join(sep||'　'); },
   closeRow(){ return '<div class="row" style="margin-top:12px"><button class="btn" style="width:100%" onclick="UI.closeModal()">关闭</button></div>'; },
@@ -3271,11 +3279,108 @@ const Battle = {
   b: null,
   sleep(ms) { return new Promise(r=>setTimeout(r, ms / Battle.b.speed)); },
 
+  /* ---------- 区域配置与地图生成（7 张地图共用一套流程） ---------- */
+  /* 解析区域配置：优先取最新 DATA.ZONES（老存档快照缺字段时自动补默认值） */
+  zoneDef(zone) {
+    const src = DATA.ZONES.find(z=>z.id===(zone && zone.id)) || zone || {};
+    return Object.assign({
+      terrain: { water:8, rubble:11, ruin:9, crate:5, barrel:4 },
+      main: {}, sub: {}, count:[4,6], pool:{ walker:70, runner:30 },
+      boss:false, bossType:'behemoth', pcrate:1,
+    }, src);
+  },
+  /* 权重随机：{walker:60, runner:40} → 类型 key */
+  rollWeighted(pool) {
+    const es = Object.entries(pool||{});
+    if (!es.length) return null;
+    let roll = Math.random() * es.reduce((s,[,w])=>s+w, 0);
+    for (const [k,w] of es) { roll -= w; if (roll < 0) return k; }
+    return es[es.length-1][0];
+  },
+  isFree(b, r, c) {
+    if (r<0||c<0||r>=Battle.ROWS||c>=Battle.COLS) return false;
+    if (!DATA.TERRAIN[b.terrain[r][c]].walk) return false;
+    return !Battle.unitAt(r,c);
+  },
+  /* 在指定行区间内随机找可通行空位（生成单位用；plainOnly 时只落空地，生成地形用） */
+  findFree(b, rMin, rMax, tries, plainOnly) {
+    for (let i=0;i<(tries||200);i++) {
+      const r = rnd(rMin, rMax), c = rnd(0, Battle.COLS-1);
+      if (!Battle.isFree(b, r, c)) continue;
+      if (plainOnly && b.terrain[r][c]!=='plain') continue;
+      return {r,c};
+    }
+    return null;
+  },
+  /* 就近找空位：出生点被占或是障碍时向外逐圈扩散 */
+  nearFree(b, r0, c0) {
+    for (let rad=0; rad<8; rad++)
+      for (let r=r0-rad; r<=r0+rad; r++)
+        for (let c=c0-rad; c<=c0+rad; c++)
+          if (Math.max(Math.abs(r-r0),Math.abs(c-c0))===rad && Battle.isFree(b,r,c)) return {r,c};
+    return null;
+  },
+  /* 地图地形：铺空地 → 按区域配方散布 → 精品物资箱 → 废墟计数 */
+  buildTerrain(b, Z) {
+    b.terrain = Array.from({length:Battle.ROWS}, ()=>Array.from({length:Battle.COLS}, ()=>'plain'));
+    Object.entries(Z.terrain||{}).forEach(([type,count])=>{
+      for (let placed=0, guard=0; placed<count && guard<400; guard++) {
+        const r = rnd(0,Battle.ROWS-1), c = rnd(0,Battle.COLS-1);
+        if (b.terrain[r][c]==='plain') { b.terrain[r][c]=type; placed++; }
+      }
+    });
+    // 精品物资箱：固定出现在地图最上方三行（0-2）
+    for (let i=0, n=Z.pcrate||0; i<n; i++) {
+      const pos = Battle.findFree(b, 0, 2, 60, true);
+      if (pos) b.terrain[pos.r][pos.c] = 'pcrate';
+    }
+    b.ruins = {};
+    for (let r=0;r<Battle.ROWS;r++) for (let c=0;c<Battle.COLS;c++)
+      if (b.terrain[r][c]==='ruin') b.ruins[r+','+c] = 1;   // 每处废墟可翻找 1 次
+  },
+  /* 我方从底部出生（最多 6 人，按固定列号就近落位） */
+  spawnTeam(b, team) {
+    const cols = [4,6,3,7];
+    team.forEach((c,i)=>{
+      const r0 = 11 + (i>1?1:0), c0 = cols[i]!==undefined ? cols[i] : 5+i;
+      const pos = Battle.nearFree(b, r0, c0) || {r:r0,c:c0};
+      b.units.push(Battle.mkAlly(c, pos.r, pos.c));
+    });
+  },
+  /* 敌方从顶部生成：数量按区间（+丧尸潮加成），类型按区域概率池，Boss 按区域配置 */
+  spawnEnemies(b, Z, zLevel, extra) {
+    const n = rnd(Z.count[0], Z.count[1]) + (extra||0);
+    for (let i=0;i<n;i++) {
+      const zt = Battle.rollWeighted(Z.pool);
+      const pos = zt && Battle.findFree(b, 0, 3);
+      if (pos) b.units.push(Battle.mkZombie(zt, pos.r, pos.c, zLevel));
+    }
+    if (Z.boss) {
+      const pos = Battle.findFree(b, 0, 2);
+      if (pos) b.units.push(Battle.mkZombie(Z.bossType||'behemoth', pos.r, pos.c, zLevel));
+    }
+  },
+  /* 区域通关产出：主产出 + 次产出，同名资源合并 */
+  zoneRewards(Z) {
+    const out = {};
+    [Z.main, Z.sub].forEach(tbl=>Object.entries(tbl||{}).forEach(([k,v])=>{
+      out[k] = (out[k]||0) + rnd(v[0], v[1]);
+    }));
+    return out;
+  },
+  /* 物资箱统一掉落：金币 2-7 / 食物 1-3 / 药物·金属·布料·木材 1-2；mult 为倍率（精品箱 ×2） */
+  crateLoot(mult) {
+    const k = pick(['gold','med','metal','food','fabric','wood']);
+    const amt = (k==='gold' ? rnd(2,7) : k==='food' ? rnd(1,3) : rnd(1,2)) * (mult||1);
+    return { k, amt, name:UI.resName(k) };
+  },
+
   /* ---------- 开战准备 ---------- */
   start(zone) {
     const g = Game.g;
     const team = UI.teamSelected.map(id=>g.chars.find(c=>c.id===id)).filter(Boolean);
     if (!team.length) { UI.toast('请先选择出战成员'); return; }
+    const Z = Battle.zoneDef(zone);
 
     // 出战消耗体力
     team.forEach(c=>{ c.stamina = Math.max(0, c.stamina - 15); });
@@ -3286,7 +3391,7 @@ const Battle = {
     g.hordeWarning = false;   // 丧尸潮为一次性效果，应用后消费
 
     const b = Battle.b = {
-      zone, zLevel, speed:1, turn:1, phase:'player',
+      zone, zoneCfg:Z, zLevel, speed:1, turn:1, phase:'player',
       units: [], terrain: [], ruins: {}, loot: {gold:0,med:0,metal:0,food:0,fabric:0,wood:0},
       stats: {},   // 战报统计：uid -> {name,icon,side,dmg,heal,kill}
       lootBase: null, mode: null, moveSet: null, targetSet: null, targetMode: null,
@@ -3294,74 +3399,9 @@ const Battle = {
       doubledReward: extra > 0,
     };
 
-    // 地图生成
-    for (let r=0;r<Battle.ROWS;r++) {
-      b.terrain[r] = [];
-      for (let c=0;c<Battle.COLS;c++) b.terrain[r][c] = 'plain';
-    }
-    const scatter = (type, count) => {
-      let placed = 0, guard = 0;
-      while (placed < count && guard++ < 300) {
-        const r = rnd(0,Battle.ROWS-1), c = rnd(0,Battle.COLS-1);
-        if (b.terrain[r][c]==='plain') { b.terrain[r][c]=type; placed++; }
-      }
-    };
-    // 区域特色地形：按 zone 配方散布（老存档 zone 无 terrain 字段时按 id 回查，再兜底经典分布）
-    const Z = DATA.ZONES.find(z=>z.id===zone.id) || zone;
-    const tm = Z.terrain || { water:8, rubble:11, ruin:9, crate:5, barrel:4 };
-    scatter('water', tm.water); scatter('rubble', tm.rubble); scatter('ruin', tm.ruin); scatter('crate', tm.crate); scatter('barrel', tm.barrel);
-    // 精品物资箱：每局 1 个，固定出现在地图最上方三行（0-2）的随机空地
-    for (let tries=0; tries<50; tries++) {
-      const r = rnd(0,2), c = rnd(0,Battle.COLS-1);
-      if (b.terrain[r][c]==='plain') { b.terrain[r][c]='pcrate'; break; }
-    }
-    for (let r=0;r<Battle.ROWS;r++) for (let c=0;c<Battle.COLS;c++) if (b.terrain[r][c]==='ruin') b.ruins[r+','+c] = 1;   // 每处废墟可翻找 1 次
-
-    // 我方出生（底部）：必须落在可通行且无人的格子，否则就近寻找
-    const walkableFree = (r,c) => {
-      if (r<0||c<0||r>=Battle.ROWS||c>=Battle.COLS) return false;
-      if (!DATA.TERRAIN[b.terrain[r][c]].walk) return false;
-      return !Battle.unitAt(r,c);
-    };
-    const nearSpawn = (r0,c0) => {
-      for (let rad=0; rad<8; rad++)
-        for (let r=r0-rad; r<=r0+rad; r++)
-          for (let c=c0-rad; c<=c0+rad; c++)
-            if (Math.max(Math.abs(r-r0),Math.abs(c-c0))===rad && walkableFree(r,c)) return {r,c};
-      return null;
-    };
-    const spawnCols = [4,6,3,7];
-    team.forEach((c,i)=>{
-      const r0 = 11 + (i>1?1:0), c0 = spawnCols[i]!==undefined?spawnCols[i]:5+i;
-      const pos = nearSpawn(r0,c0) || {r:r0,c:c0};
-      b.units.push(Battle.mkAlly(c, pos.r, pos.c));
-    });
-
-    // 敌方生成（顶部）：数量与类型按区域概率池随机
-    const rollEnemy = pool => {
-      const es = Object.entries(pool);
-      let roll = Math.random() * es.reduce((s,[,w])=>s+w, 0);
-      for (const [zt,w] of es) { roll -= w; if (roll < 0) return zt; }
-      return es[es.length-1][0];
-    };
-    const enemyCount = rnd(zone.count[0], zone.count[1]) + extra;
-    for (let i=0;i<enemyCount;i++) {
-      const zt = rollEnemy(zone.pool);
-      let pos = null, guard = 0;
-      while (!pos && guard++ < 200) {
-        const r = rnd(0,3), c = rnd(0,Battle.COLS-1);
-        if (walkableFree(r,c)) pos = {r,c};
-      }
-      if (pos) b.units.push(Battle.mkZombie(zt, pos.r, pos.c, zLevel));
-    }
-    if (zone.boss) {
-      let pos = null, guard=0;
-      while (!pos && guard++<200) {
-        const r = rnd(0,2), c = rnd(0,Battle.COLS-1);
-        if (walkableFree(r,c)) pos={r,c};
-      }
-      if (pos) b.units.push(Battle.mkZombie('behemoth', pos.r, pos.c, zLevel));
-    }
+    Battle.buildTerrain(b, Z);
+    Battle.spawnTeam(b, team);
+    Battle.spawnEnemies(b, Z, zLevel, extra);
 
     UI.showScreen('scr-battle');
     document.getElementById('btn-speed').textContent = '加速 x1';
@@ -3369,6 +3409,62 @@ const Battle = {
     if (extra) Battle.log('⚠️ 丧尸潮来袭！本次区域丧尸增多，奖励翻倍', 'bad');
     Battle.renderMap(); Battle.cellSize(); Battle.renderPanels(); Battle.renderInfo(null);
     UI.toast(`🧭 抵达 ${zone.name}，击溃所有丧尸或撤离即可结束探险`);
+  },
+
+  /* 地形交互表：一处定义「能否被攻击指定 / 点击做什么 / 走入触发什么」，新增地形只改这里 */
+  TILES: {
+    barrel:  { attackable:true, attack:(u,r,c)=>Battle.attackBarrel(u,r,c) },
+    rubble:  { attackable:true, attack:(u,r,c)=>Battle.clearRubble(u,r,c) },
+    ruin:    { attackable:(b,r,c)=>(b.ruins[r+','+c]||0)>0, attack:(u,r,c)=>Battle.searchRuin(u,r,c) },
+    crate:   { enter:(u,r,c)=>Battle.pickCrate(u,r,c,1,false) },
+    pcrate:  { enter:(u,r,c)=>Battle.pickCrate(u,r,c,2,true) },
+    stonebox:{ enter:(u,r,c)=>Battle.pickStonebox(u,r,c) },
+  },
+  tileAction(r,c){ return Battle.TILES[Battle.b.terrain[r][c]] || null; },
+  /* 该格（无单位时）能否作为攻击目标 */
+  tileAttackable(r,c) {
+    const T = Battle.tileAction(r,c);
+    if (!T || !T.attackable) return false;
+    return typeof T.attackable==='function' ? T.attackable(Battle.b, r, c) : true;
+  },
+  /* 攻击引爆油桶：算一次攻击，引爆后结算经验与全员行动完毕 */
+  async attackBarrel(u, r, c) {
+    const b = Battle.b;
+    u.hasAttacked = true;
+    b.mode=null; b.targetSet=null; b.moveSet=null;
+    await Battle.explodeBarrel(r, c, u);
+    if (u.side==='ally') { Battle.checkExp(u); Battle.checkAllActed(); }
+  },
+  /* 物资箱拾取：mult 为倍率（精品箱 ×2），special 时 10% 掉落特殊饰品 */
+  pickCrate(u, r, c, mult, special) {
+    const b = Battle.b;
+    b.terrain[r][c] = 'plain';
+    if (special && Math.random() < 0.1) {
+      const spId = pick(['bear','bunny']), sp = DATA.EQUIPS[spId];
+      Game.addEquip(spId, 1);
+      Battle.log(`🎁 ${u.name} 开启精品物资箱：获得特殊饰品 ${sp.icon} ${sp.name}（已放入背包）！`, 'crit');
+      Battle.subtitle(`🎁 获得特殊饰品 ${sp.icon} ${sp.name}！`);
+      return;
+    }
+    const L = Battle.crateLoot(mult);
+    b.loot[L.k] += L.amt;
+    if (special) {
+      Battle.log(`🎁 ${u.name} 开启精品物资箱：${UI.resIcon(L.k)} ${L.name} ×${L.amt}（双倍物资）`, 'good');
+      Battle.subtitle(`🎁 拾获 ${UI.resIcon(L.k)}×${L.amt}（双倍）`);
+    } else {
+      Battle.log(`🧰 ${u.name} 拾取物资箱：${UI.resIcon(L.k)} ${L.name} ×${L.amt}`, 'good');
+      Battle.subtitle(`🧰 拾获 ${UI.resIcon(L.k)}×${L.amt}`);
+    }
+  },
+  /* 石头物资箱：石块入背包 + 0-2 金属 */
+  pickStonebox(u, r, c) {
+    const b = Battle.b;
+    b.terrain[r][c] = 'plain';
+    Game.addEquip('stone', 1);
+    const m = rnd(0, 2);
+    b.loot.metal += m;
+    Battle.log(`📦 ${u.name} 拾取石头物资箱：🪨 石块 ×1（入背包）` + (m?` + ⚙️ 金属 ×${m}`:''), 'good');
+    Battle.subtitle(m?`📦 拾获 🪨×1 ⚙️×${m}`:'📦 拾获 🪨×1');
   },
 
   mkAlly(c, r, col) {
@@ -3510,13 +3606,9 @@ const Battle = {
     map.style.gridTemplateColumns = `repeat(${Battle.COLS}, var(--cs, 40px))`;
     let html = '';
     for (let r=0;r<Battle.ROWS;r++) for (let c=0;c<Battle.COLS;c++) {
-      const t = b.terrain[r][c], T = DATA.TERRAIN[t];
+      const t = b.terrain[r][c], T = DATA.TERRAIN[t] || DATA.TERRAIN.plain;
       const u = Battle.unitAt(r,c);
-      let cls = 'cell';
-      if (t==='water') cls+=' water'; else if (t==='rubble') cls+=' rubble'; else if (t==='stonebox') cls+=' crate';
-      else if (t==='ruin') cls+=' ruin'; else if (t==='crate') cls+=' walk';
-      if (t==='barrel') cls+=' barrel';
-      else cls+=' walk';
+      let cls = 'cell ' + (T.cls || 'walk');
       const mk = b.moveSet && b.moveSet[r+','+c]!==undefined && !(u && u.side==='ally' && u===b.selected);
       const mkSelf = b.moveSet && b.moveSet[r+','+c]!==undefined && b.selected && u===b.selected;
       const atk = b.targetSet && b.targetSet.some(([tr,tc])=>tr===r&&tc===c);
@@ -3525,13 +3617,10 @@ const Battle = {
       if (atk) cls += (b.mode==='skill'&&b.targetMode==='heal') ? ' healable' : (b.mode==='pickcrate' ? ' pickable' : ' attackable');
       if (picked) cls+=' picked';
       let inner = '';
-      if (t==='water') inner += '<span class="terr">🌊</span>';
-      if (t==='rubble') inner += '<span class="terr">🪨</span>';
-      else if (t==='stonebox') inner += '<span class="terr">📦</span>';
-      if (t==='barrel') inner += '<span class="terr">🛢️</span>';
-      if (t==='ruin') inner += `<span class="terr">🧱${b.ruins[r+','+c]!==undefined?'<i style="font-size:9px;color:#e0a080;font-style:normal">'+b.ruins[r+','+c]+'</i>':''}</span>`;
-      if (t==='crate') inner += '<span class="terr">🧰</span>';
-      if (t==='pcrate') inner += '<span class="terr">🎁</span>';
+      if (T.icon) {
+        const left = t==='ruin' && b.ruins[r+','+c]!==undefined ? `<i style="font-size:9px;color:#e0a080;font-style:normal">${b.ruins[r+','+c]}</i>` : '';
+        inner += `<span class="terr">${T.icon}${left}</span>`;
+      }
       if (u) {
         inner += `<div class="unit ${u.side} ${u===b.selected?'selected-unit':''} ${u._acting?'acting-unit':''} ${u.isDefending?'defending':''} ${(u.side==='ally'&&u.hasAttacked&&u.hasMoved)?'acted':''}" onclick="Battle.cellClick(${r},${c})">
           ${u.icon}${(u.sts&&Object.keys(u.sts).length)?`<div class="psn">${Object.keys(u.sts).map(k=>DATA.STATUSES[k].icon).join('')}</div>`:''}<div class="uhp"><div style="width:${Math.max(0,Math.round(u.hp/u.maxHp*100))}%"></div></div>
@@ -3698,10 +3787,7 @@ const Battle = {
     b.targetSet = Battle.attackCells(u).filter(([r,c])=>{
       const t = Battle.unitAt(r,c);
       if (t && t.side==='enemy') return true;
-      if (!t && b.terrain[r][c]==='rubble') return true;   // 可清除瓦砾
-      if (!t && b.terrain[r][c]==='ruin' && (b.ruins[r+','+c]||0) > 0) return true;   // 可翻找废墟
-      if (!t && b.terrain[r][c]==='barrel') return true;   // 油桶：可引爆
-      return false;
+      return !t && Battle.tileAttackable(r,c);   // 瓦砾/废墟/油桶等可交互地形
     });
     if (!b.targetSet.length) { UI.toast('攻击范围内没有丧尸、瓦砾、废墟或油桶'); b.mode=null; return; }
     b.moveSet=null; Battle.renderMap();
@@ -3858,17 +3944,8 @@ const Battle = {
     if (mode==='attack' && b.selected) {
       const inSet = b.targetSet && b.targetSet.some(([tr,tc])=>tr===r&&tc===c);
       if (inSet) {
-        if (b.terrain[r][c]==='barrel' && !u) {
-          // 引爆油桶（算一次攻击）
-          const uu = b.selected;
-          uu.hasAttacked = true;
-          b.mode=null; b.targetSet=null; b.moveSet=null;
-          await Battle.explodeBarrel(r, c, uu);
-          if (uu.side==='ally') { Battle.checkExp(uu); Battle.checkAllActed(); }
-          return;
-        }
-        if (b.terrain[r][c]==='rubble' && !u) return Battle.clearRubble(b.selected, r, c);
-        if (b.terrain[r][c]==='ruin' && !u) return Battle.searchRuin(b.selected, r, c);
+        const T = !u && Battle.tileAction(r,c);   // 可交互地形（油桶/瓦砾/废墟）统一走交互表
+        if (T && T.attack) return T.attack(b.selected, r, c);
         if (u && u.side==='enemy') return Battle.doAttack(b.selected, u);
       }
     }
@@ -3899,46 +3976,9 @@ const Battle = {
   async doMove(u, r, c) {
     const b = Battle.b;
     u.row = r; u.col = c; u.hasMoved = true;
-    // 拾取物资箱
-    if (b.terrain[r][c]==='crate') {
-      b.terrain[r][c] = 'plain';
-      const keys = ['gold','med','metal','food','fabric','wood'];
-      {
-        const k = pick(keys);
-        const amt = k==='gold' ? rnd(2,7) : rnd(1, k==='med'||k==='metal'||k==='fabric'||k==='wood'?2:3);   // 金币拾取小幅上调（1~6 → 2~7）
-        b.loot[k] += amt;
-        const kName = {gold:'金币',med:'药物',metal:'金属',food:'食物',fabric:'布料',wood:'木材'}[k]||k;
-        Battle.log(`🧰 ${u.name} 拾取物资箱：${UI.resIcon(k)} ${kName} ×${amt}`, 'good');
-        Battle.subtitle(`🧰 拾获 ${UI.resIcon(k)}×${amt}`);
-      }
-    }
-    // 开启精品物资箱：90% 双倍物资 / 10% 特殊饰品（熊熊/兔兔入背包）
-    if (b.terrain[r][c]==='pcrate') {
-      b.terrain[r][c] = 'plain';
-      if (Math.random() < 0.1) {
-        const spId = pick(['bear','bunny']), sp = DATA.EQUIPS[spId];
-        Game.addEquip(spId, 1);
-        Battle.log(`🎁 ${u.name} 开启精品物资箱：获得特殊饰品 ${sp.icon} ${sp.name}（已放入背包）！`, 'crit');
-        Battle.subtitle(`🎁 获得特殊饰品 ${sp.icon} ${sp.name}！`);
-      } else {
-        const keys = ['gold','med','metal','food','fabric','wood'];
-        const k = pick(keys);
-        const amt = (k==='gold' ? rnd(2,7) : rnd(1, k==='med'||k==='metal'||k==='fabric'||k==='wood'?2:3)) * 2;   // 普通物资箱的两倍
-        b.loot[k] += amt;
-        const kName = {gold:'金币',med:'药物',metal:'金属',food:'食物',fabric:'布料',wood:'木材'}[k]||k;
-        Battle.log(`🎁 ${u.name} 开启精品物资箱：${UI.resIcon(k)} ${kName} ×${amt}（双倍物资）`, 'good');
-        Battle.subtitle(`🎁 拾获 ${UI.resIcon(k)}×${amt}（双倍）`);
-      }
-    }
-    // 拾取石头物资箱：石块×1（入背包）+ 金属 0-2
-    if (b.terrain[r][c]==='stonebox') {
-      b.terrain[r][c] = 'plain';
-      Game.addEquip('stone', 1);
-      const m = rnd(0, 2);
-      b.loot.metal += m;
-      Battle.log(`📦 ${u.name} 拾取石头物资箱：🪨 石块 ×1（入背包）` + (m?` + ⚙️ 金属 ×${m}`:''), 'good');
-      Battle.subtitle(m?`📦 拾获 🪨×1 ⚙️×${m}`:'📦 拾获 🪨×1');
-    }
+    // 走入可交互地形（物资箱/精品箱/石头箱）：统一走交互表
+    const tile = Battle.TILES[b.terrain[r][c]];
+    if (tile && tile.enter) tile.enter(u, r, c);
     b.mode=null; b.moveSet=null;
     Battle.renderMap(); Battle.renderPanels();
     if (u.sts && u.sts.bleed) await Battle.bleedTick(u);
@@ -4789,8 +4829,7 @@ const Battle = {
 
     let rewards = {};
     if (result==='win') {
-      Object.entries(b.zone.main).forEach(([k,v])=>{ rewards[k]=(rewards[k]||0)+rnd(v[0],v[1]); });
-      Object.entries(b.zone.sub).forEach(([k,v])=>{ rewards[k]=(rewards[k]||0)+rnd(v[0],v[1]); });
+      rewards = Battle.zoneRewards(Battle.zoneDef(b.zone));   // 主产出 + 次产出统一随机
       if (doubled>1) Object.keys(rewards).forEach(k=>rewards[k]*=2);
     }
     if (result==='lose') {
