@@ -20,6 +20,7 @@ const mkB = (units) => ({ units, selected:units[0], terrain:mkTerrain(), mode:nu
   assert(T.arrow.buildCost.gold===50 && T.ballista.buildCost.gold===60, 'T1f 建造金币下调（50/60）');
   assert(T.arrow.buildCost.wood===24 && T.arrow.buildCost.metal===10
     && T.ballista.buildCost.wood===20 && T.ballista.buildCost.metal===15, 'T1g 木材/金属小幅提高');
+  assert(T.arrow.def===10 && T.ballista.def===10, 'T1h 两座工事初始防御均为 10');
 
   // ===== T2 建造：多资源、各限一座 =====
   g.res.gold = 1000; g.res.wood = 100; g.res.metal = 100;
@@ -48,7 +49,7 @@ const mkB = (units) => ({ units, selected:units[0], terrain:mkTerrain(), mode:nu
   // ===== T4 单位属性随等级成长（+10%/级） =====
   const t1 = Battle.mkTower('arrow', 1, 11, 4);
   const t3 = Battle.mkTower('arrow', 3, 11, 5);
-  assert(t1.hp===200 && t1.atk===50 && t1.range===3, 'T4a Lv1 箭塔基础属性');
+  assert(t1.hp===200 && t1.atk===50 && t1.range===3 && t1.def===10, 'T4a Lv1 箭塔基础属性（防御10）');
   assert(t3.hp===240 && t3.atk===60, 'T4b Lv3 箭塔 +20%：生命240/攻击60');
   assert(t1.isTower && t1.move===0 && t1.stamina===undefined && t1.ref===undefined, 'T4c 工事不可移动、无体力、无角色引用');
   const t2 = Battle.mkTower('ballista', 1, 12, 4);

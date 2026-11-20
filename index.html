@@ -389,10 +389,9 @@ button:disabled { opacity:.45; cursor:not-allowed; }
 .loot-line b { color:var(--yellow); }
 
 /* 百科 */
-.wiki-tabs { display:flex; gap:6px; overflow-x:auto; padding-bottom:8px; margin-bottom:12px; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
-.wiki-tabs::-webkit-scrollbar { display:none; }
+.wiki-tabs { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; padding-bottom:8px; margin-bottom:12px; }
 .wiki-tab {
-  flex-shrink:0; padding:7px 14px; border-radius:18px; font-size:13px; white-space:nowrap;
+  padding:7px 4px; border-radius:10px; font-size:12px; text-align:center; white-space:nowrap;
   background:var(--panel); border:1px solid var(--line); color:var(--txt2); transition:transform .08s;
 }
 .wiki-tab:active { transform:scale(.94); }
@@ -916,11 +915,11 @@ DATA.WORKSHOP = { name:'工坊', icon:'🏭', buildCost:130, upgradeCost:200, ma
 DATA.TOWERS = {
   arrow: { id:'arrow', name:'箭塔', icon:'🏹', lvKey:'towerArrowLv', opKey:'towerArrowOp', maxLv:5,
     buildCost:{ gold:50, wood:24, metal:10 }, upgradeCost:120,
-    hp:200, atk:50, def:0, range:3, critRate:0.05, critDmg:1.5,
+    hp:200, atk:50, def:10, range:3, critRate:0.05, critDmg:1.5,
     desc:'固定自动射击，无法移动，每回合自动攻击射程内最近的敌人；需指派操作员才能参战。' },
   ballista: { id:'ballista', name:'弩塔', icon:'🎯', lvKey:'towerBallistaLv', opKey:'towerBallistaOp', maxLv:5,
     buildCost:{ gold:60, wood:20, metal:15 }, upgradeCost:150,
-    hp:180, atk:40, def:0, range:2, critRate:0.05, critDmg:1.5,
+    hp:180, atk:40, def:10, range:2, critRate:0.05, critDmg:1.5,
     skill:{ name:'穿射', desc:'沿上下左右一个方向，对直线 2 格内所有敌人造成 100% 攻击力的伤害。冷却 3 回合。无体力消耗。', cost:0, cd:3, type:'attack', shape:'line', lineLen:2, mult:1.0 },
     desc:'固定弩机，无法移动，每回合自动攻击；技能「穿射」可贯穿一条直线上的所有敌人（冷却 3 回合）；需指派操作员才能参战。' },
 };
@@ -2523,6 +2522,7 @@ const UI = {
           const stats = `<div class="row" style="margin-top:8px;flex-wrap:wrap">
             <span class="tag red">❤️ ${Math.round(T.hp*grow)}</span>
             <span class="tag">🗡️ ${Math.round(T.atk*grow)}</span>
+            <span class="tag">🛡️ ${T.def}</span>
             <span class="tag">🎯 ${T.range}</span>
             <span class="tag">💥 ${Math.round(T.critRate*100)}% / ${Math.round(T.critDmg*100)}%</span>
             <span class="tag yellow">🏰 防御工事</span></div>`;
@@ -3187,12 +3187,12 @@ const UI = {
       </div>`;
     const secTower = `
       <div class="wiki-sec panel"><h4>🏰 防御工事</h4>
-        <table class="wiki-table"><tr><th>工事</th><th>建造 / 升级（💰）</th><th>生命 / 攻击 / 射程 / 暴击</th><th>要点</th></tr>
+        <table class="wiki-table"><tr><th>工事</th><th>建造 / 升级（💰）</th><th>生命 / 攻击 / 防御 / 射程 / 暴击</th><th>要点</th></tr>
         ${['arrow','ballista'].map(k=>{
           const T = DATA.TOWERS[k];
           return `<tr><td><b>${T.icon} ${T.name}</b></td>
             <td>建造 ${Game.towerCostStr(T.buildCost)}<br>升级 ${[1,2,3,4].map(l=>Game.upCost({upgradeCost:T.upgradeCost}, l)).join('/')}</td>
-            <td>${T.hp} / ${T.atk} / ${T.range} 格 / ${Math.round(T.critRate*100)}%（暴伤 ${Math.round(T.critDmg*100)}%）</td>
+            <td>${T.hp} / ${T.atk} / ${T.def} / ${T.range} 格 / ${Math.round(T.critRate*100)}%（暴伤 ${Math.round(T.critDmg*100)}%）</td>
             <td>${T.skill?`技能「${T.skill.name}」：直线 ${T.skill.lineLen} 格内所有敌人受到 100% 攻击力伤害，冷却 ${T.skill.cd} 回合；`:'每回合自动攻击射程内最近的敌人；'}无体力、不可移动</td></tr>`;
         }).join('')}
         </table>
