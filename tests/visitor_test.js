@@ -1,4 +1,4 @@
-/* V121 家园访客：流动商人（回收×2 + 出售×1，三笔物资互不相同）+ 流浪者（150金+20食物招募）+ 每日过夜刷新、无付费重刷 */
+/* V134 家园访客：流动商人（回收×2 + 出售×1，三笔物资互不相同）+ 流浪者（120金+20食物招募）+ 每日过夜刷新、无付费重刷 */
 const { setup, assert } = require('./_helper.js');
 const { Game, Battle, UI, Recruit, DATA, elems, html, store } = setup();
 Game.g = Game.newGame(); Game.currentSlot = 1;
@@ -20,6 +20,7 @@ const g = Game.g;
   assert([...v.merchant.buys, v.merchant.sell].every(inAmt), 'T2b 数量在区间内');
   assert(v.merchant.buys.every(o=>o.gold===Math.round(o.amt*V.buyPrice)), 'T2c 回收价 = 数量×2.5');
   assert(v.merchant.sell.gold === v.merchant.sell.amt*V.sellPrice, 'T2d 出售价 = 数量×3');
+  assert(V.recruitCost.gold===120 && V.recruitCost.food===20, 'T2e 流浪者招募价 120金+20食物');
 
   // T3 回收成交（两笔独立）：扣资源加金币 + done + 二次拦截
   const b0 = v.merchant.buys[0];
@@ -55,7 +56,7 @@ const g = Game.g;
   Game.recruitWanderer();
   assert(w.recruited === true, 'T5b 招募标记');
   assert(g.chars.filter(c=>!c.dead).length === alive0+1 && g.chars.includes(w), 'T5c 流浪者入队');
-  assert(g.res.gold === 500-150 && g.res.food === 100-20, 'T5d 扣 150金+20食物');
+  assert(g.res.gold === 500-120 && g.res.food === 100-20, 'T5d 扣 120金+20食物');
   Game.recruitWanderer();
   assert(g.chars.filter(c=>!c.dead).length === alive0+1, 'T5e 二次招募拦截');
 
@@ -88,6 +89,10 @@ const g = Game.g;
   assert(mh.includes('流动商人') && mh.includes('流浪者'), 'T9c 弹窗含双访客面板');
   assert((mh.match(/卖出<br>/g)||[]).length===2, 'T9d 弹窗渲染两条回收报价');
   assert(mh.includes('买入') && mh.includes('招募消耗'), 'T9e 按钮文案：买入/招募消耗');
+
+  // T10 随机名字池扩容：90 个且无重复，新名字已加入
+  assert(DATA.NAMES.length===90 && new Set(DATA.NAMES).size===90, `T10a 名字池 90 个且无重复（${DATA.NAMES.length}）`);
+  assert(['老赵','阿娟','大壮','小舟','国庆','小文','大成'].every(n=>DATA.NAMES.includes(n)), 'T10b 新增名字已加入池');
 
   console.log('--- done ---');
   process.exit(0);
