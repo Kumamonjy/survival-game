@@ -40,7 +40,7 @@ g.res.gold = 500; g.res.metal = 20; g.res.fabric = 20; g.res.wood = 20;
   assert(R('dart').stamina===5 && R('stone').stamina===5, 'T5a 飞镖/石块 5⚡');
   assert(R('cloth').stamina===15, 'T5b 布衣 15⚡');
   assert(R('bow').stamina===20, 'T5c 木弓 20⚡');
-  assert(R('spear').stamina===25 && R('stick').stamina===10 && R('thermos').stamina===12 && R('sweater').stamina===15, 'T5d 长枪 25 / 木棍 10 / 保温杯 12 / 毛衣 15');
+  assert(R('spear').stamina===25 && R('stick').stamina===10 && R('thermos').stamina===12 && R('sweater').stamina===15, 'T5d 长矛 25 / 木棍 10 / 保温杯 12 / 毛衣 15');
 
   // T6 一人一岗冲突：先当厨师再指派工坊被拒（固定创建厨师，避免开局随机职业的不确定性）
   const cook = Game.createChar('chef'); cook.talents = []; Game.applyTalents(cook); Game.recalc(cook); cook.stamina = 100; cook.injured = false; g.chars.push(cook);

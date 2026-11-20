@@ -1,4 +1,4 @@
-/* V85 长枪（武器自带技能「穿刺」）+ 毛衣（衣服 hp35/def10） */
+/* V85 长矛（武器自带技能「穿刺」）+ 毛衣（衣服 hp35/def10） */
 const { setup, assert } = require('./_helper.js');
 const { Game, Battle, UI, Recruit, DATA, elems, html, store } = setup();
 Game.g = Game.newGame(); Game.currentSlot = 1;
@@ -12,11 +12,11 @@ const g = Game.g;
 (async () => {
   // T1 定义与配方
   const SP = DATA.EQUIPS.spear, SW = DATA.EQUIPS.sweater;
-  assert(SP && SP.slot==='weapon' && SP.stats.atk===15 && SP.range===2, 'T1a 长枪：攻+15 / 射程 2');
+  assert(SP && SP.slot==='weapon' && SP.stats.atk===15 && SP.range===2, 'T1a 长矛：攻+15 / 射程 2');
   assert(SP.skill && SP.skill.shape==='line' && SP.skill.lineLen===2 && SP.skill.mult===1.0 && SP.skill.cost===20 && SP.skill.cd===2 && !SP.skill.equipSkill, 'T1b 穿刺：直线2格 100% / 20⚡ / CD2 / 非消耗型');
   assert(SW && SW.slot==='armor' && SW.stats.hp===35 && SW.stats.def===10, 'T1c 毛衣：生命+35 / 防御+10');
   const rSp = DATA.RECIPES.find(r=>r.id==='spear'), rSw = DATA.RECIPES.find(r=>r.id==='sweater');
-  assert(rSp && rSp.cost.gold===60 && rSp.cost.wood===4 && rSp.cost.metal===3, 'T1d 长枪配方 60💰+4🪵+3⚙️');
+  assert(rSp && rSp.cost.gold===60 && rSp.cost.wood===4 && rSp.cost.metal===3, 'T1d 长矛配方 60💰+4🪵+3⚙️');
   assert(rSw && rSw.cost.gold===75 && rSw.cost.fabric===8, 'T1e 毛衣配方 75💰+8🧵');
 
   // T2 属性与射程落地
@@ -51,7 +51,7 @@ const g = Game.g;
   const dmg = Math.max(1, u.atk - f1.def);
   assert(f1.hp===hp1-dmg && f2.hp===hp2-dmg, `T4a 直线双敌各受 100% 攻（-${dmg}）`);
   assert(u.stamina===80 && u.cds['穿刺']===2, 'T4b 消耗 20⚡ / 进 CD 2 回合');
-  assert(s1.equip.weapon && s1.equip.weapon.id==='spear', 'T4c 长枪不被消耗');
+  assert(s1.equip.weapon && s1.equip.weapon.id==='spear', 'T4c 长矛不被消耗');
 
   // T5 line 形状不越界（3 格处敌人不受影响）
   const f3 = Battle.mkZombie('walker', 5, 8, 1); f3.hp = f3.maxHp;
@@ -75,14 +75,14 @@ const g = Game.g;
   g.res.gold = 300; g.res.metal = 20; g.res.fabric = 20;
   UI.openCraftTab('weapon');
   let cmh = elems['modal-body'] ? elems['modal-body'].innerHTML : '';
-  assert(cmh.includes('长枪') && !cmh.includes('毛衣'), 'T7a 打造弹窗「武器」页含长枪');
+  assert(cmh.includes('长矛') && !cmh.includes('毛衣'), 'T7a 打造弹窗「武器」页含长矛');
   UI.openCraftTab('armor');
   cmh = elems['modal-body'] ? elems['modal-body'].innerHTML : '';
-  assert(cmh.includes('毛衣') && !cmh.includes('长枪'), 'T7a2 打造弹窗「防具」页含毛衣');
+  assert(cmh.includes('毛衣') && !cmh.includes('长矛'), 'T7a2 打造弹窗「防具」页含毛衣');
   UI.wikiTab = 'equip';
   UI.openWiki();
   const wh = elems['wiki-content'].innerHTML;
-  assert(wh.includes('长枪') && wh.includes('毛衣') && wh.includes('穿刺'), 'T7b 百科装备图鉴自动收录');
+  assert(wh.includes('长矛') && wh.includes('毛衣') && wh.includes('穿刺'), 'T7b 百科装备图鉴自动收录');
 
   console.log('--- done ---');
   process.exit(0);

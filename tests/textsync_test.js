@@ -4,14 +4,14 @@ const { Game, Battle, UI, Recruit, DATA, elems, html, store } = setup();
 Game.g = Game.newGame(); Game.currentSlot = 1;
 const g = Game.g;
 
-// T1 职务指派·工坊当值标题：体力区间来自 DATA.RECIPES，不再写死「长枪」
+// T1 职务指派·工坊当值标题：体力区间来自 DATA.RECIPES，不再写死「长矛」
 g.workshopLv = 1;
 UI.renderDuty();
 const dh = elems['duty-page'].innerHTML;
 const minS = Math.min(...DATA.RECIPES.map(r=>r.stamina));
 const maxS = Math.max(...DATA.RECIPES.map(r=>r.stamina));
 assert(dh.includes(`工坊当值（打造消耗当值者体力：${minS}⚡ ~ ${maxS}⚡`), 'T1a 工坊当值体力区间由配方生成');
-assert(!dh.includes('长枪'), 'T1b 不再写死具体装备名');
+assert(!dh.includes('长矛'), 'T1b 不再写死具体装备名');
 
 // T2 百科·建筑表：费用直接取 DATA + upCost，与实际建造/升级一致
 UI.wikiTab = 'play'; UI.openWiki();
@@ -31,6 +31,28 @@ UI.campSel = 'kitchen'; UI.renderBuild();
 assert(elems['build-page'].innerHTML.includes('4/8/12/16/20'), 'T4a 厨房卡产出区间动态');
 UI.campSel = 'farm'; UI.renderBuild();
 assert(elems['build-page'].innerHTML.includes('2/4/6/8/10'), 'T4b 农场卡产出区间动态');
+
+// T5 天赋数量描述与实际概率一致
+UI.wikiTab = 'talent'; UI.openWiki();
+const th = elems['wiki-content'].innerHTML;
+assert(th.includes('1 个 60% / 2 个 30% / 3 个 10%') && !th.includes('等概率'), 'T5a 天赋数量写成实际概率');
+assert(th.includes('生命/攻击/防御/体力类天赋作用于基础值') && th.includes('射程/移速/暴击类为固定加成'), 'T5b 天赋成长范围准确');
+
+// T6 长矛命名 & 职业移速描述
+UI.wikiTab = 'equip'; UI.openWiki();
+const eh = elems['wiki-content'].innerHTML;
+assert(DATA.EQUIPS.spear.name==='长矛', 'T6a 长枪已改名长矛');
+assert(eh.includes('长矛') && !eh.includes('长枪'), 'T6b 百科同步新名称');
+assert(!DATA.CLASSES.thief.desc.includes('全场最快') && !DATA.CLASSES.scout.desc.includes('全场最快'), 'T6c 不再宣称唯一最快');
+
+// T7 生产配方由 DATA 生成（绷带实为 2🧵）
+assert(eh.includes('医院生产：10⚡ + 2🧵 + 1💊'), 'T7a 绷带配方与 DATA 一致');
+assert(eh.includes('实验室生产：15⚡ + 1⚙️ + 3💊 + 15💰'), 'T7b 解毒针配方与 DATA 一致');
+
+// T8 资源用途与获取途径
+assert(html.includes('工坊打造/装备升级'), 'T8a 金属用途补充工坊');
+assert(eh.includes('精品物资箱 10%'), 'T8b 特殊饰品来源标注精品物资箱');
+assert(DATA.WORKSHOP.desc.includes('消耗品'), 'T8c 工坊说明含消耗品');
 
 console.log('--- done ---');
 process.exit(0);

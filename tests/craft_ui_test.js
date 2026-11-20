@@ -23,13 +23,13 @@ g.chars.push(smith); g.workshopLv = 1; Game.assignWorkshop(smith.id);
   // T3 武器页：8 把武器，互斥
   UI.openCraftTab('weapon');
   h = body();
-  assert(h.includes('菜刀') && h.includes('消防斧') && h.includes('匕首') && h.includes('长枪') && !h.includes('燃烧瓶') && !h.includes('毛衣'), 'T3 武器页只含武器');
+  assert(h.includes('菜刀') && h.includes('消防斧') && h.includes('匕首') && h.includes('长矛') && !h.includes('燃烧瓶') && !h.includes('毛衣'), 'T3 武器页只含武器');
   assert(/wiki-subtab active[^>]*>🗡️ 武器/.test(h), 'T3b 武器标签高亮');
 
   // T4 防具页合并 头盔/衣服/鞋子
   UI.openCraftTab('armor');
   h = body();
-  assert(h.includes('毛衣') && h.includes('布衣') && h.includes('布帽') && h.includes('布鞋') && !h.includes('长枪') && !h.includes('水瓶'), 'T4 防具页含头/衣/鞋且不含武器饰品');
+  assert(h.includes('毛衣') && h.includes('布衣') && h.includes('布帽') && h.includes('布鞋') && !h.includes('长矛') && !h.includes('水瓶'), 'T4 防具页含头/衣/鞋且不含武器饰品');
 
   // T5 饰品页
   UI.openCraftTab('acc');
