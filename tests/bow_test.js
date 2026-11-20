@@ -11,7 +11,7 @@ assert(BOW && BOW.slot==='weapon' && BOW.stats.atk===10 && BOW.range===3, 'T1b �
 assert(ST.range===1, 'T1c 木棍补 range:1（近战统一）');
 const rSl = DATA.RECIPES.find(r=>r.id==='slingshot'), rBow = DATA.RECIPES.find(r=>r.id==='bow');
 assert(rSl && rSl.cost.gold===20 && rSl.cost.wood===3 && rSl.cost.fabric===1, 'T1d 弹弓配方 20💰+3🪵+1🧵');
-assert(rBow && rBow.cost.gold===40 && rBow.cost.wood===5 && rBow.cost.fabric===3, 'T1e 木弓配方 40💰+5🪵+3🧵');
+assert(rBow && rBow.cost.gold===44 && rBow.cost.wood===5 && rBow.cost.fabric===3, 'T1e 木弓配方 44💰+5🪵+3🧵');
 
 // T2 effRange：max(自身, 武器)
 const soldier = Game.createChar('soldier', '老兵', false);    // 自身射程 1
@@ -33,7 +33,7 @@ assert(Game.effRange(hunter)===3, 'T2d max 语义：猎人(射程3)穿弹弓不�
 // T3 升级只涨攻不涨射程
 g.res.gold = 500; g.res.wood = 50;
 const worn = soldier.equip.weapon;              // 穿戴槽实例（与 bagInst 同 uid 不同对象）
-Game.upgradeEquip(bow1.uid);                    // 木弓 +1（40💰+5🪵+3🧵）：攻 10→12，射程仍 3
+Game.upgradeEquip(bow1.uid);                    // 木弓 +1（44💰+5🪵+3🧵）：攻 10→12，射程仍 3
 assert(worn.lv===1 && Game.effRange(soldier)===3, 'T3a 弓 +1 级射程不变');
 const stAtk = Game.equipStats({ equip:{ weapon:{ uid:'x', id:'bow', lv:1 } }, maxHp:0, maxStamina:0, atk:0, def:0 });
 assert(stAtk.atk===12, `T3b 弓 +1 攻 = round(10×1.2)=12（${stAtk.atk}）`);

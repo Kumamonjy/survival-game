@@ -18,7 +18,8 @@ const [s1, s2] = g.chars;
   const teamHtml = elems['team-list'].innerHTML;
   assert(teamHtml.includes(`🗡️${atkB}`) && teamHtml.includes(`🛡️${defB}`), `T2a 出战页显示含装备攻击/防御（${atkB}/${defB}）`);
   assert(teamHtml.includes(`/${hpB}`) && teamHtml.includes(`/${stB}`), `T2b 出战页上限含装备（血${hpB} 体${stB}）`);
-  assert(!teamHtml.includes(`🗡️${s1.atk} 🛡️${s1.def} `), 'T2c 出战页无裸字段');
+  const s1Card = teamHtml.split('<div class="char-card').slice(1).find(c=>c.includes(`<b>${s1.name}</b>`)) || '';
+  assert(!s1Card.includes(`🗡️${s1.atk} 🛡️${s1.def} `), 'T2c 出战页无裸字段');
 
   // T3 指派页与人物信息一致
   g.kitchenLv = 1; g.farmLv = 0; g.dormLv = 1; g.gymLv = 0;

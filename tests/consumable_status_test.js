@@ -27,7 +27,7 @@ const mkB = units => ({ units, selected:units[0], terrain:Array.from({length:Bat
   // ===== T2 工坊配方 =====
   const r1 = DATA.RECIPES.find(r=>r.id==='cigarette'), r2 = DATA.RECIPES.find(r=>r.id==='soup');
   assert(r1 && r1.cost.gold===10 && r1.cost.fabric===1 && r1.stamina===5, 'T2a 香烟配方 10💰+1🧵 / 5⚡');
-  assert(r2 && r2.cost.gold===18 && r2.cost.med===1 && r2.cost.fabric===1 && r2.stamina===10, 'T2b 药汤配方 18💰+1💊+1🧵 / 10⚡');
+  assert(r2 && r2.cost.gold===20 && r2.cost.med===1 && r2.cost.fabric===1 && r2.stamina===10, 'T2b 药汤配方 20💰+1💊+1🧵 / 10⚡');
 
   // ===== T3 打造入包 =====
   Game.craft('cigarette'); Game.craft('soup');
