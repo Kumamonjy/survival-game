@@ -1,4 +1,4 @@
-/* V111 棍棒（atk+15 近战）+ 木棍/棍棒共用技能「棍棒打击」（1格 140%，15⚡ CD3） */
+/* V132 棍棒（atk+10 近战）+ 木棍/棍棒共用技能「棍棒打击」（1格 140%，15⚡ CD3） */
 const { setup, assert } = require('./_helper.js');
 const { Game, Battle, UI, Recruit, DATA, elems, html, store } = setup();
 Game.g = Game.newGame(); Game.currentSlot = 1;
@@ -8,9 +8,9 @@ const g = Game.g;
 g.res.gold = 500; g.res.wood = 30; g.res.metal = 30; g.res.fabric = 30;
 
 (async () => {
-  // T1 定义：棍棒 atk+15 射程1 / 自带棍棒打击
+  // T1 定义：棍棒 atk+10 射程1 / 自带棍棒打击
   const club = DATA.EQUIPS.club;
-  assert(club && club.slot==='weapon' && club.stats.atk===15 && club.range===1, 'T1a 棍棒：攻+15 射程1');
+  assert(club && club.slot==='weapon' && club.stats.atk===10 && club.range===1, 'T1a 棍棒：攻+10 射程1');
   assert(club.skill && club.skill.name==='棍棒打击' && club.skill.mult===1.4 && club.skill.cost===15 && club.skill.cd===3, 'T1b 棍棒自带技能 140%/15⚡/CD3');
   assert(DATA.EQUIPS.stick.skill && DATA.EQUIPS.stick.skill.name==='棍棒打击' && DATA.EQUIPS.stick.skill.mult===1.4, 'T1c 木棍也带同款技能');
 
@@ -21,10 +21,10 @@ g.res.gold = 500; g.res.wood = 30; g.res.metal = 30; g.res.fabric = 30;
   const inst = (g.bagInst||[]).find(e=>e.id==='club');
   assert(inst && inst.lv===0, 'T2b 棍棒打造入包');
 
-  // T3 属性链：effAtk +15，射程 1（固定近战角色，避免随机职业全远程导致兜底失败）
+  // T3 属性链：effAtk +10，射程 1（固定近战角色，避免随机职业全远程导致兜底失败）
   const s1 = Game.createChar('civilian','持棒者'); s1.stamina = 9999; s1.talents = []; Game.applyTalents(s1); Game.recalc(s1); g.chars.push(s1);
   Game.equipChar(s1.id, 'weapon', inst.uid);
-  assert(Game.effAtk(s1)===s1.atk+15, 'T3a 装备棍棒 effAtk +15');
+  assert(Game.effAtk(s1)===s1.atk+10, 'T3a 装备棍棒 effAtk +10');
   assert(Game.effRange(s1)===1, 'T3b 射程 1');
 
   // T4 mkAlly 聚合：战斗单位带「棍棒打击」

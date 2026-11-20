@@ -867,14 +867,22 @@ DATA.EQUIPS = {
   stick:  { id:'stick',  name:'木棍', slot:'weapon', icon:'🪵', stats:{atk:5}, range:1,
             skill:{ name:'棍棒打击', desc:'消耗15体力，对 1 格内的一名敌人造成 140% 攻击力的伤害。', cost:15, cd:3, type:'attack', shape:'target', mult:1.4, range:1 },
             desc:'攻击力 +5，射程 1；自带技能「棍棒打击」：1 格内单体 140% 伤害（冷却 3 回合，消耗 15 体力）' },
-  club:   { id:'club',   name:'棍棒', slot:'weapon', icon:'🏏', stats:{atk:15}, range:1,
+  club:   { id:'club',   name:'棍棒', slot:'weapon', icon:'🏏', stats:{atk:10}, range:1,
             skill:{ name:'棍棒打击', desc:'消耗15体力，对 1 格内的一名敌人造成 140% 攻击力的伤害。', cost:15, cd:3, type:'attack', shape:'target', mult:1.4, range:1 },
-            desc:'攻击力 +15，射程 1；自带技能「棍棒打击」：1 格内单体 140% 伤害（冷却 3 回合，消耗 15 体力）' },
+            desc:'攻击力 +10，射程 1；自带技能「棍棒打击」：1 格内单体 140% 伤害（冷却 3 回合，消耗 15 体力）' },
   slingshot: { id:'slingshot', name:'弹弓', slot:'weapon', icon:'🪃', stats:{atk:5}, range:2,       desc:'攻击力 +5，射程 2（远程）' },
   bow:    { id:'bow',    name:'木弓', slot:'weapon', icon:'🏹', stats:{atk:10}, range:3,             desc:'攻击力 +10，射程 3（远程）' },
   spear:  { id:'spear',  name:'长枪', slot:'weapon', icon:'🔱', stats:{atk:15}, range:2,
             skill:{ name:'穿刺', desc:'消耗20体力，选择一个方向，对直线上 2 格内的所有敌人造成 100% 攻击力的伤害。', cost:20, cd:2, type:'attack', shape:'line', lineLen:2, mult:1.0 },
             desc:'攻击力 +15，射程 2（远程）；自带技能「穿刺」：直线 2 格 100% 伤害（冷却 2 回合，消耗 20 体力）' },
+  dagger: { id:'dagger', name:'匕首', slot:'weapon', icon:'🗡️', stats:{atk:12}, range:1,
+            desc:'攻击力 +12，射程 1' },
+  cleaver:{ id:'cleaver',name:'菜刀', slot:'weapon', icon:'🔪', stats:{atk:10}, range:1,
+            skill:{ name:'凶猛劈砍', desc:'消耗15体力，对 1 格内的一名敌人造成 150% 攻击力的伤害，并使其流血 2 回合。', cost:15, cd:3, type:'attack', shape:'target', mult:1.5, range:1, bleed:{turns:2} },
+            desc:'攻击力 +10，射程 1；自带技能「凶猛劈砍」：1 格内单体 150% 伤害并附加流血 2 回合（冷却 3 回合，消耗 15 体力）' },
+  fireaxe:{ id:'fireaxe',name:'消防斧', slot:'weapon', icon:'🪓', stats:{atk:20}, range:1,
+            skill:{ name:'凶猛劈砍', desc:'消耗15体力，对 1 格内的一名敌人造成 150% 攻击力的伤害，并使其流血 2 回合。', cost:15, cd:3, type:'attack', shape:'target', mult:1.5, range:1, bleed:{turns:2} },
+            desc:'攻击力 +20，射程 1；自带技能「凶猛劈砍」：1 格内单体 150% 伤害并附加流血 2 回合（冷却 3 回合，消耗 15 体力）' },
   sweater:{ id:'sweater',name:'毛衣', slot:'armor',  icon:'🧶', stats:{hp:35, def:10},               desc:'生命值 +35，防御力 +10' },
   bottle: { id:'bottle', name:'水瓶', slot:'acc',    icon:'🥤', stats:{stamina:15},                  desc:'体力值 +15' },
   thermos:{ id:'thermos',name:'保温杯', slot:'acc',  icon:'🥛', stats:{stamina:25},                  desc:'体力值 +25' },
@@ -922,6 +930,9 @@ DATA.RECIPES = [
   { id:'slingshot', cost:{ gold:20, wood:3, fabric:1 }, stamina:12 },
   { id:'bow',    cost:{ gold:40, wood:5, fabric:3 }, stamina:20 },
   { id:'club',   cost:{ gold:45, wood:4, metal:1 }, stamina:20 },
+  { id:'dagger', cost:{ gold:30, metal:2 }, stamina:12 },
+  { id:'cleaver',cost:{ gold:38, metal:3 }, stamina:14 },
+  { id:'fireaxe',cost:{ gold:70, wood:5, metal:4 }, stamina:25 },
   { id:'spear',  cost:{ gold:60, wood:4, metal:3 }, stamina:25 },
   { id:'sweater', cost:{ gold:75, fabric:8 }, stamina:15 },
   { id:'chood',  cost:{ gold:32, fabric:4 }, stamina:10 },
@@ -4436,6 +4447,9 @@ const Battle = {
           }
           if (t.hp > 0 && sk.stun) {
             Battle.applyStatus(t, 'stun', sk.stun.turns, u.uid);   // 麻醉飞镖：命中后眩晕
+          }
+          if (t.hp > 0 && sk.bleed) {
+            Battle.applyStatus(t, 'bleed', sk.bleed.turns, u.uid);   // 凶猛劈砍：命中后流血
           }
           if (sk.stealPct) {
             // 妙手神偷：窃取目标总生命值 2% 的金币（击杀后照偷）
