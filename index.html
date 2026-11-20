@@ -120,10 +120,10 @@ button:disabled { opacity:.45; cursor:not-allowed; }
   padding:12px 14px 8px; border-bottom:1px solid var(--line);
   background:linear-gradient(180deg,rgba(38,46,32,.9),rgba(30,36,24,.7));
 }
-.home-title { display:flex; align-items:baseline; gap:10px; margin-bottom:8px; }
-.home-title h1 { font-size:21px; color:var(--green2); letter-spacing:4px; text-shadow:0 0 14px rgba(125,163,69,.4); }
-.home-title .day { color:var(--yellow); font-size:14px; font-weight:bold; }
-.home-title .weather { margin-left:auto; font-size:13px; color:var(--txt2); }
+.home-title { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+.home-title h1 { font-size:19px; letter-spacing:2px; white-space:nowrap; flex-shrink:0; color:var(--green2); text-shadow:0 0 14px rgba(125,163,69,.4); }
+.home-title .day { color:var(--yellow); font-size:12px; font-weight:bold; white-space:nowrap; }
+.home-title .weather { font-size:12px; color:var(--txt2); white-space:nowrap; }
 .res-bar { display:flex; gap:6px; }
 .res-item {
   flex:1; display:flex; align-items:center; justify-content:center; gap:4px;
@@ -133,77 +133,43 @@ button:disabled { opacity:.45; cursor:not-allowed; }
 .res-item .ic { font-size:15px; }
 .res-item small { color:var(--dim); font-weight:normal; font-size:10px; display:block; }
 
-.base-scene {
-  position:relative; height:132px; margin:12px; border-radius:12px; overflow:hidden;
-  border:1px solid var(--line2); flex-shrink:0;
-  background:linear-gradient(180deg,#3a4433 0%,#2a3226 55%,#1c2217 100%);
-}
-.base-scene .sky-sun { position:absolute; top:10px; right:16px; width:34px; height:34px; border-radius:50%; background:radial-gradient(circle,#e8d48a,#c9a227 70%,transparent 72%); box-shadow:0 0 24px rgba(212,167,44,.5); }
-.base-scene .ground { position:absolute; bottom:0; left:0; right:0; height:46px; background:linear-gradient(180deg,#2e351f,#222815); border-top:2px solid #3d4830; }
-.base-scene .emoji { position:absolute; font-size:26px; filter:drop-shadow(0 3px 3px rgba(0,0,0,.5)); }
-.base-scene .day-label { position:absolute; top:10px; left:14px; font-size:12px; color:var(--txt2); }
-.base-scene .campfire { animation:fireGlow 2.2s infinite alternate; }
-@keyframes fireGlow { from{filter:drop-shadow(0 0 4px rgba(255,150,50,.4));} to{filter:drop-shadow(0 0 14px rgba(255,150,50,.9));} }
-
-/* ============ 营地场景（建筑贴图，V123） ============ */
+/* ============ 营地场景（建筑网格，V139 去除装饰、改为整齐三列） ============ */
 .camp-scene {
-  position:relative; height:300px; margin-bottom:12px; border-radius:12px; overflow:hidden;
-  border:1px solid var(--line2); flex-shrink:0;
+  margin:0 12px 12px; padding:10px; border-radius:12px; flex-shrink:0;
+  border:1px solid var(--line2);
   background:linear-gradient(180deg,#39432f 0%,#2a3226 52%,#1c2217 100%);
 }
-.camp-sun { position:absolute; top:8px; right:14px; font-size:22px; filter:drop-shadow(0 0 10px rgba(212,167,44,.5)); }
-.camp-deco { position:absolute; font-size:20px; opacity:.75; filter:drop-shadow(0 2px 2px rgba(0,0,0,.4)); pointer-events:none; }
-.camp-fire { position:absolute; font-size:24px; animation:fireGlow 2.2s infinite alternate; pointer-events:none; }
-.camp-b {
-  position:absolute; width:78px; padding:7px 2px 5px; text-align:center; cursor:pointer;
+.camp-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+.camp-tile {
+  padding:9px 2px 7px; text-align:center; cursor:pointer;
   background:rgba(20,26,15,.6); border:1px solid var(--line2); border-radius:10px;
   transition:transform .08s, border-color .15s; user-select:none; -webkit-user-select:none;
 }
-.camp-b:active { transform:scale(.94); }
-.camp-b.sel { border-color:var(--sel); box-shadow:0 0 0 1px var(--sel); }
-.camp-b .ci { font-size:30px; line-height:1.25; filter:drop-shadow(0 3px 3px rgba(0,0,0,.5)); }
-.camp-b .cn { font-size:11px; color:var(--txt); margin-top:2px; letter-spacing:1px; }
-.camp-b .clv { color:var(--yellow); font-size:10px; }
-.camp-b .cb { font-size:10px; color:var(--red2); margin-top:1px; }
-.camp-b.off { border-style:dashed; background:rgba(20,26,15,.35); }
-.camp-b.off .ci { filter:grayscale(1) brightness(.5) drop-shadow(0 3px 3px rgba(0,0,0,.5)); }
-.camp-b.off .cn { color:var(--dim); }
-/* 主界面营地：非建筑功能热点（更小，避免抢建筑视觉） */
+.camp-tile:active { transform:scale(.95); }
+.camp-tile.sel { border-color:var(--sel); box-shadow:0 0 0 1px var(--sel); }
+.camp-tile .ci { font-size:26px; line-height:1.2; filter:drop-shadow(0 3px 3px rgba(0,0,0,.5)); }
+.camp-tile .cn { font-size:12px; color:var(--txt); margin-top:1px; letter-spacing:1px; }
+.camp-tile .clv { color:var(--yellow); font-size:10px; }
+.camp-tile .cb { font-size:10px; color:var(--red2); }
+.camp-tile.off { border-style:dashed; background:rgba(20,26,15,.32); }
+.camp-tile.off .ci { filter:grayscale(1) brightness(.5); }
+.camp-tile.off .cn { color:var(--dim); }
+.camp-tile.util { background:rgba(20,26,15,.35); border-style:dashed; }
+.camp-tile.util .cn { color:var(--txt2); }
+/* 底排功能热点：横向等分 */
+.camp-spots { display:flex; gap:8px; margin-top:8px; }
 .camp-spot {
-  position:absolute; width:58px; padding:4px 2px; text-align:center; cursor:pointer;
+  flex:1; display:flex; align-items:center; justify-content:center; gap:6px; padding:9px 2px;
   background:rgba(20,26,15,.55); border:1px solid var(--line2); border-radius:10px;
-  transition:transform .08s, border-color .15s; user-select:none; -webkit-user-select:none;
+  cursor:pointer; transition:transform .08s, border-color .15s; user-select:none; -webkit-user-select:none;
 }
-.camp-spot:active { transform:scale(.94); }
-.camp-spot .ci { font-size:22px; line-height:1.2; filter:drop-shadow(0 3px 3px rgba(0,0,0,.5)); }
-.camp-spot .cn { font-size:10px; color:var(--txt2); }
-.camp-spot .csub { font-size:9px; color:var(--red2); }
-.camp-spot.main { width:66px; background:rgba(92,125,46,.3); border-color:#7a9a44; box-shadow:0 0 12px rgba(125,163,69,.35); }
+.camp-spot:active { transform:scale(.95); }
+.camp-spot .ci { font-size:19px; filter:drop-shadow(0 2px 2px rgba(0,0,0,.5)); }
+.camp-spot .cn { font-size:11px; color:var(--txt2); white-space:nowrap; }
+.camp-spot .csub { font-size:9px; color:var(--red2); white-space:nowrap; }
+.camp-spot.main { background:rgba(92,125,46,.28); border-color:#7a9a44; box-shadow:0 0 10px rgba(125,163,69,.3); }
 .camp-spot.main .cn { color:var(--green2); font-weight:bold; }
-.camp-spot .badge {
-  position:absolute; top:-5px; right:-5px; background:var(--red); color:#fff; font-size:9px;
-  min-width:15px; height:15px; border-radius:8px; display:flex; align-items:center; justify-content:center; padding:0 3px;
-}
-.home-scene { height:360px; }
 
-.func-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:0 12px; }
-.func-btn {
-  display:flex; align-items:center; gap:10px; padding:13px 12px; border-radius:12px;
-  background:linear-gradient(180deg,var(--panel2),var(--panel)); border:1px solid var(--line2);
-  transition:transform .08s; position:relative;
-}
-.func-btn:active { transform:scale(.96); }
-.func-btn.wide { grid-column:1 / -1; }
-.func-btn .ic {
-  width:44px; height:44px; border-radius:10px; display:flex; align-items:center; justify-content:center;
-  font-size:22px; background:rgba(125,163,69,.12); border:1px solid var(--line2); flex-shrink:0;
-}
-.func-btn .t { font-size:15px; font-weight:bold; letter-spacing:1px; }
-.func-btn .d { font-size:11px; color:var(--txt2); }
-.func-btn .badge {
-  position:absolute; top:6px; right:8px; background:var(--red); color:#fff; font-size:10px;
-  min-width:16px; height:16px; border-radius:8px; display:none; align-items:center; justify-content:center; padding:0 4px;
-}
 .home-foot { padding:10px 12px 14px; }
 .home-tip { font-size:11px; color:var(--dim); text-align:center; margin-top:8px; }
 .home-tools { margin-left:auto; display:flex; gap:6px; }
@@ -485,9 +451,12 @@ button:disabled { opacity:.45; cursor:not-allowed; }
 .milestone-choice .mc-t { font-weight:bold; color:var(--yellow); }
 .milestone-choice .mc-d { font-size:12px; color:var(--txt2); margin-top:3px; }
 
-@media (max-height:700px) {
-  .home-scene { height:330px; }
-  .camp-b { width:72px; } .camp-spot { width:54px; } .camp-spot.main { width:62px; }
+@media (max-width:360px) {
+  .home-title h1 { font-size:17px; letter-spacing:1px; }
+  .camp-tile .ci { font-size:23px; }
+  .camp-spot { padding:8px 1px; gap:4px; }
+  .camp-spot .ci { font-size:17px; }
+  .camp-spot .cn { font-size:10px; }
 }
 </style>
 </head>
@@ -519,7 +488,7 @@ button:disabled { opacity:.45; cursor:not-allowed; }
       <div id="build-page"></div>
       <div class="home-foot">
         <button class="btn primary" style="width:100%" onclick="Game.restDay()">🌙 进入下一天（过夜结算）</button>
-        <div class="home-tip" id="home-tip">提示：点击营地中的建筑使用功能；大门可外出探险</div>
+        <div class="home-tip" id="home-tip"></div>
       </div>
     </div>
   </div>
@@ -2087,7 +2056,7 @@ const UI = {
   /* ---- 主界面 ---- */
   renderHome() {
     const g = Game.g; if (!g) return;
-    document.getElementById('home-day').textContent = `第 ${g.day} 天${g.todayExplored>0?` · 今日已探索 ${g.todayExplored} 次`:''}`;
+    document.getElementById('home-day').textContent = `第 ${g.day} 天${g.todayExplored>0?` · 探索 ${g.todayExplored}`:''}`;
     document.getElementById('home-weather').textContent = UI.weatherInfo().name;
     document.getElementById('res-gold').textContent = g.res.gold;
     document.getElementById('res-med').textContent = g.res.med;
@@ -2104,7 +2073,7 @@ const UI = {
       ? (foodShort
         ? `🚨 食物预警：今晚晚餐需 ${demand} 份，供给仅 ${supply} 份（存粮${g.res.food}+当值产出${supply-g.res.food}）——有人要挨饿，快去探险或指派生产！`
         : '⚠️ 注意：有成员重伤，请及时处理')
-      : '提示：点击营地中的建筑使用功能；🚪 大门可外出探险';
+      : '';
     const tip = document.getElementById('home-tip');
     tip.style.color = foodShort ? 'var(--red2)' : (warn ? 'var(--yellow)' : '');
     UI.renderBuild();   // 营地场景与建筑卡（含重伤角标、访客热点、天气压暗）
@@ -2440,55 +2409,53 @@ const UI = {
       };
     }
 
-    /* 营地场景：建筑贴图（未建造置灰、点击选中查看功能） */
+    /* 营地场景：3 列建筑网格（未建造置灰、点击选中查看功能）；无装饰元素 */
     const LAYOUT = [
-      { id:'kitchen',  icon:'🍳', name:'厨房',   x:2,  y:3  },
-      { id:'dorm',     icon:'🛏️', name:'寝室',   x:36, y:3  },
-      { id:'lab',      icon:'🧪', name:'实验室', x:68, y:3  },
-      { id:'gym',      icon:'🏋️', name:'健身房', x:2,  y:30 },
-      { id:'workshop', icon:'🏭', name:'工坊',   x:68, y:30 },
-      { id:'farm',     icon:'🌾', name:'农场',   x:2,  y:54 },
-      { id:'hospital', icon:'🏥', name:'医院',   x:37, y:54 },
+      { id:'kitchen',  icon:'🍳', name:'厨房'   },
+      { id:'dorm',     icon:'🛏️', name:'寝室'   },
+      { id:'gym',      icon:'🏋️', name:'健身房' },
+      { id:'farm',     icon:'🌾', name:'农场'   },
+      { id:'hospital', icon:'🏥', name:'医院'   },
+      { id:'lab',      icon:'🧪', name:'实验室' },
+      { id:'workshop', icon:'🏭', name:'工坊'   },
     ];
     const lvOf = { kitchen:()=>g.kitchenLv, dorm:()=>g.dormLv, gym:()=>g.gymLv, farm:()=>g.farmLv, hospital:()=>g.hospitalLv, lab:()=>g.labLv, workshop:()=>g.workshopLv||0 };
     const sel = UI.campSel;
     const injured = g.chars.filter(c=>c.injured && !c.dead).length;
     const visitor = !!g.visitors;
-    const scene = `<div class="camp-scene home-scene" id="home-camp-scene">
-      <div class="camp-sun">☀️</div>
-      <div class="camp-deco" style="left:29%;top:14%">🌲</div>
-      <div class="camp-deco" style="left:52%;top:8%">🌲</div>
-      <div class="camp-deco" style="left:24%;top:44%">⛺</div>
-      <div class="camp-deco" style="left:53%;top:44%">🧱</div>
-      <div class="camp-fire" style="left:48%;top:66%">🔥</div>
-      ${LAYOUT.map(b=>{
-        const lv = lvOf[b.id]();
-        const built = lv>0;
-        return `<div class="camp-b${built?'':' off'}${sel===b.id?' sel':''}" style="left:${b.x}%;top:${b.y}%" onclick="UI.campSel='${b.id}';UI.renderBuild()">
-          <div class="ci">${b.icon}</div>
-          <div class="cn">${b.name}${built?` <span class="clv">Lv.${lv}</span>`:''}</div>
-          ${built?'':'<div class="cb">待建造</div>'}
-        </div>`;
-      }).join('')}
-      <div class="camp-spot" style="left:2%;top:82%" onclick="UI.openChars()">
-        <div class="ci">🧍</div><div class="cn">人物</div>
-        ${injured?`<div class="csub">${injured} 重伤</div>`:''}
-        ${injured?`<span class="badge">${injured}</span>`:''}
+    const scene = `<div class="camp-scene" id="home-camp-scene">
+      <div class="camp-grid">
+        ${LAYOUT.map(b=>{
+          const lv = lvOf[b.id]();
+          const built = lv>0;
+          return `<div class="camp-tile${built?'':' off'}${sel===b.id?' sel':''}" onclick="UI.campSel='${b.id}';UI.renderBuild()">
+            <div class="ci">${b.icon}</div>
+            <div class="cn">${b.name}${built?` <span class="clv">Lv.${lv}</span>`:''}</div>
+            ${built?'':'<div class="cb">待建造</div>'}
+          </div>`;
+        }).join('')}
+        <div class="camp-tile util" onclick="UI.openRecruit()">
+          <div class="ci">📡</div><div class="cn">招募</div>
+        </div>
+        <div class="camp-tile util" onclick="UI.openDuty()">
+          <div class="ci">📋</div><div class="cn">职务</div>
+        </div>
       </div>
-      <div class="camp-spot" style="left:28%;top:82%" onclick="UI.openInv()">
-        <div class="ci">📦</div><div class="cn">仓库</div>
-      </div>
-      <div class="camp-spot main" style="left:50%;top:80%" onclick="UI.openZones()">
-        <div class="ci">🚪</div><div class="cn">外出探险</div>
-      </div>
-      ${visitor?`<div class="camp-spot" style="left:74%;top:82%" onclick="UI.openVisitors()">
-        <div class="ci">🚶</div><div class="cn">访客</div><div class="csub" style="color:var(--yellow)">今日到访</div>
-      </div>`:''}
-      <div class="camp-spot" style="left:38%;top:36%" onclick="UI.openRecruit()">
-        <div class="ci">📡</div><div class="cn">招募</div>
-      </div>
-      <div class="camp-spot" style="left:68%;top:57%" onclick="UI.openDuty()">
-        <div class="ci">📋</div><div class="cn">职务</div>
+      <div class="camp-spots">
+        <div class="camp-spot" onclick="UI.openChars()">
+          <div class="ci">🧍</div>
+          <div><div class="cn">人物</div>${injured?`<div class="csub">${injured} 重伤</div>`:''}</div>
+        </div>
+        <div class="camp-spot" onclick="UI.openInv()">
+          <div class="ci">📦</div><div class="cn">仓库</div>
+        </div>
+        <div class="camp-spot main" onclick="UI.openZones()">
+          <div class="ci">🚪</div><div class="cn">外出探险</div>
+        </div>
+        ${visitor?`<div class="camp-spot" onclick="UI.openVisitors()">
+          <div class="ci">🚶</div>
+          <div><div class="cn">访客</div><div class="csub" style="color:var(--yellow)">今日到访</div></div>
+        </div>`:''}
       </div>
     </div>`;
 
