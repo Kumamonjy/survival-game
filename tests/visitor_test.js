@@ -20,7 +20,7 @@ const g = Game.g;
   assert([...v.merchant.buys, v.merchant.sell].every(inAmt), 'T2b 数量在区间内');
   assert(v.merchant.buys.every(o=>o.gold===Math.round(o.amt*V.buyPrice)), 'T2c 回收价 = 数量×2.5');
   assert(v.merchant.sell.gold === v.merchant.sell.amt*V.sellPrice, 'T2d 出售价 = 数量×3');
-  assert(V.recruitCost.gold===120 && V.recruitCost.food===20, 'T2e 流浪者招募价 120金+20食物');
+  assert(V.recruitCost.gold===100 && V.recruitCost.food===20, 'T2e 流浪者招募价 100金+20食物');
 
   // T3 回收成交（两笔独立）：扣资源加金币 + done + 二次拦截
   const b0 = v.merchant.buys[0];
@@ -56,7 +56,7 @@ const g = Game.g;
   Game.recruitWanderer();
   assert(w.recruited === true, 'T5b 招募标记');
   assert(g.chars.filter(c=>!c.dead).length === alive0+1 && g.chars.includes(w), 'T5c 流浪者入队');
-  assert(g.res.gold === 500-120 && g.res.food === 100-20, 'T5d 扣 120金+20食物');
+  assert(g.res.gold === 500-100 && g.res.food === 100-20, 'T5d 扣 100金+20食物');
   Game.recruitWanderer();
   assert(g.chars.filter(c=>!c.dead).length === alive0+1, 'T5e 二次招募拦截');
 

@@ -6,7 +6,7 @@ Game.g = Game.newGame(); Game.currentSlot = 1;
 // T1 职业定义
 const E = DATA.CLASSES.explorer;
 assert(E && E.name==='探险家' && E.icon==='🧭', 'T1a 探险家注册（🧭）');
-assert(E.price===250 && E.food===2, 'T1b 招募价 250 / 食物 2');
+assert(E.price===230 && E.food===2, 'T1b 招募价 230 / 食物 2');
 assert(E.base.maxHp===250 && E.base.maxStamina===150 && E.base.atk===40 && E.base.def===10, 'T1c 基础属性 250/150/40/10');
 assert(E.base.range===1 && E.base.move===3 && E.base.critRate===5 && E.base.critDmg===150, 'T1d 射程1/移速3/暴击5%/150%');
 const WS = E.skills && E.skills[0];
