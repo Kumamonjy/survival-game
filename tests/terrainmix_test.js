@@ -39,9 +39,8 @@ const g = Game.g;
   await Battle.start(stale);
   assert(cnt('barrel')===6 && cnt('ruin')===12, `T4 老存档快照回查配方 barrel6/ruin12（${cnt('barrel')}/${cnt('ruin')}）`);
 
-  // T5 区域卡展示战场地形行（调到第 10 天解锁全部区域）
+  // T5 区域卡展示战场地形行（全部区域开局即可进入）
   elems['zone-list'] = mkEl();
-  g.day = 10;
   UI.openZones();
   assert(elems['zone-list'].innerHTML.includes('战场地形') && elems['zone-list'].innerHTML.includes('🛢️10'), 'T5 区域卡展示地形配方');
 

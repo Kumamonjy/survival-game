@@ -242,8 +242,6 @@ button:disabled { opacity:.45; cursor:not-allowed; }
   transition:transform .08s;
 }
 .zone-card:active { transform:scale(.98); }
-.zone-card.locked { opacity:.5; filter:grayscale(.7); }
-.zone-card.locked:active { transform:none; }
 .zone-card .zic {
   width:52px; height:52px; border-radius:12px; font-size:26px; display:flex; align-items:center; justify-content:center;
   background:rgba(212,167,44,.1); border:1px solid var(--line2); flex-shrink:0;
@@ -793,25 +791,25 @@ DATA.ZOMBIES = {
 
 /* 探险区域：pool 为丧尸类型概率池（权重），count 为丧尸数量区间；丧尸等级 = 出战队伍平均等级 - 1（最低 1） */
 DATA.ZONES = [
-  { id:'market',  name:'废弃超市', icon:'🛒', danger:1, unlockDay:1, desc:'货架上还残留着末日前的物资，衣物货架或许还保有布料。',
+  { id:'market',  name:'废弃超市', icon:'🛒', danger:1, desc:'货架上还残留着末日前的物资，衣物货架或许还保有布料。',
     main:{food:[8,14]}, sub:{gold:[4,8],fabric:[2,4]}, count:[4,5], pool:{walker:60, runner:40}, boss:false,
     terrain:{ water:10, rubble:8, ruin:6, crate:8, barrel:1 } },
-  { id:'gas',     name:'废弃加油站', icon:'⛽', danger:1, unlockDay:1, desc:'便利店收银台里还留着零钱，拆下来的木托盘堆在后院；散落的油桶随时可能被引爆。',
+  { id:'gas',     name:'废弃加油站', icon:'⛽', danger:1, desc:'便利店收银台里还留着零钱，拆下来的木托盘堆在后院；散落的油桶随时可能被引爆。',
     main:{gold:[16,28]}, sub:{wood:[1,3],food:[2,4]}, count:[4,5], pool:{walker:65, runner:23, bomber:12}, boss:false,
     terrain:{ water:4, rubble:9, ruin:5, crate:7, barrel:24 } },
-  { id:'hospital',name:'市中心医院', icon:'🏥', danger:2, unlockDay:3, desc:'药房或许还有没被搜刮的药品。',
+  { id:'hospital',name:'市中心医院', icon:'🏥', danger:2, desc:'药房或许还有没被搜刮的药品。',
     main:{med:[4,7]}, sub:{food:[3,6],fabric:[1,3]}, count:[5,6], pool:{walker:20, runner:30, licker:25, bomber:12, shrieker:8, witch:5}, boss:false,
     terrain:{ water:12, rubble:8, ruin:7, crate:7, barrel:2 } },
-  { id:'forest',  name:'林场', icon:'🌲', danger:2, unlockDay:3, desc:'伐木场堆满原木与木托盘，木材取之不尽；但林间游荡着成群的丧尸。',
+  { id:'forest',  name:'林场', icon:'🌲', danger:2, desc:'伐木场堆满原木与木托盘，木材取之不尽；但林间游荡着成群的丧尸。',
     main:{wood:[6,10]}, sub:{food:[2,4],metal:[1,2]}, count:[5,6], pool:{walker:30, runner:25, brute:20, licker:15, bomber:10}, boss:false,
     terrain:{ water:6, rubble:16, ruin:12, crate:5, barrel:6 } },
-  { id:'factory', name:'旧钢铁工厂', icon:'🏭', danger:3, unlockDay:5, desc:'废墟中散落着大量可用的金属材料，废弃木托盘与包装箱能拆出木材。深处偶尔能听到沉重的脚步声……',
+  { id:'factory', name:'旧钢铁工厂', icon:'🏭', danger:3, desc:'废墟中散落着大量可用的金属材料，废弃木托盘与包装箱能拆出木材。深处偶尔能听到沉重的脚步声……',
     main:{metal:[5,9]}, sub:{gold:[8,15],fabric:[1,2],wood:[1,3]}, count:[5,7], pool:{walker:15, runner:15, brute:30, licker:15, bomber:15, behemoth:5, shrieker:5}, boss:false,
     terrain:{ water:4, rubble:15, ruin:8, crate:4, barrel:10 } },
-  { id:'street',  name:'商业街废墟', icon:'🏙️', danger:3, unlockDay:5, desc:'银行的保险柜还没有被完全搬空。服装店废墟里能翻到布料，倒塌的商铺木架是木材来源。',
+  { id:'street',  name:'商业街废墟', icon:'🏙️', danger:3, desc:'银行的保险柜还没有被完全搬空。服装店废墟里能翻到布料，倒塌的商铺木架是木材来源。',
     main:{gold:[35,60]}, sub:{metal:[3,6],fabric:[1,2],wood:[1,2]}, count:[5,7], pool:{runner:19, brute:18, licker:18, savage:15, bomber:10, gasbag:10, shrieker:7, witch:3}, boss:false,
     terrain:{ water:6, rubble:10, ruin:14, crate:6, barrel:3 } },
-  { id:'base',    name:'军事基地', icon:'🎖️', danger:4, unlockDay:8, desc:'武装到牙齿，但驻守的已不是人类。有大变异体坐镇。',
+  { id:'base',    name:'军事基地', icon:'🎖️', danger:4, desc:'武装到牙齿，但驻守的已不是人类。有大变异体坐镇。',
     main:{metal:[7,11]}, sub:{med:[2,4],gold:[15,25],fabric:[1,2]}, count:[6,8], pool:{brute:20, licker:18, runner:14, savage:16, bomber:8, gasbag:12, shrieker:7, witch:5}, boss:true,
     terrain:{ water:6, rubble:14, ruin:12, crate:5, barrel:6 } },
 ];
@@ -2748,20 +2746,18 @@ const UI = {
   /* ---- 探险区域 ---- */
   openZones() {
     const el = document.getElementById('zone-list');
-    const day = (Game.g && Game.g.day) || 1;
     el.innerHTML = DATA.ZONES.map(z=>{
       const Z = Battle.zoneDef(z);
       const mainStr = UI.lootRangeStr(Z.main), subStr = UI.lootRangeStr(Z.sub), terrStr = UI.terrainStr(Z.terrain);
-      const locked = (Z.unlockDay||1) > day;
-      return `<div class="zone-card${locked?' locked':''}" ${locked?'':`onclick="UI.openTeam('${z.id}')"`}>
-        <div class="zic">${locked?'🔒':z.icon}</div>
+      return `<div class="zone-card" onclick="UI.openTeam('${z.id}')">
+        <div class="zic">${z.icon}</div>
         <div style="flex:1">
           <div class="zt">${z.name} <span class="danger-stars">${'★'.repeat(z.danger)}</span></div>
-          <div class="zd">${locked ? `第 ${Z.unlockDay} 天解锁（当前第 ${day} 天）` : z.desc}</div>
-          ${locked?'':`<div class="zd" style="margin-top:4px"><b style="color:var(--txt)">主要产出：</b>${mainStr}<br><b style="color:var(--txt)">次要产出：</b>${subStr}　＋ 战斗中拾取物资箱</div>
-          <div class="zd" style="margin-top:3px"><b style="color:var(--txt)">战场地形：</b>${terrStr}</div>`}
+          <div class="zd">${z.desc}</div>
+          <div class="zd" style="margin-top:4px"><b style="color:var(--txt)">主要产出：</b>${mainStr}<br><b style="color:var(--txt)">次要产出：</b>${subStr}　＋ 战斗中拾取物资箱</div>
+          <div class="zd" style="margin-top:3px"><b style="color:var(--txt)">战场地形：</b>${terrStr}</div>
         </div>
-        <div style="color:${locked?'var(--dim)':'var(--green2)'}">${locked?'':'›'}</div>
+        <div style="color:var(--green2)">›</div>
       </div>`;
     }).join('');
     UI.showScreen('scr-zones');
@@ -3069,7 +3065,7 @@ const UI = {
         const Z = Battle.zoneDef(z);
         return `<tr>
           <td><b>${z.icon} ${z.name}</b><br><span style="font-size:11px">${z.desc}</span></td>
-          <td>${'★'.repeat(Z.danger)}<br><span style="font-size:11px">第 ${Z.unlockDay} 天</span></td>
+          <td>${'★'.repeat(Z.danger)}</td>
           <td>${UI.lootRangeStr(Z.main)}<br>＋ ${UI.lootRangeStr(Z.sub)}</td>
         </tr>`;
       }).join('');
@@ -3085,7 +3081,7 @@ const UI = {
       }).join('');
       return `
       <div class="wiki-sec panel"><h4>🗺️ 探险地图（${DATA.ZONES.length} 张）</h4>
-        <table class="wiki-table"><tr><th>区域</th><th>危险度<br>解锁</th><th>产出（主要 ＋ 次要）</th></tr>${zRows}</table>
+        <table class="wiki-table"><tr><th>区域</th><th>危险度</th><th>产出（主要 ＋ 次要）</th></tr>${zRows}</table>
       </div>
       <div class="wiki-sec panel"><h4>🧭 敌情与地形</h4>
         <table class="wiki-table"><tr><th>区域</th><th>丧尸构成（概率）</th><th>地形</th></tr>${eRows}</table>

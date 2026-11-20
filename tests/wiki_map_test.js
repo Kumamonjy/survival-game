@@ -14,9 +14,10 @@ assert(body.includes('🗺️ 探险地图（7 张）'), 'T2 地图页标题显�
 assert(DATA.ZONES.every(z=>body.includes(z.name)) && body.includes('废弃加油站') && body.includes('林场'),
   'T3 七个区域（含加油站/林场）全部列出');
 
-// T4 门槛与产出：危险度星数、解锁天数、主/次产出区间
-assert(body.includes('第 8 天') && body.includes('★★★★'), 'T4a 军事基地危险度 4★/第 8 天');
-assert(body.includes('💰 16-28') && body.includes('🪵 6-10'), 'T4b 加油站金币与林场木材产出区间');
+// T4 产出：危险度星数、主/次产出区间
+assert(body.includes('★★★★') && body.includes('💰 16-28') && body.includes('🪵 6-10'),
+  'T4a 军事基地 4★ / 加油站金币 / 林场木材产出区间');
+assert(!body.includes('解锁'), 'T4b 地图页不再显示解锁天数');
 
 // T5 敌情：概率构成 + Boss 标注
 assert(body.includes('🧭 敌情与地形') && body.includes('Boss：暴君变异体'), 'T5a 敌情表标注基地 Boss');
@@ -32,12 +33,12 @@ assert(body.includes('🛢️24') && body.includes('🌊12'), 'T6 地形配方�
 });
 
 // T8 数据驱动：临时加一张图后自动出现在百科，无需改渲染代码
-DATA.ZONES.push({ id:'__tmp__', name:'临时测试区', icon:'🧪', danger:5, unlockDay:99,
+DATA.ZONES.push({ id:'__tmp__', name:'临时测试区', icon:'🧪', danger:5,
   desc:'测试用', main:{gold:[1,2]}, sub:{food:[1,1]}, count:[1,2], pool:{walker:100}, boss:false,
   terrain:{ water:1 } });
 UI.openWiki();
 const body2 = elems['wiki-content'].innerHTML;
-assert(body2.includes('临时测试区') && body2.includes('第 99 天'), 'T8 新增地图自动出现在百科');
+assert(body2.includes('临时测试区') && body2.includes('（8 张）'), 'T8 新增地图自动出现在百科');
 DATA.ZONES.pop();
 
 // T9 敌人页不再重复罗列地图解锁（改为指向地图页）

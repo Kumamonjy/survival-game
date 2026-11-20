@@ -10,8 +10,7 @@ const Z = id => DATA.ZONES.find(z=>z.id===id);
   assert(DATA.ZONES.length===7 && DATA.ZONES.every(z=>z.pool && z.count && z.count[0]<=z.count[1]), 'T1a 7 区域均有概率池与数量区间');
   assert(Z('gas') && Z('gas').danger===1 && Z('gas').main.gold, 'T1d 新增 1★ 加油站（金币主产）');
   assert(Z('forest') && Z('forest').danger===2 && Z('forest').main.wood[0]>=6, 'T1e 新增 2★ 林场（木材主产）');
-  assert(DATA.ZONES.every(z=>z.unlockDay>=1), 'T1f 全部区域带解锁天数');
-  assert(Z('base').unlockDay===8 && Z('market').unlockDay===1, 'T1g 解锁门槛：超市第1天 / 基地第8天');
+  assert(DATA.ZONES.every(z=>z.unlockDay===undefined), 'T1f 全部区域开局即解锁（无 unlockDay 门槛）');
   assert(Z('factory').pool.behemoth===5 && !Z('factory').boss, 'T1b 工厂 5% 权重暴君且非必出');
   assert(Z('base').boss===true, 'T1c 军事基地 boss 必出');
 

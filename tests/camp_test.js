@@ -80,15 +80,13 @@ const g = Game.g;
   Game.makeBandage();
   assert(doc.stamina === 100 - 6, `T11 医院 Lv3 生产绷带实扣 6⚡（余 ${doc.stamina}）`);
 
-  // T12 地图按天数锁定
+  // T12 所有地图开局即解锁
   g.day = 1; UI.openZones();
   let zh = elems['zone-list'].innerHTML;
-  assert((zh.match(/zone-card locked/g)||[]).length===5, 'T12a 第1天锁定 5 张图（医院/林场/工厂/商业街/基地）');
-  assert(zh.includes('第 3 天解锁') && zh.includes('🔒'), 'T12b 锁定卡显示解锁天数与锁');
-  g.day = 10; UI.openZones();
-  zh = elems['zone-list'].innerHTML;
-  assert((zh.match(/zone-card locked/g)||[]).length===0, 'T12c 第10天全部解锁');
-  assert(zh.includes('⛽') && zh.includes('🌲'), 'T12d 加油站/林场出现在列表');
+  assert((zh.match(/zone-card locked/g)||[]).length===0, 'T12a 第1天无锁定区域');
+  assert(!zh.includes('🔒') && !zh.includes('解锁'), 'T12b 不显示锁与解锁天数');
+  assert((zh.match(/zone-card"/g)||[]).length===DATA.ZONES.length, 'T12c 全部区域可点击进入');
+  assert(zh.includes('⛽') && zh.includes('🌲') && zh.includes('🎖️'), 'T12d 加油站/林场/基地均出现在列表');
 
   console.log('--- done ---');
   process.exit(0);
