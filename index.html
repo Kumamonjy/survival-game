@@ -2305,7 +2305,7 @@ const UI = {
         title:`🍳 厨师（每天 -${K.workCost}⚡ → 产 ${K.out(g.kitchenLv)} 🍞）`,
         occupants: occOf(g.kitchenChef),
         occBadge:()=>'<span class="tag blue">当值厨师</span>',
-        occSub:o=>`⚡ ${o.stamina}/${o.maxStamina}（体力 &lt;${K.workCost} 时停产）`,
+        occSub:o=>`⚡ ${o.stamina}/${Game.effSt(o)}（体力 &lt;${K.workCost} 时停产）`,
         unLabel:'撤职', unCall:()=>'Game.unassignKitchen()',
         empty:`⚠️ 厨师空缺——厨房没有产出。${alive.some(c=>c.cls==='chef')?'从下方名单指派。':`去广播站招募一位厨师（${DATA.CLASSES.chef.price} 💰）。`}`,
         cands: alive.filter(c=>c.cls==='chef' && c.id!==g.kitchenChef),
@@ -2316,7 +2316,7 @@ const UI = {
         title:`🧪 实验室当值（生产解毒针：${Game.produceStamina(DATA.PRODUCE.antidote,'labLv')}⚡ + 15💰 + 1⚙️ + 3💊 → 背包）`,
         occupants: occOf(g.labChef),
         occBadge:()=>'<span class="tag blue">实验员</span>',
-        occSub:o=>`⚡ ${o.stamina}/${o.maxStamina}（体力 &lt;${Game.produceStamina(DATA.PRODUCE.antidote,'labLv')} 时无法生产，不影响出战）`,
+        occSub:o=>`⚡ ${o.stamina}/${Game.effSt(o)}（体力 &lt;${Game.produceStamina(DATA.PRODUCE.antidote,'labLv')} 时无法生产，不影响出战）`,
         unLabel:'撤职', unCall:()=>'Game.unassignLab()',
         empty:`⚠️ 实验室空置——没有科学家当值就无法生产解毒针。${alive.some(c=>c.cls==='scientist')?'从下方名单指派。':`去广播站招募一位科学家（${DATA.CLASSES.scientist.price} 💰）。`}`,
         cands: alive.filter(c=>c.cls==='scientist' && c.id!==g.labChef),
@@ -2327,7 +2327,7 @@ const UI = {
         title:`⚒️ 工坊当值（打造消耗当值者体力：${Math.min(...DATA.RECIPES.map(r=>r.stamina))}⚡ ~ ${Math.max(...DATA.RECIPES.map(r=>r.stamina))}⚡ · 不限职业）`,
         occupants: occOf(g.workshopChef),
         occBadge:()=>'<span class="tag blue">工匠</span>',
-        occSub:o=>`⚡ ${o.stamina}/${o.maxStamina}（体力不足时无法打造，不影响出战）`,
+        occSub:o=>`⚡ ${o.stamina}/${Game.effSt(o)}（体力不足时无法打造，不影响出战）`,
         unLabel:'撤职', unCall:()=>'Game.unassignWorkshop()',
         empty:`⚠️ 工坊空置——没有工匠当值就无法打造装备。${alive.length?'从下方名单指派（不限职业）。':''}`,
         cands: alive.filter(c=>c.id!==g.workshopChef),
@@ -2338,7 +2338,7 @@ const UI = {
         title:`🏥 医院当值（生产绷带：${Game.produceStamina(DATA.PRODUCE.bandage,'hospitalLv')}⚡ + 2🧵 + 1💊 → 背包）`,
         occupants: occOf(g.hospitalDoc),
         occBadge:()=>'<span class="tag blue">医务员</span>',
-        occSub:o=>`⚡ ${o.stamina}/${o.maxStamina}（体力 &lt;${Game.produceStamina(DATA.PRODUCE.bandage,'hospitalLv')} 时无法生产，不影响出战）`,
+        occSub:o=>`⚡ ${o.stamina}/${Game.effSt(o)}（体力 &lt;${Game.produceStamina(DATA.PRODUCE.bandage,'hospitalLv')} 时无法生产，不影响出战）`,
         unLabel:'撤职', unCall:()=>'Game.unassignHospital()',
         empty:`⚠️ 医院空置——没有医生或护士当值就无法生产绷带。${alive.some(c=>c.cls==='doctor'||c.cls==='nurse')?'从下方名单指派。':`去广播站招募一位医生（${DATA.CLASSES.doctor.price} 💰）或护士（${DATA.CLASSES.nurse.price} 💰）。`}`,
         cands: alive.filter(c=>(c.cls==='doctor'||c.cls==='nurse') && c.id!==g.hospitalDoc),
@@ -2349,7 +2349,7 @@ const UI = {
         title:`🌾 农场耕作（每天 -${F.workCost}⚡ → 产 ${F.out(g.farmLv)} 🍞）`,
         occupants: occOf(g.farmWorker),
         occBadge:()=>'<span class="tag blue">农场耕作</span>',
-        occSub:o=>`⚡ ${o.stamina}/${o.maxStamina}（体力 &lt;${F.workCost} 时停产）`,
+        occSub:o=>`⚡ ${o.stamina}/${Game.effSt(o)}（体力 &lt;${F.workCost} 时停产）`,
         unLabel:'撤职', unCall:()=>'Game.unassignFarm()',
         empty:'⚠️ 无人耕作——农场荒着没有产出。从下方名单指派（任意职业）。',
         cands: alive.filter(c=>c.id!==g.farmWorker),
@@ -2442,7 +2442,7 @@ const UI = {
             + `<div class="row" style="margin-top:8px">
           <button class="btn small" ${canCook?'':'disabled'} onclick="Game.cookBread()">🥖 烤面包（1 🍞食物 + 10⚡ → 背包 +1 面包）</button>
         </div>`
-            + occNote(chef ? `👨‍🍳 当值厨师：<b>${chef.name}</b>（⚡ ${chef.stamina}/${chef.maxStamina}）` : null, '⚠️ 未指派厨师，厨房空转没有产出。', dutyHint('人员安排')));
+            + occNote(chef ? `👨‍🍳 当值厨师：<b>${chef.name}</b>（⚡ ${chef.stamina}/${Game.effSt(chef)}）` : null, '⚠️ 未指派厨师，厨房空转没有产出。', dutyHint('人员安排')));
 
       // 寝室
       const Dm = DATA.DORM;
@@ -2477,7 +2477,7 @@ const UI = {
         flv === 0
           ? buildRow(F, 'Game.buildFarm()', '建造农场')
           : upRow(flv, F, 'Game.upgradeFarm()', `<span class="tag yellow">每日产出 ${F.out(flv)} 🍞</span>`)
-            + occNote(fw ? `🌾 耕作：<b>${fw.name}</b>（⚡ ${fw.stamina}/${fw.maxStamina}）` : null, '⚠️ 无人耕作，农场没有产出。', dutyHint('人员安排')));
+            + occNote(fw ? `🌾 耕作：<b>${fw.name}</b>（⚡ ${fw.stamina}/${Game.effSt(fw)}）` : null, '⚠️ 无人耕作，农场没有产出。', dutyHint('人员安排')));
 
       // 实验室：建造 + 生产（可升级：每级生产体力 -2⚡）
       const L = DATA.LAB;
@@ -2498,7 +2498,7 @@ const UI = {
           ${(!chkAnt.ok||!chkPain.ok||!chkAid.ok)?`<span style="color:var(--red2);font-size:12px">${chkAnt.why||chkPain.why||chkAid.why}</span>`:''}
         </div>`
             + upRow(g.labLv, L, "Game.upgradeBuilding('lab')", `<span class="tag yellow">生产体力 ${sAid}⚡</span>`)
-            + (sci ? `<div class="wiki-p" style="margin-top:8px">🔬 实验员：<b>${sci.name}</b>（⚡ ${sci.stamina}/${sci.maxStamina}${sci.injured?'，重伤停产':''}）</div>` : '');
+            + (sci ? `<div class="wiki-p" style="margin-top:8px">🔬 实验员：<b>${sci.name}</b>（⚡ ${sci.stamina}/${Game.effSt(sci)}${sci.injured?'，重伤停产':''}）</div>` : '');
         }
         return cardShell('🧪', '实验室', g.labLv, true,
           `指派科学家当值，生产解毒针 / 止痛药 / 急救丸，成品入背包。` + (g.labLv>0?`<br>升级：每级生产体力 -2⚡（当前 -${(g.labLv-1)*2}⚡，最低 5⚡）。`:''),
@@ -2524,7 +2524,7 @@ const UI = {
           ${(!chkBan.ok||!chkPain.ok||!chkAid.ok)?`<span style="color:var(--red2);font-size:12px">${chkBan.why||chkPain.why||chkAid.why}</span>`:''}
         </div>`
             + upRow(g.hospitalLv, H, "Game.upgradeBuilding('hospital')", `<span class="tag yellow">生产体力 ${sAid}⚡</span>`)
-            + (doc ? `<div class="wiki-p" style="margin-top:8px">⚕️ 医务员：<b>${doc.name}</b>（⚡ ${doc.stamina}/${doc.maxStamina}${doc.injured?'，重伤停产':''}）</div>` : '');
+            + (doc ? `<div class="wiki-p" style="margin-top:8px">⚕️ 医务员：<b>${doc.name}</b>（⚡ ${doc.stamina}/${Game.effSt(doc)}${doc.injured?'，重伤停产':''}）</div>` : '');
         }
         return cardShell('🏥', '医院', g.hospitalLv, true,
           `指派医生或护士当值，生产绷带 / 止痛药 / 急救丸，成品入背包。` + (g.hospitalLv>0?`<br>升级：每级生产体力 -2⚡（当前 -${(g.hospitalLv-1)*2}⚡，最低 5⚡）。`:''),
@@ -2542,7 +2542,7 @@ const UI = {
         </div>
         ${( ()=>{ const smith = g.workshopChef ? g.chars.find(c=>c.id===g.workshopChef && !c.dead) : null;
           return `<div class="wiki-p" style="margin-top:8px">${smith
-            ? `⚒️ 工匠：<b>${smith.name}</b>（⚡ ${smith.stamina}/${smith.maxStamina}${smith.injured?'，重伤停产':''}）`
+            ? `⚒️ 工匠：<b>${smith.name}</b>（⚡ ${smith.stamina}/${Game.effSt(smith)}${smith.injured?'，重伤停产':''}）`
             : '<span style="color:var(--red2);font-size:12px">⚠️ 尚未指派工匠——去「职务指派」安排一名成员当值（不限职业）后才能打造</span>'}</div>`; })() }
         <div class="row" style="margin-top:10px">
           <button class="btn primary" style="flex:1" onclick="UI.openCraftModal()">🔨 打造</button>
@@ -2747,7 +2747,7 @@ const UI = {
       <div class="wiki-p" style="margin-top:4px;font-size:12px">
         <div class="row" style="gap:6px">
           <span style="flex:1;min-width:0">${smith
-            ? `⚒️ 工匠：<b>${smith.name}</b>（⚡ ${smith.stamina}/${smith.maxStamina}${smith.injured?'，<span style="color:var(--red2)">重伤停产</span>':''}）`
+            ? `⚒️ 工匠：<b>${smith.name}</b>（⚡ ${smith.stamina}/${Game.effSt(smith)}${smith.injured?'，<span style="color:var(--red2)">重伤停产</span>':''}）`
             : '<span style="color:var(--red2)">⚠️ 未指派工匠——点右侧按钮直接安排当值</span>'}</span>
           <button class="btn small" onclick="UI.toggleCraftAssign()">${smith?'🔄 更换':'👤 指派'}</button>
         </div>

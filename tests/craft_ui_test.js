@@ -113,6 +113,16 @@ g.chars.push(smith); g.workshopLv = 1; Game.assignWorkshop(smith.id);
   assert(g.workshopChef !== other.id, 'T15b 已当值的成员无法直接改派工匠');
   Game.unassignFarm();
 
+  // T16 体力上限含装备加成，避免显示 175/165 这类「超过上限」
+  smith.equip = smith.equip || {};
+  smith.equip.acc = { id:'bottle', lv:0 };
+  smith.stamina = 110;
+  Game.assignWorkshop(smith.id);
+  UI.openCraftModal();
+  h = body();
+  assert(h.includes(`⚡ 110/${Game.effSt(smith)}`) && Game.effSt(smith) === smith.maxStamina + 15, 'T16 工匠体力按含装备的有效上限显示');
+  smith.equip.acc = null;
+
   console.log('--- done ---');
   process.exit(0);
 })();
