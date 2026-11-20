@@ -2198,7 +2198,7 @@ const UI = {
         staminaCost:0, fullTag:null, assignLabel:'指派',
         assignCall:c=>`Game.assignLab('${c.id}')` },
       { built: g.workshopLv > 0,
-        title:'⚒️ 工坊当值（打造消耗当值者体力：消耗品 5⚡ ~ 长枪 25⚡ · 不限职业）',
+        title:`⚒️ 工坊当值（打造消耗当值者体力：${Math.min(...DATA.RECIPES.map(r=>r.stamina))}⚡ ~ ${Math.max(...DATA.RECIPES.map(r=>r.stamina))}⚡ · 不限职业）`,
         occupants: occOf(g.workshopChef),
         occBadge:()=>'<span class="tag blue">工匠</span>',
         occSub:o=>`⚡ ${o.stamina}/${o.maxStamina}（体力不足时无法打造，不影响出战）`,
@@ -2287,7 +2287,7 @@ const UI = {
       const chef = g.kitchenChef ? g.chars.find(c=>c.id===g.kitchenChef && !c.dead) : null;
       const canCook = chef && !chef.injured && chef.stamina>=10 && g.res.food>=1;
       CARDS.kitchen = () => cardShell('🍳', '厨房', lv, true,
-        `指派厨师当值，每日产出食物（Lv.1~5 → 4~20 份），厨师每天耗 ${K.workCost}⚡；可烤面包（1🍞+10⚡）。`,
+        `指派厨师当值，每日产出食物（Lv.1~5 → ${[1,2,3,4,5].map(l=>K.out(l)).join('/')} 份），厨师每天耗 ${K.workCost}⚡；可烤面包（1🍞+10⚡）。`,
         lv === 0
           ? buildRow(K, 'Game.buildKitchen()', '建造厨房')
           : upRow(lv, K, 'Game.upgradeKitchen()', `<span class="tag yellow">每日产出 ${K.out(lv)} 🍞</span>`)
@@ -2325,7 +2325,7 @@ const UI = {
       const flv = g.farmLv;
       const fw = g.farmWorker ? g.chars.find(c=>c.id===g.farmWorker && !c.dead) : null;
       CARDS.farm = () => cardShell('🌾', '农场', flv, true,
-        `指派任意职业耕作（每日 -${F.workCost}⚡），Lv.1~5 每日产出 2~10 份食物。`,
+        `指派任意职业耕作（每日 -${F.workCost}⚡），Lv.1~5 每日产出 ${[1,2,3,4,5].map(l=>F.out(l)).join('/')} 份食物。`,
         flv === 0
           ? buildRow(F, 'Game.buildFarm()', '建造农场')
           : upRow(flv, F, 'Game.upgradeFarm()', `<span class="tag yellow">每日产出 ${F.out(flv)} 🍞</span>`)
@@ -3027,15 +3027,16 @@ const UI = {
         </div>
       </div>
       <div class="wiki-sec panel"><h4>🏠 营地建筑</h4>
-        <table class="wiki-table"><tr><th>建筑</th><th>建造/升级（💰）</th><th>产出</th><th>当值与要点</th></tr>
-          <tr><td><b>🍳 厨房</b></td><td>200 建造 / 每 200 升级，Lv.5 封顶</td><td>每日 +4/8/12/16/20 份食物</td><td>厨师当值（-50⚡/天），体力不足停产；可烤面包（1🍞+10⚡）</td></tr>
-          <tr><td><b>🛏️ 寝室</b></td><td>150 建造 / 每 150 升级，每级 1 床位</td><td>入住者每日额外 +50⚡+50❤️（与晚饭叠加，重伤睡满自愈）</td><td>不影响出战；床位免费换人</td></tr>
-          <tr><td><b>🏋️ 健身房</b></td><td>200 建造 / 每 200 升级，每级 1 训练位</td><td>训练者每日 -50⚡、+40 经验</td><td>需体力≥50 且未重伤；不影响出战</td></tr>
-          <tr><td><b>🌱 农场</b></td><td>150 建造 / 每 150 升级，Lv.5 封顶</td><td>每日 +2×等级 份食物</td><td>任意职业当值（-50⚡/天）；不影响出战</td></tr>
-          <tr><td><b>🏥 医院</b></td><td>180 建造 / 每 180 升级，Lv.5 封顶</td><td>生产绷带/止痛药/急救丸</td><td>医生或护士当值；每级生产体力 -2⚡（最低 5⚡）</td></tr>
-          <tr><td><b>🧪 实验室</b></td><td>200 建造 / 每 200 升级，Lv.5 封顶</td><td>生产解毒针/止痛药/急救丸</td><td>科学家当值；每级生产体力 -2⚡（最低 5⚡）</td></tr>
-        </table>
-        <div class="wiki-p" style="margin-top:6px">建筑产出于每日过夜结算；换人/撤职随时免费。装备详情见「🧰 装备」页。</div>
+        <table class="wiki-table"><tr><th>建筑</th><th>建造 / 升级（💰）</th><th>产出</th><th>当值与要点</th></tr>${[
+          { icon:'🍳', d:DATA.KITCHEN, out:`每日 +${[1,2,3,4,5].map(l=>DATA.KITCHEN.out(l)).join('/')} 份食物`, note:'厨师当值（-50⚡/天），体力不足停产；可烤面包（1🍞+10⚡）' },
+          { icon:'🛏️', d:DATA.DORM, out:`入住者每日额外 +${DATA.DORM.regenAmt}⚡+${DATA.DORM.regenAmt}❤️（与晚饭叠加，重伤睡满自愈）`, note:'不影响出战；床位免费换人' },
+          { icon:'🏋️', d:DATA.GYM, out:`训练者每日 -${DATA.GYM.staminaCost}⚡、+${DATA.GYM.expAmt} 经验`, note:`需体力≥${DATA.GYM.staminaCost} 且未重伤；不影响出战` },
+          { icon:'🌾', d:DATA.FARM, out:`每日 +${[1,2,3,4,5].map(l=>DATA.FARM.out(l)).join('/')} 份食物`, note:'任意职业当值（-50⚡/天）；不影响出战' },
+          { icon:'🏥', d:DATA.HOSPITAL, out:'生产绷带/止痛药/急救丸', note:'医生或护士当值；每级生产体力 -2⚡（最低 5⚡）' },
+          { icon:'🧪', d:DATA.LAB, out:'生产解毒针/止痛药/急救丸', note:'科学家当值；每级生产体力 -2⚡（最低 5⚡）' },
+          { icon:'🏭', d:DATA.WORKSHOP, out:'打造装备与消耗品', note:`工匠当值（不限职业）；每级材料 -10%；打造耗体力 ${Math.min(...DATA.RECIPES.map(r=>r.stamina))}⚡~${Math.max(...DATA.RECIPES.map(r=>r.stamina))}⚡` },
+        ].map(({icon,d,out,note})=>`<tr><td><b>${icon} ${d.name}</b></td><td>建造 ${d.buildCost}｜升级 ${[1,2,3,4].map(l=>Game.upCost(d,l)).join('/')}</td><td>${out}</td><td>${note}</td></tr>`).join('')}</table>
+        <div class="wiki-p" style="margin-top:6px">建筑产出于每日过夜结算；换人/撤职随时免费。升级费用随当前等级递增：基准价 ×(1+0.5×当前等级)。装备详情见「🧰 装备」页。</div>
       </div>`;
     const secSave = `
       <div class="wiki-sec panel"><h4>💾 存档说明</h4>
