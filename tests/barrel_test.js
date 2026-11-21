@@ -75,6 +75,25 @@ const g = Game.g;
   });
   assert(cells.some(([r,c2])=>r===6&&c2===7), 'T6 邻格油桶进入攻击目标集');
 
+  // T7 依次引爆：3 只油桶排成一行，爆炸之间应有明显间隔 + 连锁字幕 + 新特效
+  Battle.b.units = Battle.b.units.filter(x=>x.side!=='enemy' || x===e10);   // 保留 1 只远处敌人，避免提前结算
+  Battle.b.terrain = Array.from({length:Battle.ROWS},()=>Array.from({length:Battle.COLS},()=>'plain'));
+  Battle.b.speed = 1;
+  Battle.b.terrain[0][1]='barrel'; Battle.b.terrain[0][2]='barrel'; Battle.b.terrain[0][3]='barrel';
+  const times = [];
+  const origFx = Battle.fxBlast;
+  Battle.fxBlast = () => times.push(Date.now());
+  Battle._barrelSeq = 0;                  // 模拟 attackBarrel 的连锁计数重置
+  await Battle.explodeBarrel(0, 1, null);
+  Battle.fxBlast = origFx;
+  assert(times.length===3, `T7a 三只油桶依次爆炸（${times.length} 次特效）`);
+  const gaps = times.slice(1).map((t,i)=>t-times[i]);
+  assert(gaps.every(g=>g>=140), `T7b 相邻爆炸有间隔，不是同时（${gaps.join('/')}ms）`);
+  assert(Battle.b.terrain[0][1]==='plain' && Battle.b.terrain[0][2]==='plain' && Battle.b.terrain[0][3]==='plain', 'T7c 连锁后三桶均消失');
+  assert(/连锁爆炸 ×3/.test(elems['battle-subtitle'].innerHTML), 'T7d 连锁爆炸字幕计数');
+  assert(html.includes('blast-core') && html.includes('blast-ring') && html.includes('battle-fx-layer') && html.includes('map-shake'),
+    'T7e 新增爆炸特效（火环/白热核心/震屏）CSS');
+
   console.log('--- done ---');
   process.exit(0);
 })();

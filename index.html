@@ -267,7 +267,7 @@ button:disabled { opacity:.45; cursor:not-allowed; }
 .side-panel.enemy .mini-bar > div { background:var(--enemy); }
 .side-panel.ally .mini-bar > div { background:var(--ally); }
 
-.map-wrap { flex:1; overflow:auto; display:flex; align-items:center; justify-content:center; padding:6px; -webkit-overflow-scrolling:touch; }
+.map-wrap { flex:1; overflow:auto; display:flex; align-items:center; justify-content:center; padding:6px; -webkit-overflow-scrolling:touch; position:relative; }
 #battle-map {
   display:grid; gap:2px; background:rgba(0,0,0,.25); padding:4px; border-radius:8px;
   border:1px solid var(--line); touch-action:manipulation; position:relative;
@@ -283,6 +283,23 @@ button:disabled { opacity:.45; cursor:not-allowed; }
 .cell.barrel { background:#4a3520; }
 @keyframes fxBoom { 0%{box-shadow:inset 0 0 0 0 rgba(255,150,60,.95); background:rgba(255,170,70,.6);} 60%{box-shadow:inset 0 0 18px 8px rgba(255,110,40,.7);} 100%{box-shadow:inset 0 0 0 0 rgba(255,90,40,0); background:transparent;} }
 .cell.fx-boom { animation:fxBoom .5s ease-out; z-index:7; }
+/* 油桶爆炸：白热核心 + 扩散火环 + 地图震屏（独立特效层，不会被 renderMap 冲掉） */
+.battle-fx-layer { position:absolute; inset:0; pointer-events:none; z-index:30; overflow:hidden; }
+.blast-fx { position:absolute; pointer-events:none; }
+.blast-fx .blast-core {
+  position:absolute; inset:0; border-radius:50%;
+  background:radial-gradient(circle,#fffbe0 0%,#ffd257 30%,#ff8a2a 55%,rgba(255,80,20,0) 74%);
+  animation:blastCore .55s ease-out forwards;
+}
+.blast-fx .blast-ring {
+  position:absolute; inset:-6%; border-radius:50%; border:2px solid rgba(255,168,64,.95);
+  box-shadow:0 0 16px 5px rgba(255,110,40,.75), inset 0 0 10px rgba(255,210,110,.85);
+  animation:blastRing .6s ease-out forwards;
+}
+@keyframes blastCore { 0%{transform:scale(.2); opacity:1;} 55%{transform:scale(1.15); opacity:.95;} 100%{transform:scale(1.7); opacity:0;} }
+@keyframes blastRing { 0%{transform:scale(.3); opacity:1;} 100%{transform:scale(2.5); opacity:0;} }
+@keyframes mapShake { 0%,100%{transform:translate(0,0);} 20%{transform:translate(-3px,2px);} 45%{transform:translate(3px,-2px);} 70%{transform:translate(-2px,1px);} }
+.map-wrap.map-shake { animation:mapShake .32s ease-out; }
 .cell.ruin { background:#443c2c; }
 .cell .terr { position:absolute; font-size:16px; opacity:.85; pointer-events:none; }
 .cell.moveable { box-shadow:inset 0 0 0 2px rgba(125,180,80,.85); background:rgba(100,140,60,.45); cursor:pointer; }
@@ -3897,6 +3914,7 @@ const Battle = {
     const b = Battle.b;
     u.hasAttacked = true;
     b.mode=null; b.targetSet=null; b.moveSet=null;
+    Battle._barrelSeq = 0;
     await Battle.explodeBarrel(r, c, u);
     if (u.side==='ally') { Battle.checkExp(u); Battle.checkAllActed(); }
   },
@@ -4274,6 +4292,30 @@ const Battle = {
     el.classList.add(cls);
     setTimeout(()=>el.classList.remove(cls), ms);
   },
+  /* 油桶爆炸特效：白热核心 + 扩散火环 + 地图震屏。
+     挂在 .map-wrap 的独立特效层上，不会因 renderMap 重建格子而消失 */
+  fxBlast(row, col) {
+    const map = document.getElementById('battle-map');
+    if (!map) return;
+    const wrap = map.parentElement;
+    const cell = map.children && map.children[row*Battle.COLS + col];
+    if (!wrap || !cell) return;
+    let layer = wrap.querySelector('.battle-fx-layer');
+    if (!layer) { layer = document.createElement('div'); layer.className = 'battle-fx-layer'; wrap.appendChild(layer); }
+    const rect = (el)=> (typeof el.getBoundingClientRect==='function') ? el.getBoundingClientRect() : {left:0,top:0,width:0,height:0};
+    const cr = rect(cell), wr = rect(wrap);
+    const size = cr.width || cell.offsetWidth || 36;
+    const fx = document.createElement('div');
+    fx.className = 'blast-fx';
+    fx.style.cssText = `left:${cr.left-wr.left}px;top:${cr.top-wr.top}px;width:${size}px;height:${size}px;`;
+    fx.innerHTML = '<i class="blast-ring"></i><i class="blast-core"></i>';
+    layer.appendChild(fx);
+    setTimeout(()=>fx.remove(), 700);
+    wrap.classList.remove('map-shake'); void wrap.offsetWidth;
+    wrap.classList.add('map-shake');
+    clearTimeout(Battle._shakeT);
+    Battle._shakeT = setTimeout(()=>wrap.classList.remove('map-shake'), 340);
+  },
   /* 近战前冲：攻击者朝目标方向顶一下 */
   fxLunge(att, def) {
     const map = document.getElementById('battle-map');
@@ -4585,17 +4627,22 @@ const Battle = {
     }
   },
   /* 自爆丧尸：死亡（击杀/毒发/燃烧身亡均触发）时对相邻 1 格的所有角色造成爆炸伤害并使幸存者中毒 */
-  explode(u) {
+  async explode(u) {
     if (u.exploded) return;
     u.exploded = true;
     const DMG = DATA.ZOMBIES[u.zombieType]?.explodeDmg || 80;
+    Battle.fxBlast(u.row, u.col);
     Battle.log(`💥 ${u.name} 发生了剧烈自爆！`, 'crit');
     Battle.subtitle(`💥 ${u.name} 自爆！`);
-    // 自爆波及相邻油桶 → 连锁引爆
-    [[1,0],[-1,0],[0,1],[0,-1]].forEach(([dr,dc])=>{
+    // 自爆波及相邻油桶 → 依次连锁引爆
+    Battle._barrelSeq = 0;
+    for (const [dr,dc] of [[1,0],[-1,0],[0,1],[0,-1]]) {
       const rr=u.row+dr, cc=u.col+dc;
-      if (Battle.inMap(rr,cc) && Battle.b.terrain[rr][cc]==='barrel') Battle.explodeBarrel(rr, cc, u);
-    });
+      if (Battle.inMap(rr,cc) && Battle.b.terrain[rr][cc]==='barrel') {
+        await Battle.sleep(200);
+        if (Battle.b.terrain[rr][cc]==='barrel') await Battle.explodeBarrel(rr, cc, u);
+      }
+    }
     Battle.b.units.filter(x=>x.hp>0 && x.side==='ally' && Battle.manhattan(x,u)<=1).forEach(v=>{
       Battle.rawDamage(v, DMG, u);
       if (v.hp <= 0) {
@@ -4610,16 +4657,20 @@ const Battle = {
     Battle.renderMap(); Battle.renderPanels();
     Battle.checkBattleEnd();
   },
-  /* 油桶：受任何攻击即爆炸（可连锁）。8 格无差别 100 伤害（结算防御）+ 燃烧 5 回合，击杀/经验走 applyDamage 统一结算 */
+  /* 油桶：受任何攻击即爆炸（可连锁）。8 格无差别 100 伤害（结算防御）+ 燃烧 5 回合，击杀/经验走 applyDamage 统一结算
+     连锁改为「依次引爆」：每只油桶爆发后停顿 220ms（随倍速缩短），一桶接一桶炸开 */
   async explodeBarrel(r, c, src) {
     const b = Battle.b;
     if (!b || !b.terrain[r] || b.terrain[r][c] !== 'barrel') return;
     src = src || { name:'油桶', icon:'🛢️', side:'neutral', uid:null, row:r, col:c };   // 无归属（如自爆连锁丢参）时防崩溃
     b.terrain[r][c] = 'plain';
-    Battle.fxAt(r, c, 'fx-boom', 500);
+    Battle.renderMap(); Battle.renderPanels();
+    Battle.fxBlast(r, c);
     Battle.floatDmg(r, c, '💥', '#ffb347', true);
-    Battle.log('🛢️ 油桶被引爆！烈焰吞噬周围 8 格', 'crit');
-    Battle.subtitle('🛢️ 油桶爆炸！');
+    const seq = (Battle._barrelSeq = (Battle._barrelSeq||0) + 1);
+    Battle.log(seq===1 ? '🛢️ 油桶被引爆！烈焰吞噬周围 8 格' : `🛢️ 连锁引爆！第 ${seq} 只油桶炸开`, 'crit');
+    Battle.subtitle(seq===1 ? '🛢️ 油桶爆炸！' : `🛢️ 连锁爆炸 ×${seq}！`);
+    await Battle.sleep(150);      // 火光爆开后再结算伤害
     const srcUid = src ? src.uid : null;
     for (let dr=-1; dr<=1; dr++) for (let dc=-1; dc<=1; dc++) {
       if (!dr && !dc) continue;
@@ -4631,7 +4682,8 @@ const Battle = {
         await Battle.applyDamage(src, v, dmg, false, 1, '油桶爆炸');
         if (v.hp>0) Battle.applyStatus(v, 'burn', 5, srcUid);
       } else if (b.terrain[rr][cc]==='barrel') {
-        await Battle.explodeBarrel(rr, cc, src);   // 连锁引爆
+        await Battle.sleep(220);   // 依次引爆：等上一团火过去再接下一桶
+        if (b.terrain[rr][cc]==='barrel') await Battle.explodeBarrel(rr, cc, src);
       }
     }
     Battle.renderMap(); Battle.renderPanels();
@@ -4639,6 +4691,7 @@ const Battle = {
   },
   /* 技能波及引爆：cells 覆盖格中有油桶则连锁（直线/AOE/横扫共用） */
   async hitBarrels(cells, src) {
+    Battle._barrelSeq = 0;
     for (const [r,c] of (cells||[])) {
       if (Battle.b.terrain[r] && Battle.b.terrain[r][c]==='barrel') await Battle.explodeBarrel(r, c, src);
     }
