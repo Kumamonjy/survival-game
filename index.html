@@ -837,24 +837,27 @@ DATA.ZONES = [
     main:{food:[8,14]}, sub:{gold:[4,8],fabric:[2,4]}, count:[4,5], pool:{walker:60, runner:40}, boss:false,
     terrain:{ water:10, rubble:8, ruin:6, crate:8, barrel:1 } },
   { id:'gas',     name:'废弃加油站', icon:'⛽', danger:1, desc:'便利店收银台里还留着零钱，拆下来的木托盘堆在后院；散落的油桶随时可能被引爆。',
-    main:{gold:[16,28]}, sub:{wood:[1,3],food:[2,4]}, count:[4,5], pool:{walker:65, runner:23, bomber:12}, boss:false,
+    main:{gold:[12,20]}, sub:{wood:[1,3],food:[2,4]}, count:[4,5], pool:{walker:65, runner:23, bomber:12}, boss:false,
     terrain:{ water:4, rubble:9, ruin:5, crate:7, barrel:24 } },
   { id:'hospital',name:'市中心医院', icon:'🏥', danger:2, desc:'药房或许还有没被搜刮的药品。',
-    main:{med:[4,7]}, sub:{food:[3,6],fabric:[1,3]}, count:[5,6], pool:{walker:20, runner:30, licker:25, bomber:12, shrieker:8, witch:5}, boss:false,
+    main:{med:[5,9]}, sub:{food:[3,6],fabric:[1,3]}, count:[5,6], pool:{walker:20, runner:30, licker:25, bomber:12, shrieker:8, witch:5}, boss:false,
     terrain:{ water:12, rubble:8, ruin:7, crate:7, barrel:2 } },
   { id:'forest',  name:'林场', icon:'🌲', danger:2, desc:'伐木场堆满原木与木托盘，木材取之不尽；但林间游荡着成群的丧尸。',
     main:{wood:[6,10]}, sub:{food:[2,4],metal:[1,2]}, count:[5,6], pool:{walker:30, runner:25, brute:20, licker:15, bomber:10}, boss:false,
     terrain:{ water:6, rubble:16, ruin:12, crate:5, barrel:6 } },
   { id:'factory', name:'旧钢铁工厂', icon:'🏭', danger:3, desc:'废墟中散落着大量可用的金属材料，废弃木托盘与包装箱能拆出木材。深处偶尔能听到沉重的脚步声……',
-    main:{metal:[5,9]}, sub:{gold:[8,15],fabric:[1,2],wood:[1,3]}, count:[5,7], pool:{walker:15, runner:15, brute:30, licker:15, bomber:15, behemoth:5, shrieker:5}, boss:false,
+    main:{metal:[5,9]}, sub:{gold:[8,15],fabric:[1,2],wood:[1,3],med:[1,2]}, count:[5,7], pool:{walker:15, runner:15, brute:30, licker:15, bomber:15, behemoth:5, shrieker:5}, boss:false,
     terrain:{ water:4, rubble:15, ruin:8, crate:4, barrel:10 } },
   { id:'street',  name:'商业街废墟', icon:'🏙️', danger:3, desc:'银行的保险柜还没有被完全搬空。服装店废墟里能翻到布料，倒塌的商铺木架是木材来源。',
-    main:{gold:[35,60]}, sub:{metal:[3,6],fabric:[1,2],wood:[1,2]}, count:[5,7], pool:{runner:19, brute:18, licker:18, savage:15, bomber:10, gasbag:10, shrieker:7, witch:3}, boss:false,
+    main:{gold:[35,60]}, sub:{metal:[3,6],fabric:[1,2],wood:[1,2],med:[1,2]}, count:[5,7], pool:{runner:19, brute:18, licker:18, savage:15, bomber:10, gasbag:10, shrieker:7, witch:3}, boss:false,
     terrain:{ water:6, rubble:10, ruin:14, crate:6, barrel:3 } },
   { id:'base',    name:'军事基地', icon:'🎖️', danger:4, desc:'武装到牙齿，但驻守的已不是人类。有大变异体坐镇。',
-    main:{metal:[7,11]}, sub:{med:[2,4],gold:[15,25],fabric:[1,2]}, count:[6,8], pool:{brute:20, licker:18, runner:14, savage:16, bomber:8, gasbag:12, shrieker:7, witch:5}, boss:true,
+    main:{metal:[7,11]}, sub:{med:[2,4],gold:[28,45],fabric:[1,2]}, count:[6,8], pool:{brute:20, licker:18, runner:14, savage:16, bomber:8, gasbag:12, shrieker:7, witch:5}, boss:true,
     terrain:{ water:6, rubble:14, ruin:12, crate:5, barrel:6 } },
 ];
+
+/* 顶级装备分层：危险度 ≤2 的区域探险不掉落（需深入 d3+ 区域获取或工坊打造） */
+DATA.TOP_EQUIPS = ['pistol','fireaxe','spear','bow'];
 
 /* 天赋：招募角色随机获得1~3个（最多3个，互不重复；1个60%/2个30%/3个10%；生命/攻击/防御/体力作用于基础值并随升级成长，射程/移速/暴击为固定加成）
    一览排序：正面在前、负面在后，组内按属性数值降序 */
@@ -3455,7 +3458,7 @@ const UI = {
         · <b>分解</b>：返还 50% 制造成本（向上取整）；穿戴中的装备需先卸下才能分解<br>
         · <b>武器射程</b>：战斗中角色射程 = <b>max(自身射程, 武器射程)</b>——取较高值，猎人（射程3）穿弹弓不会降为 2<br>
         · <b>道具（消耗品）</b>：不提供属性、不可升级；战斗中使用其技能后消耗 1 个，每人最多携带 3 个同类道具<br>
-        · 探险胜利有概率获得装备掉落，直接放入背包</div>
+        · 探险胜利有概率获得装备掉落，直接放入背包（分层规则见百科「🗺️ 地图」页）</div>
       </div>`;
     /* 地图页：区域门槛/产出 + 敌情/地形 + 通用规则（数据全部来自 DATA.ZONES，新增地图自动出现在此处） */
     const secMap = (() => {
@@ -3490,6 +3493,7 @@ const UI = {
         · 编队最多 <b>6 人</b>，每人出发消耗 <b>15⚡</b> 体力；探险<b>不消耗天数</b><br>
         · 胜利可获得该区域的<b>主要 + 次要产出</b>；主动撤离保留已拾取物资但无通关奖励；全员倒下则物资减半<br>
         · 每局固定 1 个<b>精品物资箱</b>（地图最上方三行）：90% 双倍物资 / 10% 特殊饰品<br>
+        · 装备掉落分层：胜利 20% 概率掉一件装备；<b>危险度 ≤2 的区域不会掉落顶级武器</b>（手枪/消防斧/长矛/木弓）——需深入 d3+ 区域获取或工坊打造<br>
         · 地形互动：废墟可翻找 1 次、瓦砾可攻击清除并留下石头箱、油桶被攻击会爆炸且可连锁引爆<br>
         · 油桶爆炸/燃烧瓶会在<b>地面残留火焰 2 回合</b>：踩上或停留在火焰中会<b>燃烧 2 回合</b>（每回合掉生命与体力）<br>
         · 丧尸等级 = <b>出战平均等级 − 1</b>（最低 1），每级生命/攻击/防御按基础值 +10%；「丧尸潮」额外 +2 只且奖励翻倍</div>
@@ -3855,6 +3859,15 @@ const Battle = {
     const Z = DATA.ZOMBIES[type];
     const r = (Z && Z.gold) || [1,1];
     return rnd(r[0], r[1]);
+  },
+  /* 装备掉落统一入口：20% 概率随机一件（特殊饰品不可掉落）；危险度 ≤2 的区域排除顶级武器；zone 可传区域对象或 id 字符串 */
+  rollDropEquip(zone) {
+    if (Math.random() >= 0.2) return null;
+    const Z = Battle.zoneDef(typeof zone==='string' ? {id:zone} : zone);
+    const top = DATA.TOP_EQUIPS || [];
+    let pool = Object.keys(DATA.EQUIPS).filter(id=>!DATA.EQUIPS[id].special);
+    if (Z && Z.danger <= 2) pool = pool.filter(id=>!top.includes(id));
+    return DATA.EQUIPS[pick(pool)] || null;
   },
   /* 物资箱统一掉落：金币 2-7 / 食物 1-3 / 药物·金属·布料·木材 1-2；mult 为倍率（精品箱 ×2） */
   crateLoot(mult) {
@@ -5691,12 +5704,11 @@ const Battle = {
     Object.entries(rewards).forEach(([k,v])=>{ if(v>0) g.res[k]+=v; });
     if (killGoldTotal>0) g.res.gold += killGoldTotal;
 
-    // 装备掉落：探险胜利 20% 概率获得一件随机装备（入背包；特殊饰品不可掉落，获取途径后续开放）
+    // 装备掉落：探险胜利 20% 概率获得一件随机装备（入背包；特殊饰品不可掉落；d≤2 区域排除顶级武器）
     let dropEq = null;
-    if (!b.horde && result==='win' && Math.random() < 0.2) {
-      const dropPool = Object.keys(DATA.EQUIPS).filter(id=>!DATA.EQUIPS[id].special);
-      dropEq = DATA.EQUIPS[pick(dropPool)];
-      Game.addEquip(dropEq.id, 1);
+    if (!b.horde && result==='win') {
+      dropEq = Battle.rollDropEquip(b.zone);
+      if (dropEq) Game.addEquip(dropEq.id, 1);
     }
 
     // 时间不随探索流逝：过夜结算由主界面「进入下一天」触发（守城战不算探索次数）

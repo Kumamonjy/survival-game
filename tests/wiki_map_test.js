@@ -15,8 +15,8 @@ assert(DATA.ZONES.every(z=>body.includes(z.name)) && body.includes('废弃加油
   'T3 七个区域（含加油站/林场）全部列出');
 
 // T4 产出：危险度星数、主/次产出区间
-assert(body.includes('★★★★') && body.includes('💰 16-28') && body.includes('🪵 6-10'),
-  'T4a 军事基地 4★ / 加油站金币 / 林场木材产出区间');
+assert(body.includes('★★★★') && body.includes('💰 12-20') && body.includes('🪵 6-10'),
+  'T4a 军事基地 4★ / 加油站金币（12-20）/ 林场木材产出区间');
 assert(!body.includes('解锁'), 'T4b 地图页不再显示解锁天数');
 
 // T5 敌情：概率构成 + Boss 标注
