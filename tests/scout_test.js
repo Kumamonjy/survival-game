@@ -37,6 +37,8 @@ const g = Game.g;
   assert(diag.hp===diag.maxHp, 'T2d 斜角格不受影响（曼哈顿菱形）');
   assert(u.stamina===u.maxStamina-40, `T2e 扣体力 40（${u.maxStamina-u.stamina}）`);
   assert((u.cds['奔袭']||0)>0, 'T2f 进冷却');
+  assert(u.row===5 && u.col===7, `T2g 陷阵落位：角色移动到释放格（${u.row},${u.col}）`);
+  assert(u.hasMoved!==true, 'T2h 飞扑不消耗移动步数');
 
   // T3 近身格斗：150% 伤害 + 强力 2 回合
   u.hasAttacked = false; u.cds = {}; u.stamina = u.maxStamina;

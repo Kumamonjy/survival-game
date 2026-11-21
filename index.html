@@ -696,7 +696,7 @@ DATA.CLASSES = {
     food:2,
     skills:[
       { name:'近身格斗', desc:'消耗40体力，对1格内一名敌人造成 150% 攻击力的伤害，自身进入「强力」状态持续 2 回合（攻击力 +20%）。', cost:40, cd:3, type:'attack', shape:'target', mult:1.5, range:1, selfStrong:2 },
-      { name:'奔袭', desc:'消耗40体力，选择2格范围内一个空格飞扑过去（不移动），对以该格为中心的十字范围（含中心共5格）内所有敌人造成 80% 攻击力的伤害。', cost:40, cd:4, type:'attack', shape:'aoe', range:2, area:1, mult:0.8, emptyCell:true },
+      { name:'奔袭', desc:'消耗40体力，选择2格范围内一个空格飞扑过去（落点即新站位，不消耗移动步数），对以该格为中心的十字范围（含中心共5格）内所有敌人造成 80% 攻击力的伤害。', cost:40, cd:4, type:'attack', shape:'aoe', range:2, area:1, mult:0.8, emptyCell:true },
     ],
     base:{ maxHp:230, maxStamina:120, atk:40, def:5, range:1, move:4, critRate:5, critDmg:150 },
     price:180
@@ -5025,6 +5025,12 @@ const Battle = {
     if (p.target) victims = [p.target];
     else if (p.targets) victims = p.targets;
     else if (p.cell) {
+      if (sk.emptyCell && (u.row!==p.cell[0] || u.col!==p.cell[1])) {   // 陷阵式落点技（奔袭）：飞扑到释放格（不消耗移动步数）
+        u.row = p.cell[0]; u.col = p.cell[1];
+        Battle.fxAt(u.row, u.col, 'hit-white', 300);
+        Battle.renderMap(); Battle.renderPanels();
+        await Battle.sleep(220);
+      }
       hitCells = Battle.cellsAround(p.cell[0], p.cell[1], sk.area||1);
       // hitsAll：燃烧瓶等无差别范围技，敌我不分全部命中
       victims = hitCells
