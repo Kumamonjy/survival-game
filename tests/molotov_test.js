@@ -22,8 +22,8 @@ const [s1, s2] = g.chars;
 
   // ===== T3 工坊配方 =====
   const r = DATA.RECIPES.find(x => x.id === 'molotov');
-  assert(r && r.cost.gold === 26 && r.cost.metal === 1 && r.cost.fabric === 2 && r.stamina === 10,
-    'T3a 配方 26💰+1⚙️+2🧵 / 10⚡');
+  assert(r && r.cost.gold === 21 && r.cost.metal === 2 && r.cost.fabric === 3 && r.stamina === 10,
+    'T3a 配方 21💰+2⚙️+3🧵 / 10⚡');
   const P = Game.produceConfig('molotov');
   assert(P && P.building === 'workshopLv' && P.craft === true && P.duty === 'workshopChef', 'T3b 只能工坊打造（需工匠当值）');
 
@@ -35,7 +35,7 @@ const [s1, s2] = g.chars;
   const bag0 = Game.bagCount('molotov'), st0 = wc.stamina;
   Game.craft('molotov');
   assert(Game.bagCount('molotov') === bag0 + 1, 'T4a 打造成功背包 +1 燃烧瓶');
-  assert(g.res.gold === 74 && g.res.metal === 9 && g.res.fabric === 8, `T4b 实扣 26💰+1⚙️+2🧵（${g.res.gold}/${g.res.metal}/${g.res.fabric}）`);
+  assert(g.res.gold === 79 && g.res.metal === 8 && g.res.fabric === 7, `T4b 实扣 21💰+2⚙️+3🧵（${g.res.gold}/${g.res.metal}/${g.res.fabric}）`);
   assert(wc.stamina === st0 - 10, 'T4c 工匠扣 10 体力');
 
   // ===== T5 携带后技能入列 =====

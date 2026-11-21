@@ -22,8 +22,8 @@ g.res.gold = 1000; g.res.wood = 50; g.res.metal = 50; g.res.fabric = 50;
 
   // T3 配方：110💰+8⚙️+3🧵 / 30⚡，全场最贵
   const rc = DATA.RECIPES.find(r=>r.id==='pistol');
-  assert(rc && rc.cost.gold===110 && rc.cost.metal===8 && rc.cost.fabric===3 && rc.stamina===30, 'T3a 配方 110💰+8⚙️+3🧵 / 30⚡');
-  assert(DATA.RECIPES.every(r=>r.cost.gold<=110), 'T3b 金币造价全场最高（强力装备定位）');
+  assert(rc && rc.cost.gold===88 && rc.cost.metal===10 && rc.cost.fabric===4 && rc.stamina===30, 'T3a 配方 88💰+10⚙️+4🧵 / 30⚡');
+  assert(DATA.RECIPES.every(r=>r.cost.gold<=88), 'T3b 金币造价全场最高（强力装备定位）');
 
   // T4 打造 + 装备：effAtk +40 / 射程 3 / 暴击 +3
   Game.craft('pistol');

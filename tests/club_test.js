@@ -16,7 +16,7 @@ g.res.gold = 500; g.res.wood = 30; g.res.metal = 30; g.res.fabric = 30;
 
   // T2 配方与工坊：54💰+5🪵+2⚙️ / 20⚡（V172 上调）
   const rc = DATA.RECIPES.find(r=>r.id==='club');
-  assert(rc && rc.cost.gold===54 && rc.cost.wood===5 && rc.cost.metal===2 && rc.stamina===20, 'T2 配方 54💰+5🪵+2⚙️ / 20⚡');
+  assert(rc && rc.cost.gold===43 && rc.cost.wood===6 && rc.cost.metal===3 && rc.stamina===20, 'T2 配方 43💰+6🪵+3⚙️ / 20⚡');
   Game.craft('club');
   const inst = (g.bagInst||[]).find(e=>e.id==='club');
   assert(inst && inst.lv===0, 'T2b 棍棒打造入包');

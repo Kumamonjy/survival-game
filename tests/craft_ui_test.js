@@ -83,8 +83,8 @@ g.chars.push(smith); g.workshopLv = 1; Game.assignWorkshop(smith.id);
   assert(cap && cap.slot==='head' && cap.stats.hp===10 && cap.stats.stamina===10, 'T12a 棒球帽：生命+10 / 体力+10');
   assert(helmet && helmet.slot==='head' && helmet.stats.hp===25 && helmet.stats.def===10, 'T12b 安全帽：生命+25 / 防御+10');
   const rc = DATA.RECIPES.find(r=>r.id==='cap'), rh = DATA.RECIPES.find(r=>r.id==='helmet');
-  assert(rc && rc.cost.gold===25 && rc.cost.fabric===3, 'T12c 棒球帽配方 25💰+3🧵');
-  assert(rh && rh.cost.gold===66 && rh.cost.metal===4, 'T12d 安全帽配方 66💰+4⚙️');
+  assert(rc && rc.cost.gold===20 && rc.cost.fabric===4, 'T12c 棒球帽配方 20💰+4🧵');
+  assert(rh && rh.cost.gold===53 && rh.cost.metal===5, 'T12d 安全帽配方 53💰+5⚙️');
 
   // T13 兔兔调整：体力+20 / 防御+10
   const bunny = DATA.EQUIPS.bunny;

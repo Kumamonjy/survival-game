@@ -18,7 +18,7 @@ g.res.gold = 500; g.res.metal = 20; g.res.fabric = 20; g.res.wood = 20;
   Game.assignWorkshop(smith.id);
   assert(g.workshopChef===smith.id, 'T2a 工匠指派成功');
   Game.craft('dart');
-  assert(g.res.gold===before.gold-8 && g.res.metal===before.metal-2, 'T2b 材料正常扣除');
+  assert(g.res.gold===before.gold-6 && g.res.metal===before.metal-3, 'T2b 材料正常扣除');
   assert(smith.stamina===95, `T2c 工匠体力 -5（${smith.maxStamina - smith.stamina === 5 ? '确认为5' : smith.stamina}）`);
   assert((g.bagInst||[]).some(e=>e.id==='dart'), 'T2d 飞镖入包');
 
