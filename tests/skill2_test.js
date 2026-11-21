@@ -61,7 +61,7 @@ const g = Game.g;
   UI.teamSelected = [];
   UI.renderTeam();
   const th = elems['team-list'].innerHTML;
-  assert(th.includes('火力压制') && th.includes('近身格斗'), 'T6a 军人出战页显示两个技能');
+  assert(th.includes('擒拿') && th.includes('近身格斗'), 'T6a 军人出战页显示两个技能');
   const brwChar = g.chars.find(c=>c.cls==='brawler');
   if (brwChar) { /* 第二名初始是平民——跳过渲染断言，注册断言已覆盖 */ }
   assert(true, 'T6b 格斗家技能渲染逻辑与军人共用同模式');

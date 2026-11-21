@@ -13,12 +13,12 @@ g.res.gold = 1000; g.res.wood = 50; g.res.metal = 50; g.res.fabric = 50;
   assert(P && P.name==='手枪' && P.slot==='weapon' && P.icon==='🔫', 'T1a 手枪定义（武器槽）');
   assert(P.stats.atk===40 && P.stats.critRate===3 && P.range===3, 'T1b 攻+40 / 暴击率+3% / 射程3');
 
-  // T2 技能：火力压制 = 军人第一技能的克隆（同参数、非同一引用、不污染原技能）
-  const sk = P.skill, sol = DATA.CLASSES.soldier.skills[0];
+  // T2 技能：火力压制为手枪独立技能对象（V173 军人一技能已换为擒拿，互不影响）
+  const sk = P.skill, grap = DATA.CLASSES.soldier.skills[0];
   assert(sk && sk.name==='火力压制' && sk.mult===1.6 && sk.cost===25 && sk.cd===3
-    && sk.range===3 && sk.shape==='target' && sk.type==='attack', 'T2a 火力压制参数与军人一技能一致');
-  assert(sk !== sol, 'T2b 独立克隆对象（非同一引用）');
-  assert(sol.equipSkill===undefined && !sol.eqName && sol.name==='火力压制', 'T2c 军人原技能对象未被污染');
+    && sk.range===3 && sk.shape==='target' && sk.type==='attack', 'T2a 手枪自带火力压制 160%/25⚡/CD3/3格');
+  assert(grap && grap.name==='擒拿' && sk !== grap, 'T2b 军人一技能为擒拿，与手枪技能为不同对象');
+  assert(sk.equipSkill===undefined && !sk.eqName, 'T2c 手枪技能对象无消耗品标记');
 
   // T3 配方：110💰+8⚙️+3🧵 / 30⚡，全场最贵
   const rc = DATA.RECIPES.find(r=>r.id==='pistol');

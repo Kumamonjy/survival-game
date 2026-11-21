@@ -658,11 +658,11 @@ DATA.CLASSES = {
     price:80
   },
   soldier: {
-    name:'军人', icon:'🪖', color:'sol', desc:'受过正规训练的老兵，生命与攻击冠绝全队，还能远距离火力压制——但饭量也是全队最大的。拥有两个职业技能。',
+    name:'军人', icon:'🪖', color:'sol', desc:'受过正规训练的老兵，生命与攻击冠绝全队，一记擒拿可将敌人打晕——但饭量也是全队最大的。拥有两个职业技能。',
     avatars:['🪖','💂','🧑‍✈️','🎖️','🦺','👨‍🚒'],
     food:3,
     skills:[
-      { name:'火力压制', desc:'消耗25体力，对3格内一名敌人造成 160% 攻击力的伤害（可跨地形远程打击）。', cost:25, cd:3, type:'attack', shape:'target', mult:1.6, range:3 },
+      { name:'擒拿', desc:'消耗35体力，对1格内一名敌人造成 70% 攻击力的伤害，并使其陷入眩晕状态 1 回合（无法行动）。', cost:35, cd:4, type:'attack', shape:'target', mult:0.7, range:1, stun:{ turns:1 } },
       { name:'近身格斗', desc:'消耗40体力，对1格内一名敌人造成 150% 攻击力的伤害，自身进入「强力」状态持续 2 回合（攻击力 +20%）。', cost:40, cd:3, type:'attack', shape:'target', mult:1.5, range:1, selfStrong:2 },
     ],
     base:{ maxHp:300, maxStamina:150, atk:50, def:10, range:1, move:3, critRate:10, critDmg:180 },
@@ -912,8 +912,8 @@ DATA.EQUIPS = {
             skill:{ name:'穿刺', desc:'消耗20体力，选择一个方向，对直线上 2 格内的所有敌人造成 100% 攻击力的伤害。', cost:20, cd:2, type:'attack', shape:'line', lineLen:2, mult:1.0 },
             desc:'攻击力 +15，射程 2（远程）；自带技能「穿刺」：直线 2 格 100% 伤害（冷却 2 回合，消耗 20 体力）' },
   pistol: { id:'pistol', name:'手枪', slot:'weapon', icon:'🔫', stats:{atk:40, critRate:3}, range:3,
-            skill:Object.assign({}, DATA.CLASSES.soldier.skills[0]),
-            desc:'攻击力 +40，暴击率 +3%，射程 3（远程）；自带军人技能「火力压制」：3 格内单体 160% 伤害（冷却 3 回合，消耗 25 体力）' },
+            skill:{ name:'火力压制', desc:'消耗25体力，对3格内一名敌人造成 160% 攻击力的伤害（可跨地形远程打击）。', cost:25, cd:3, type:'attack', shape:'target', mult:1.6, range:3 },
+            desc:'攻击力 +40，暴击率 +3%，射程 3（远程）；自带技能「火力压制」：3 格内单体 160% 伤害（冷却 3 回合，消耗 25 体力）' },
   dagger: { id:'dagger', name:'匕首', slot:'weapon', icon:'🗡️', stats:{atk:12}, range:1,
             desc:'攻击力 +12，射程 1' },
   cleaver:{ id:'cleaver',name:'菜刀', slot:'weapon', icon:'🔪', stats:{atk:10}, range:1,
