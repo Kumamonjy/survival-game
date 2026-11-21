@@ -40,15 +40,15 @@ function mkB(units){
   assert(toasts.some(t=>t.includes('已攻击过')), 'T3a 攻击后不能再次攻击');
   Battle.cmdDefend();
   assert(u2.stamina===st2 && !u2.isDefending, 'T3b 攻击后不能休息（防白嫖体力）');
-  assert(html.includes('原地休息，恢复 8 点体力'), 'T3c 战报文案为休息回体力');
+  assert(html.includes('原地休息，恢复 4 点体力'), 'T3c 战报文案为休息回体力');
 
-  // ===== T4 休息：回 8 体力 + 标记 + 行动结束 =====
+  // ===== T4 休息：回 4 体力 + 标记 + 行动结束 =====
   const u3 = Battle.mkAlly(a1, 5, 5);
   Battle.b = mkB([u3]);
   Battle.b.selected = u3;
   u3.stamina = 50;
   Battle.cmdDefend();
-  assert(u3.stamina===58 && u3.isDefending===true && u3.hasMoved && u3.hasAttacked, 'T4a 休息 +8⚡ 并结束行动');
+  assert(u3.stamina===54 && u3.isDefending===true && u3.hasMoved && u3.hasAttacked, 'T4a 休息 +4⚡ 并结束行动');
   assert(html.includes('onclick="Battle.cmdDefend()">休息<') && !html.includes('cmdDefend()">防御<'), 'T4b 按钮文案为「休息」');
 
   // ===== T5 减伤保留 =====
@@ -94,7 +94,7 @@ function mkB(units){
   Battle.b = mkB([u7, far]);
   u7.stamina = 100;
   await Battle.aiAct(u7, Battle.b.units.filter(x=>x.side==='enemy'&&x.hp>0));
-  assert(u7.isDefending===true && u7.stamina===108, `T10a 走位后无目标 → 休息 +8⚡（剩 ${u7.stamina}）`);
+  assert(u7.isDefending===true && u7.stamina===104, `T10a 走位后无目标 → 休息 +4⚡（剩 ${u7.stamina}）`);
   assert(u7.hasMoved && u7.hasAttacked, 'T10b 休息后本回合行动结束');
   assert((u7.row!==5 || u7.col!==5) && Battle.manhattan(u7, far)===2, 'T10c 已朝敌人走位 3 格（距离 5→2）');
 

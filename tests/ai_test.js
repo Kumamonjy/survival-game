@@ -78,7 +78,7 @@ function mkBattle(units, terrain) {
   mkBattle([u3, z5], box);
   await Battle.endPlayerTurn();
   const log6 = Battle.b.log.map(e=>e.msgs.map(m=>m.m).join('|')).join('|');
-  assert(log6.includes('原地休息，恢复 8 点体力'), 'T6a 被围死角色自动休息回体力（日志）');
+  assert(log6.includes('原地休息，恢复 4 点体力'), 'T6a 被围死角色自动休息回体力（日志）');
 
   // ===== T7 多回合连续行动（V43 回归：丧尸第二回合不再站桩） =====
   const z6 = Battle.mkZombie('walker', 8, 3, 1);
