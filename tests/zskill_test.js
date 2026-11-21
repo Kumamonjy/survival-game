@@ -24,7 +24,7 @@ const mkAllyAt = (cls,name,r,c) => { const ch = Game.createChar(cls,name,false);
   assert(WI && WI.name==='腐化医者' && WI.icon==='🧪' && WI.base.maxHp===180 && WI.base.atk===25 && WI.base.move===2
     && WI.skills[0].name==='腐血仪式' && WI.skills[0].type==='heal' && WI.skills[0].mult===1.5 && WI.skills[0].range===2 && WI.skills[0].includeSelf && WI.skills[0].cd===3, 'T1e 腐化医者定义（180❤️/25⚔️/移速2，腐血仪式 heal1.5x range2 CD3 含自己）');
   const SK = DATA.ZOMBIES.shrieker.skill;
-  assert(SK.type==='summon' && SK.summonType==='walker' && SK.summonCount===2 && SK.summonCap===14 && SK.requireHpLost && SK.cd===5, 'T1f 尖啸通用化字段（summon/walker/2只/上限14/需受伤）');
+  assert(SK.type==='summon' && SK.summonType==='walker' && SK.summonCount===2 && SK.summonCap===undefined && SK.requireHpLost && SK.cd===5, 'T1f 尖啸通用化字段（summon/walker/2只/无上限/需受伤）');
   const P = id => DATA.ZONES.find(z=>z.id===id).pool;
   assert(P('hospital').witch===5 && P('street').witch===3 && P('base').witch===5 && !P('market').witch && !P('factory').witch, 'T1g 区域池：医5/街3/基5，超市/工厂无');
   assert(DATA.ZONES.every(z=>Object.values(z.pool).reduce((s,w)=>s+w,0)===100), 'T1h 各区域池权重总和恒 100');

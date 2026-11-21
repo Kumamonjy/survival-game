@@ -48,15 +48,14 @@ const g = Game.g;
   await Battle.zombieAct(sh);
   assert(Battle.b.units.length>cnt3 && sh.cds['尖啸']===5, 'T5 CD=1 递减后当回合立即再尖啸并重新进入 CD5');
 
-  // T6 召唤上限：场上丧尸 ≥14 时不召
+  // T6 已取消召唤上限：场上已有 14 只丧尸时仍可尖啸
   sh.cds = {}; sh.hp = sh.maxHp - 5;
-  // 清掉召唤物，手动塞 14 只
+  // 清掉召唤物，手动塞 14 只（远离尖啸者，保证周围 2 格有空位）
   Battle.b.units = Battle.b.units.filter(x=>x.side==='ally');
-  const pile = [];
-  for (let i=0;i<14;i++){ const z = Battle.mkZombie('walker', 0, i%Battle.COLS, 1); pile.push(z); Battle.b.units.push(z); }
+  for (let i=0;i<14;i++){ const z = Battle.mkZombie('walker', 0, i%Battle.COLS, 1); Battle.b.units.push(z); }
   const cnt2 = Battle.b.units.length;
   await Battle.zombieAct(sh);
-  assert(Battle.b.units.length===cnt2, 'T6 场上 ≥14 只时不再召唤');
+  assert(Battle.b.units.length===cnt2+2, `T6 取消上限：场上已有 14 只仍召唤 2 只（${Battle.b.units.length}）`);
 
   // T7 百科收录
   UI.renderWiki ? UI.renderWiki('zombies') : null;
