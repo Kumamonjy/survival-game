@@ -15,10 +15,10 @@ assert(rBow && rBow.cost.gold===44 && rBow.cost.wood===5 && rBow.cost.fabric===3
 
 // T2 effRange：max(自身, 武器)
 const soldier = Game.createChar('soldier', '老兵', false);    // 自身射程 1
-const scout = Game.createChar('scout', '斥候', false);        // 自身射程 2
+const scout = Game.createChar('scout', '运动员', false);      // 自身射程 1（V168 改版）
 const hunter = Game.createChar('hunter', '猎手', false);      // 自身射程 3
 g.chars.push(soldier, scout, hunter);
-assert(Game.effRange(soldier)===1 && Game.effRange(scout)===2 && Game.effRange(hunter)===3, 'T2a 无武器 = 自身射程（1/2/3）');
+assert(Game.effRange(soldier)===1 && Game.effRange(scout)===1 && Game.effRange(hunter)===3, 'T2a 无武器 = 自身射程（1/1/3）');
 g.workshopLv = 1; g.res.gold = 500; g.res.wood = 50; g.res.fabric = 50;
 const smith = Game.createChar('civilian','工匠甲'); smith.stamina = 999; g.chars.push(smith); Game.assignWorkshop(smith.id);
 Game.craft('slingshot'); const sl1 = g.bagInst.find(e=>e.id==='slingshot');
