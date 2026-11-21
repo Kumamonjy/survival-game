@@ -300,6 +300,22 @@ button:disabled { opacity:.45; cursor:not-allowed; }
 @keyframes blastRing { 0%{transform:scale(.3); opacity:1;} 100%{transform:scale(2.5); opacity:0;} }
 @keyframes mapShake { 0%,100%{transform:translate(0,0);} 20%{transform:translate(-3px,2px);} 45%{transform:translate(3px,-2px);} 70%{transform:translate(-2px,1px);} }
 .map-wrap.map-shake { animation:mapShake .32s ease-out; }
+/* 残留火焰地形：橙红底色 + 呼吸光晕 + 跳动火苗 */
+.cell.fire { background:linear-gradient(180deg,#5c3316,#3a1f0f); }
+.cell.fire::before {
+  content:''; position:absolute; inset:0; border-radius:4px; pointer-events:none;
+  background:radial-gradient(circle at 50% 66%, rgba(255,196,90,.6), rgba(224,88,24,.3) 55%, rgba(120,30,0,.08) 82%);
+  animation:fireGlow 1.05s ease-in-out infinite alternate;
+}
+.fire-fx {
+  position:absolute; inset:0; display:flex; align-items:flex-end; justify-content:flex-start;
+  padding:0 0 1px 2px; font-size:13px; pointer-events:none; z-index:2;
+  animation:fireFlick .75s ease-in-out infinite alternate;
+  filter:drop-shadow(0 0 6px rgba(255,120,30,.9));
+}
+.fire-fx b { position:absolute; right:1px; bottom:0; font-size:8px; color:#ffd88a; text-shadow:0 0 3px #000; }
+@keyframes fireFlick { 0%{transform:scale(.92) translateY(1px); opacity:.9;} 100%{transform:scale(1.08) translateY(-1px); opacity:1;} }
+@keyframes fireGlow { 0%{opacity:.6;} 100%{opacity:1;} }
 .cell.ruin { background:#443c2c; }
 .cell .terr { position:absolute; font-size:16px; opacity:.85; pointer-events:none; }
 .cell.moveable { box-shadow:inset 0 0 0 2px rgba(125,180,80,.85); background:rgba(100,140,60,.45); cursor:pointer; }
@@ -930,8 +946,8 @@ DATA.EQUIPS = {
             skill:{ name:'服用急救丸', desc:'为 1 格内一名友方（含自己）恢复 60 点生命。使用后消耗 1 枚急救丸。', cost:0, cd:0, type:'heal', shape:'target', flatHeal:60, mult:0, range:1, includeSelf:true, equipSkill:true, eqName:'急救丸' },
             desc:'消耗品 · 不提供属性；自带技能「服用急救丸」：为 1 格内一名友方（含自己）恢复 60 点生命，使用后消耗 1 枚；营地中使用还可解除重伤' },
   molotov: { id:'molotov', name:'燃烧瓶', slot:'item', icon:'🔥', consumable:true,
-            skill:{ name:'投掷燃烧瓶', desc:'消耗15体力，向 2 格内任意一格投掷，对以该格为中心的十字范围（含中心共 5 格）内所有角色（敌我双方）造成 40 点伤害，并使其陷入燃烧状态 2 回合。使用后消耗 1 个燃烧瓶。', cost:15, cd:0, type:'attack', shape:'aoe', range:2, area:1, fixedDmg:40, burn:{turns:2}, hitsAll:true, equipSkill:true, eqName:'燃烧瓶' },
-            desc:'消耗品 · 不提供属性；自带技能「投掷燃烧瓶」：向 2 格内一格投掷，对十字 5 格内所有角色（含敌我双方）造成 40 点伤害并附加燃烧 2 回合；使用后消耗 1 个' },
+            skill:{ name:'投掷燃烧瓶', desc:'消耗15体力，向 2 格内任意一格投掷，对以该格为中心的十字范围（含中心共 5 格）内所有角色（敌我双方）造成 40 点伤害，并使其陷入燃烧状态 2 回合；落点地面残留火焰 2 回合，踩上去会被点燃。使用后消耗 1 个燃烧瓶。', cost:15, cd:0, type:'attack', shape:'aoe', range:2, area:1, fixedDmg:40, burn:{turns:2}, fire:{turns:2}, hitsAll:true, equipSkill:true, eqName:'燃烧瓶' },
+            desc:'消耗品 · 不提供属性；自带技能「投掷燃烧瓶」：向 2 格内一格投掷，对十字 5 格内所有角色（含敌我双方）造成 40 点伤害并附加燃烧 2 回合，落点残留火焰 2 回合；使用后消耗 1 个' },
   cigarette: { id:'cigarette', name:'香烟', slot:'item', icon:'🚬', consumable:true,
             skill:{ name:'抽烟', desc:'使用后恢复 15 点体力，并进入调息状态 2 回合（每回合恢复 5% 体力）。使用后消耗 1 支香烟。', cost:0, cd:0, type:'regen', shape:'target', regenAmt:15, range:1, includeSelf:true, selfOnly:true, regenStatus:{turns:2}, equipSkill:true, eqName:'香烟' },
             desc:'消耗品 · 不提供属性；自带技能「抽烟」：恢复 15 点体力并进入调息 2 回合，使用后消耗 1 支' },
@@ -1036,6 +1052,9 @@ DATA.TERRAIN = {
   pcrate: { name:'精品物资箱', icon:'🎁', moveCost:1, walk:true, cls:'walk', desc:'走上即开启：90% 获得双倍物资，10% 获得特殊饰品（熊熊/兔兔）' },
   barrel: { name:'油桶', icon:'🛢️', moveCost:0, walk:false, cls:'barrel', desc:'受任何攻击即爆炸：对周围 1 圈（8 格）所有单位造成 100 点伤害（结算防御）并附加燃烧 5 回合，可连锁引爆' },
 };
+
+/* 残留火焰地形（覆盖层，不替换原地形）：爆炸后地面留火，踩上去会燃烧 */
+DATA.FIRE = { turns:2, burnMin:2, burnMax:3 };
 
 /* 资源显示名：拾取/交易/产出提示统一调用 UI.resName */
 DATA.RES_NAMES = { gold:'金币', med:'药物', metal:'金属', food:'食物', fabric:'布料', wood:'木材' };
@@ -3427,6 +3446,7 @@ const UI = {
         · 胜利可获得该区域的<b>主要 + 次要产出</b>；主动撤离保留已拾取物资但无通关奖励；全员倒下则物资减半<br>
         · 每局固定 1 个<b>精品物资箱</b>（地图最上方三行）：90% 双倍物资 / 10% 特殊饰品<br>
         · 地形互动：废墟可翻找 1 次、瓦砾可攻击清除并留下石头箱、油桶被攻击会爆炸且可连锁引爆<br>
+        · 油桶爆炸/燃烧瓶会在<b>地面残留火焰 2 回合</b>：踩上或停留在火焰中会<b>燃烧 2~3 回合</b>（每回合掉生命与体力）<br>
         · 丧尸等级 = <b>出战平均等级 − 1</b>（最低 1），每级生命/攻击/防御按基础值 +10%；「丧尸潮」额外 +2 只且奖励翻倍</div>
       </div>`;
     })();
@@ -3814,7 +3834,7 @@ const Battle = {
 
     const b = Battle.b = {
       zone, zoneCfg:Z, zLevel, speed:1, turn:1, phase:'player',
-      units: [], terrain: [], ruins: {}, loot: {gold:0,med:0,metal:0,food:0,fabric:0,wood:0},
+      units: [], terrain: [], ruins: {}, fire: {}, loot: {gold:0,med:0,metal:0,food:0,fabric:0,wood:0},
       stats: {},   // 战报统计：uid -> {name,icon,side,dmg,heal,kill}
       lootBase: null, mode: null, moveSet: null, targetSet: null, targetMode: null,
       selected: null, log: [], over: false,
@@ -3855,7 +3875,7 @@ const Battle = {
     fighters.forEach(c=>{ c.stamina = Math.max(0, c.stamina - 15); });
     const b = Battle.b = {
       horde:true, zone:{ id:'horde', name:H.name, icon:H.icon }, zoneCfg:H, zLevel, speed:1, turn:1, phase:'player',
-      units: [], terrain: [], ruins: {}, loot:{gold:0,med:0,metal:0,food:0,fabric:0,wood:0},
+      units: [], terrain: [], ruins: {}, fire: {}, loot:{gold:0,med:0,metal:0,food:0,fabric:0,wood:0},
       stats: {}, lootBase:null, mode:null, moveSet:null, targetSet:null, targetMode:null,
       selected:null, log:[], over:false, doubledReward:false,
     };
@@ -4152,7 +4172,9 @@ const Battle = {
     for (let r=0;r<Battle.ROWS;r++) for (let c=0;c<Battle.COLS;c++) {
       const t = b.terrain[r][c], T = DATA.TERRAIN[t] || DATA.TERRAIN.plain;
       const u = Battle.unitAt(r,c);
+      const fireT = (b.fire && b.fire[r+','+c]) || 0;
       let cls = 'cell ' + (T.cls || 'walk');
+      if (fireT) cls += ' fire';
       const mk = b.moveSet && b.moveSet[r+','+c]!==undefined && !(u && u.side==='ally' && u===b.selected);
       const mkSelf = b.moveSet && b.moveSet[r+','+c]!==undefined && b.selected && u===b.selected;
       const atk = b.targetSet && b.targetSet.some(([tr,tc])=>tr===r&&tc===c);
@@ -4165,6 +4187,7 @@ const Battle = {
         const left = t==='ruin' && b.ruins[r+','+c]!==undefined ? `<i style="font-size:9px;color:#e0a080;font-style:normal">${b.ruins[r+','+c]}</i>` : '';
         inner += `<span class="terr">${T.icon}${left}</span>`;
       }
+      if (fireT) inner += `<div class="fire-fx">🔥<b>${fireT}</b></div>`;
       if (u) {
         inner += `<div class="unit ${u.side} ${u.isTower?'tower':''} ${u===b.selected?'selected-unit':''} ${u._acting?'acting-unit':''} ${u.isDefending?'defending':''} ${(u.side==='ally'&&u.hasAttacked&&u.hasMoved)?'acted':''}" onclick="Battle.cellClick(${r},${c})">
           ${u.icon}${(u.sts&&Object.keys(u.sts).length)?`<div class="psn">${Object.keys(u.sts).map(k=>DATA.STATUSES[k].icon).join('')}</div>`:''}<div class="uhp"><div style="width:${Math.max(0,Math.round(u.hp/u.maxHp*100))}%"></div></div>
@@ -4569,6 +4592,7 @@ const Battle = {
     // 走入可交互地形（物资箱/精品箱/石头箱）：统一走交互表
     const tile = Battle.TILES[b.terrain[r][c]];
     if (tile && tile.enter) tile.enter(u, r, c);
+    if (Battle.fireAt(r,c)) Battle.fireBurn(u);   // 踏入残留火焰 → 燃烧
     b.mode=null; b.moveSet=null;
     Battle.renderMap(); Battle.renderPanels();
     if (u.sts && u.sts.bleed) await Battle.bleedTick(u);
@@ -4603,6 +4627,46 @@ const Battle = {
     Battle.log(`${S.icon} ${u.name} ${refresh?'的「'+S.name+'」被刷新':'陷入「'+S.name+'」'}（持续 ${u.sts[key].t} 回合）`, 'bad');
     if (!refresh) Battle.fxAt(u.row, u.col, 'status-pop', 250);   // 新状态图标弹入
     Battle.renderMap(); Battle.renderPanels();
+  },
+  /* ---------- 残留火焰地形 ---------- */
+  fireAt(r, c) { const b=Battle.b; return !!(b && b.fire && b.fire[r+','+c] > 0); },
+  /* 点燃一格地面：仅可通行地形生效；同一格重复点燃取较长时长；格上的单位立即被点燃 */
+  ignite(r, c, turns) {
+    const b = Battle.b;
+    if (!b || !Battle.inMap(r,c)) return false;
+    const T = DATA.TERRAIN[b.terrain[r][c]];
+    if (!T || !T.walk) return false;                      // 水面/石头/废墟/油桶不着火
+    b.fire = b.fire || {};
+    const k = r+','+c;
+    b.fire[k] = Math.max(b.fire[k]||0, turns || DATA.FIRE.turns);
+    const v = Battle.unitAt(r,c);
+    if (v && v.hp>0) Battle.fireBurn(v);
+    return true;
+  },
+  /* 踩火 / 火中停留：进入燃烧 2~3 回合；已有更长的燃烧不被缩短 */
+  fireBurn(u) {
+    if (!u || u.hp<=0 || u.isTower) return;
+    const dur = DATA.FIRE.burnMin + Math.floor(Math.random() * (DATA.FIRE.burnMax - DATA.FIRE.burnMin + 1));
+    if (u.sts && u.sts.burn) {
+      if (u.sts.burn.t < dur) {
+        u.sts.burn.t = dur;
+        Battle.log(`🔥 ${u.name} 的「燃烧」被火焰续燃（${dur} 回合）`, 'bad');
+      }
+    } else {
+      Battle.applyStatus(u, 'burn', dur, null);
+    }
+  },
+  /* 回合结束：火焰 -1 回合，熄灭时移除；仍站在火中的单位持续被点燃 */
+  tickFire() {
+    const b = Battle.b;
+    if (!b || !b.fire) return;
+    let changed = false;
+    Object.keys(b.fire).forEach(k=>{
+      b.fire[k]--;
+      if (b.fire[k] <= 0) { delete b.fire[k]; changed = true; }
+    });
+    b.units.filter(u=>u.hp>0 && !u.isTower && Battle.fireAt(u.row,u.col)).forEach(u=>Battle.fireBurn(u));
+    if (changed) { Battle.log('💨 地面火焰熄灭了', ''); Battle.renderMap(); }
   },
   /* 状态伤害结算（中毒/燃烧/流血共用）：击杀与伤害归属施加者 */
   statusDamage(u, key, label) {
@@ -4665,6 +4729,8 @@ const Battle = {
     src = src || { name:'油桶', icon:'🛢️', side:'neutral', uid:null, row:r, col:c };   // 无归属（如自爆连锁丢参）时防崩溃
     b.terrain[r][c] = 'plain';
     Battle.renderMap(); Battle.renderPanels();
+    // 爆炸在地面留下火焰（3×3 内可通行格），持续 2 回合
+    for (let dr=-1; dr<=1; dr++) for (let dc=-1; dc<=1; dc++) Battle.ignite(r+dr, c+dc, DATA.FIRE.turns);
     Battle.fxBlast(r, c);
     Battle.floatDmg(r, c, '💥', '#ffb347', true);
     const seq = (Battle._barrelSeq = (Battle._barrelSeq||0) + 1);
@@ -5001,11 +5067,20 @@ const Battle = {
       }
     }
     if (hitCells.length) await Battle.hitBarrels(hitCells, u);   // 技能波及油桶 → 引爆
+    if (sk.fire && hitCells.length) {
+      let lit = 0;
+      hitCells.forEach(([r,c])=>{ if (Battle.ignite(r,c,sk.fire.turns)) lit++; });
+      if (lit) {
+        const ft = sk.fire.turns || DATA.FIRE.turns;
+        Battle.log(`🔥 ${sk.name} 在地面留下火焰（${lit} 格，持续 ${ft} 回合）`, 'crit');
+        Battle.renderMap();
+      }
+    }
     if (victims.length && sk.selfStrong) {
       Battle.applyStatus(u, 'strong', sk.selfStrong);   // 近身格斗：命中后自身获得强力状态
     } else if (!victims.length) {
-      Battle.log('💨 技能没有命中任何敌人', 'bad');
-      Battle.subtitle('💨 未命中');
+      Battle.log(sk.fire ? '🔥 投掷落地，火焰在地面蔓延' : '💨 技能没有命中任何敌人', sk.fire ? 'crit' : 'bad');
+      Battle.subtitle(sk.fire ? '🔥 地面燃起火焰！' : '💨 未命中');
     }
     b.mode=null; b.targetSet=null; b.targetMode=null; b.moveSet=null; b.pendingSkill=null; b.multiTargets=null;
     Battle.renderMap(); Battle.renderPanels(); Battle.renderInfo(u);
@@ -5171,6 +5246,7 @@ const Battle = {
     /* 回合状态结算：毒/燃/治愈/调息 + 全部状态计时递减 */
     await Battle.sleep(200);
     Battle.tickStatuses();
+    Battle.tickFire();          // 火焰地形 -1 回合；仍在火中的单位持续点燃
     Battle.checkBattleEnd();
     if (b.over) return;
     // 新回合
@@ -5306,8 +5382,10 @@ const Battle = {
       await Battle.sleep(320);
       for (let i=0;i<n;i++) {
         const [r,c] = spots[i];
-        b.units.push(Battle.mkZombie(sk.summonType, r, c, b.zLevel));
+        const z = Battle.mkZombie(sk.summonType, r, c, b.zLevel);
+        b.units.push(z);
         Battle.floatDmg(r, c, ZS.icon, '#c58fff');
+        if (Battle.fireAt(r,c)) Battle.fireBurn(z);   // 召唤到火里也会被点燃
       }
       Battle.renderMap(); Battle.renderPanels();
       await Battle.sleep(320);
@@ -5370,6 +5448,7 @@ const Battle = {
     if (bestCell) {
       u.row = bestCell.r; u.col = bestCell.c;
       if (u.side==='ally') u.hasMoved = true;   // 我方自动行动记录移动；丧尸标记不跨回合（回合重置只清我方）
+      if (Battle.fireAt(u.row,u.col)) Battle.fireBurn(u);   // 走入火中 → 燃烧
       Battle.renderMap();
       await Battle.sleep(220);
       return true;
@@ -5388,7 +5467,11 @@ const Battle = {
       let plan = Battle.aiPlanZombie(u, foes);
       if (!plan && await Battle.aiChase(u, foes)) plan = Battle.aiPlanZombie(u, foes, true);   // 追击后原地复检（移动已消耗）
       if (plan) {
-        if (plan.r!==u.row || plan.c!==u.col) { u.row=plan.r; u.col=plan.c; Battle.renderMap(); await Battle.sleep(220); }
+        if (plan.r!==u.row || plan.c!==u.col) {
+          u.row=plan.r; u.col=plan.c;
+          if (Battle.fireAt(u.row,u.col)) Battle.fireBurn(u);   // 走入火中 → 燃烧
+          Battle.renderMap(); await Battle.sleep(220);
+        }
         await Battle.aiExecuteZombie(u, plan.act);
         if (u.sts && u.sts.bleed) await Battle.bleedTick(u);
         Battle.checkBattleEnd();
