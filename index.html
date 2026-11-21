@@ -3054,7 +3054,7 @@ const UI = {
     const el = document.getElementById('recruit-list');
     const alive = g.chars.filter(c=>!c.dead).length;
     el.innerHTML = `<div class="wiki-p" style="color:var(--txt2);margin-bottom:8px">当前队伍 ${alive} 人 · 招募无人数上限，人越多每天消耗的食物也越多</div>`
-      + Recruit.candidates.map((c,i)=>{
+      + (Recruit.list().map((c,i)=>{
       const C = DATA.CLASSES[c.cls];
       const tdesc = (c.talents||[]).map(id=>{ const t=DATA.TALENTS.find(x=>x.id===id); return t?t.desc:''; }).filter(Boolean).join('、');
       return `<div class="char-card recruit-card">
@@ -3068,7 +3068,7 @@ const UI = {
           </div>
         </div>
       </div>`;
-    }).join('') || '<div class="panel">暂无候选者，请点击右上角"播报"。</div>';
+    }).join('') || '<div class="panel">暂无候选者，请点击右上角"播报"。</div>');
   },
 
   /* ---- 探险区域 ---- */
@@ -3286,7 +3286,7 @@ const UI = {
           <tr><td><b>⏳ 时间</b></td><td>探险不过夜；「进入下一天」过夜才结算晚餐、恢复、建筑产出，并刷新天气与家园访客；同一天可多次探索</td></tr>
           <tr><td><b>❤️ 生命</b></td><td>吃到晚饭每天 +50（重伤者回满自动解除重伤）；急救丸可立即回 60 并解重伤</td></tr>
           <tr><td><b>🍞 食物</b></td><td>每名成员按职业日耗（见「🧍 职业」页表格；贪吃 +1 / 节俭 −1）；不够全营吃时弹晚餐分配勾选谁吃——吃到 +50⚡+50❤️，没吃到当天不恢复（不会饿死）</td></tr>
-          <tr><td><b>📻 广播站</b></td><td>营地与外界的联络渠道。目前开放「幸存者招募」：免费看 3 名候选者，20💰 刷新播报，招募无人数上限；后续将解锁求援、空投、情报等用途</td></tr>
+          <tr><td><b>📻 广播站</b></td><td>营地与外界的联络渠道。目前开放「幸存者招募」：首次免费看 3 名候选者，此后唯一刷新方式是 20💰 播报（名单持久保存，不随天数自动刷新）；招募无人数上限；后续将解锁求援、空投、情报等用途</td></tr>
           <tr><td><b>🚶 家园访客</b></td><td>每天一位流动商人（回收 2 种物资换金币、出售 1 种物资，各限成交一次）+ 一位流浪者（100💰+20🍞 招募）；随过夜刷新，无法付费重刷</td></tr>
           <tr><td><b>🌊 尸潮来袭</b></td><td>每 10 天（第 10/20/30… 天）点「进入下一天」时强制守城一场：<b>全员自动出战</b>（存活且未重伤，每人消耗 15⚡；工事操作员操控工事），丧尸等级 = 出战平均等级 −1，数量 = 基地总人数 +3，难度约 2 星；<b>防御工事部署在阵地中间一行</b>，不可撤离。胜利获得金币 + 随机物资（约 2 星产出 ×1.5）并正常结算经验与击杀赏金；失守则金币与全部资源 <b>-30%</b>、存活角色全员重伤（不死亡）。</td></tr>
           <tr><td><b>💀 击杀赏金</b></td><td>每次探险结算时，按击败丧尸的难度额外获得金币：越强的丧尸赏金越高（图鉴 gold 列，单只 1~10💰，霸主 10💰）；撤离与失败同样照计，不吃区域奖励的减半规则</td></tr>
@@ -3601,12 +3601,13 @@ const UI = {
  *  广播站（招募）
  * ===================================================== */
 const Recruit = {
-  candidates: [],
+  /* 候选名单存于 g.recruitCandidates（随存档持久化）：
+     仅新档/旧档迁移首次进入时免费生成一批；此后刷新唯一途径 = 花费 20 金币「播报」，不随天数自动刷新 */
+  list() { return Game.g.recruitCandidates || []; },
   ensureCandidates() {
-    if (!Recruit.candidates.length) Recruit.rollCandidates();
+    if (!Game.g.recruitCandidates) Recruit.rollCandidates();
   },
   rollCandidates() {
-    Recruit.candidates = [];
     const clsPool = Object.keys(DATA.CLASSES);
     // 名字不与在队成员重复，且同一批 3 人内也互不重复
     const used = new Set(Game.g ? Game.g.chars.filter(c=>!c.dead).map(c=>c.name) : []);
@@ -3614,7 +3615,8 @@ const Recruit = {
     const names = [];
     while (names.length < 3 && pool.length) names.push(pool.splice(rnd(0,pool.length-1),1)[0]);
     while (names.length < 3) names.push(pick(DATA.NAMES));
-    for (let i=0;i<3;i++) Recruit.candidates.push(Game.createChar(pick(clsPool), names[i]));
+    Game.g.recruitCandidates = [];
+    for (let i=0;i<3;i++) Game.g.recruitCandidates.push(Game.createChar(pick(clsPool), names[i]));
   },
   refreshCandidates() {
     const g = Game.g;
@@ -3626,21 +3628,20 @@ const Recruit = {
     Game.saveToSlot(Game.currentSlot, true);
   },
   hire(i) {
-    const g = Game.g, c = Recruit.candidates[i];
+    const g = Game.g, c = Recruit.list()[i];
     if (!c) return;
     const price = DATA.CLASSES[c.cls].price;
     if (g.res.gold < price) { UI.toast(`金币不足，招募 ${DATA.CLASSES[c.cls].name} 需要 ${price} 金币`); return; }
     g.res.gold -= price;
     c.stamina = Math.max(c.stamina, 50);
     g.chars.push(c);
-    Recruit.candidates.splice(i,1);
-    if (!Recruit.candidates.length) Recruit.rollCandidates();
+    g.recruitCandidates.splice(i,1);   // 招完不自动补充：空列表保留，需 20💰 播报刷新
     UI.renderRecruit(); Game.renderHome();
     UI.toast(`🎉 ${c.name}（${DATA.CLASSES[c.cls].name}）加入了队伍！`);
     Game.saveToSlot(Game.currentSlot, true);
   },
   preview(i) {
-    const c = Recruit.candidates[i]; if (!c) return;
+    const c = Recruit.list()[i]; if (!c) return;
     const C = DATA.CLASSES[c.cls];
     const talentDescs = (c.talents||[]).map(id=>{ const t=DATA.TALENTS.find(x=>x.id===id); return t?`<div class="wiki-p" style="margin-top:6px"><span class="tag ${t.good?'':'red'}">天赋 · ${t.name}</span> ${t.desc}</div>`:''; }).join('') || '<div class="wiki-p" style="margin-top:6px"><span class="tag">天赋 · 无</span> 此人没有觉醒任何天赋</div>';
     UI.modal(`<h3>${c.name} · ${c.av||C.icon} ${C.name}</h3>

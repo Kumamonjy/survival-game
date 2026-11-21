@@ -32,12 +32,11 @@ const [s1, s2] = g.chars;
   assert(html.includes(`❤️\${c.hp}/\${Game.effHp(c)}　⚡\${c.stamina}/\${Game.effSt(c)}`), 'T4 晚餐弹窗生命/体力含装备');
 
   // T5 招募预览一致（新候选无装备 → eff=基础值）
-  Recruit.candidates = [];
-  Recruit.refresh && Recruit.refresh();
-  const cand = Recruit.candidates[0];
+  Recruit.ensureCandidates();
+  const cand = Recruit.list()[0];
   if (cand) {
     Recruit.preview(0);
-    const pvHtml = elems['modal-box'] ? elems['modal-box'].innerHTML : '';
+    const pvHtml = elems['modal-body'] ? elems['modal-body'].innerHTML : '';
     assert(pvHtml.includes(`<b>${Game.effHp(cand)}</b>`), 'T5 招募预览走 eff 函数');
   } else assert(true, 'T5 无候选者跳过');
 

@@ -7,7 +7,7 @@ while (g.chars.filter(c=>!c.dead).length < 8) g.chars.push(Game.createChar('civi
 
 (async () => {
   // T1 满 8 人后广播招募仍成功
-  Recruit.candidates = [Game.createChar('soldier')];
+  g.recruitCandidates = [Game.createChar('soldier')];
   g.res.gold = 999;
   Recruit.hire(0);
   assert(g.chars.filter(c=>!c.dead).length === 9, 'T1 满编后广播招募成功（9 人）');
@@ -26,7 +26,7 @@ while (g.chars.filter(c=>!c.dead).length < 8) g.chars.push(Game.createChar('civi
   // T4 满编刷新广播正常扣 20 金
   const gold1 = g.res.gold;
   Recruit.refreshCandidates();
-  assert(g.res.gold === gold1-20 && Recruit.candidates.length === 3, 'T4 满编可刷广播（扣 20 金换 3 候选）');
+  assert(g.res.gold === gold1-20 && g.recruitCandidates.length === 3, 'T4 满编可刷广播（扣 20 金换 3 候选）');
 
   // T5 招募页：显示当前人数行，不再出现「队伍已满」面板
   UI.renderRecruit();
