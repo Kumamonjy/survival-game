@@ -989,13 +989,14 @@ DATA.RECIPES = [
   { id:'bracer', cost:{ gold:16, fabric:5 }, stamina:8 },
   { id:'stick',  cost:{ gold:19, wood:8 }, stamina:10 },
   { id:'slingshot', cost:{ gold:20, wood:5, fabric:2 }, stamina:12 },
-  { id:'bow',    cost:{ gold:43, wood:8, fabric:5 }, stamina:20 },
+  /* 顶级武器四件：材料 ×1.5 向上取整（金币不变）——强力装备门槛提高 */
+  { id:'bow',    cost:{ gold:43, wood:12, fabric:8 }, stamina:20 },
   { id:'club',   cost:{ gold:43, wood:6, metal:3 }, stamina:20 },
   { id:'dagger', cost:{ gold:29, metal:4 }, stamina:12 },
   { id:'cleaver',cost:{ gold:34, metal:5 }, stamina:14 },
-  { id:'fireaxe',cost:{ gold:67, wood:8, metal:6 }, stamina:25 },
-  { id:'spear',  cost:{ gold:58, wood:6, metal:5 }, stamina:25 },
-  { id:'pistol', cost:{ gold:88, metal:10, fabric:4 }, stamina:30 },
+  { id:'fireaxe',cost:{ gold:67, wood:12, metal:9 }, stamina:25 },
+  { id:'spear',  cost:{ gold:58, wood:9, metal:8 }, stamina:25 },
+  { id:'pistol', cost:{ gold:88, metal:15, fabric:6 }, stamina:30 },
   { id:'sweater', cost:{ gold:72, fabric:12 }, stamina:15 },
   { id:'chood',  cost:{ gold:32, fabric:6 }, stamina:10 },
   { id:'cap',    cost:{ gold:20, fabric:4 }, stamina:8 },
@@ -2509,6 +2510,8 @@ const UI = {
         dlv === 0
           ? buildRow(Dm, 'Game.buildDorm()', '建造寝室')
           : upRow(dlv, Dm, 'Game.upgradeDorm()', `<span class="tag yellow">床位 ${beds.length}/${dlv}</span>`)
+            + `<div class="row" style="margin-top:8px;gap:8px"><button class="btn small" onclick="UI.toggleDormPick()">🛏️ ${UI.dormPick?'收起列表':'入住 / 换人'}</button><span style="font-size:12px;color:var(--txt2)">也可在「职务指派」中安排</span></div>`
+            + (UI.dormPick ? UI.dormPickList() : '')
             + occNote(bedNames.length ? '🛏️ 入住：'+bedNames.join('、') : null, '⚠️ 床位全部空置。', dutyHint('入住/退房')));
 
       // 健身房
@@ -2779,6 +2782,38 @@ const UI = {
     Game.assignWorkshop(cid);
     UI.craftAssign = false;
     UI.renderCraftModal();
+  },
+  /* 寝室卡内直接指派入住：展开/收起角色选择列表（职务指派界面入口保留） */
+  toggleDormPick() { UI.dormPick = !UI.dormPick; UI.renderBuild(); },
+  quickAssignBed(cid) {
+    Game.assignBed(cid);
+    UI.dormPick = false;
+    UI.renderBuild();
+  },
+  dormPickList() {
+    const g = Game.g;
+    const inBed = new Set((g.dormBeds||[]).filter(id=>g.chars.some(c=>c.id===id&&!c.dead)));
+    const full = inBed.size >= g.dormLv;
+    const rows = g.chars.filter(c=>!c.dead).map(c=>{
+      const duty = Game.dutyOf(c.id);
+      if (inBed.has(c.id)) {
+        return `<div class="pick-row" style="cursor:default">
+          <span>${c.av||DATA.CLASSES[c.cls].icon}</span>
+          <b>${c.name}</b>
+          <span style="color:var(--txt2)">🛏️ 已入住　⚡${c.stamina}</span>
+          ${c.injured?'<span class="tag red">重伤</span>':''}
+          <button class="btn small" style="margin-left:auto" onclick="Game.unassignBed('${c.id}');UI.renderBuild()">退房</button>
+        </div>`;
+      }
+      return `<div class="pick-row" ${full?'style="opacity:.45" title="床位已满"':''} ${full?'':`onclick="UI.quickAssignBed('${c.id}')"`}>
+        <span>${c.av||DATA.CLASSES[c.cls].icon}</span>
+        <b>${c.name}</b>
+        <span style="color:var(--txt2)">${DATA.CLASSES[c.cls].name}　⚡${c.stamina}</span>
+        ${c.injured?'<span class="tag red">重伤</span>':''}
+        ${duty?`<span class="tag yellow" style="margin-left:auto">${duty}</span>`:''}
+      </div>`;
+    }).join('');
+    return `<div class="craft-pick">${rows || '<div class="wiki-p" style="font-size:12px">暂无可用成员</div>'}</div>`;
   },
   /* 打造排序：按金币消耗升序/降序切换 */
   toggleCraftSort() {

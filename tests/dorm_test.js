@@ -61,6 +61,42 @@ const [s1, s2] = g.chars;
   Game.applySave(oldSave, 1);
   assert(Game.g.dormLv===0 && Array.isArray(Game.g.dormBeds), 'T6 旧档自动补 dormLv/dormBeds');
 
+  // ===== T7 寝室卡内直接指派（V178：点击寝室 → 入住/换人列表；职务指派入口保留） =====
+  const g7 = Game.newGame();
+  Game.g = g7; g7.res.gold = 500;
+  Game.buildDorm();                       // Lv.1 → 1 个床位
+  UI.campSel = 'dorm'; UI.dormPick = false;
+  UI.renderBuild();
+  let bh = elems['build-page'].innerHTML;
+  assert(bh.includes('入住 / 换人') && bh.includes('职务指派'), 'T7a 建成后显示「入住 / 换人」按钮并保留职务指派提示');
+  assert(!bh.includes('craft-pick'), 'T7b 未展开时不渲染选择列表');
+  UI.toggleDormPick();
+  bh = elems['build-page'].innerHTML;
+  assert(bh.includes('craft-pick') && bh.includes('收起列表'), 'T7c 展开后渲染角色选择列表');
+  assert(g7.chars.filter(c=>!c.dead).every(c=>bh.includes(c.name)), 'T7d 列表含全部存活成员');
+  const pick1 = g7.chars.find(c=>!c.dead);
+  UI.quickAssignBed(pick1.id);
+  bh = elems['build-page'].innerHTML;
+  assert(g7.dormBeds.length===1 && g7.dormBeds[0]===pick1.id, 'T7e 点选角色直接入住');
+  assert(bh.includes('入住：') && !bh.includes('craft-pick') && bh.includes('入住 / 换人'), 'T7f 入住后收起列表，入住名单显示在卡内');
+  Game.unassignBed(pick1.id);
+  UI.dormPick = true; UI.renderBuild();
+  bh = elems['build-page'].innerHTML;
+  const before = g7.dormBeds.length;
+  const html_full = bh;
+  assert(html_full.includes(pick1.name), 'T7g 退房后列表仍可选人');
+  // 满员拦截：Lv.1 床位住 1 人后，其余成员行禁点（无 onclick）
+  Game.assignBed(pick1.id);
+  UI.renderBuild();
+  bh = elems['build-page'].innerHTML;
+  const others = g7.chars.filter(c=>!c.dead && c.id!==pick1.id);
+  const otherRow = others.length ? others[0].name : '';
+  const rowIdx = bh.indexOf(otherRow);
+  const rowHtml = rowIdx>=0 ? bh.slice(Math.max(0,rowIdx-400), rowIdx+200) : '';
+  assert(others.length===0 || !rowHtml.includes('quickAssignBed'), 'T7h 满员后其余成员行不可再点入住');
+  assert(g7.dormBeds.length===1, 'T7i 床位状态正确');
+  UI.dormPick = false;
+
   console.log('--- done ---');
   process.exit(0);
 })().catch(e=>{ console.error('TEST ERROR:', e.message); process.exit(1); });

@@ -4,6 +4,9 @@ const { Game, Battle, UI, DATA } = setup();
 Game.g = Game.newGame(); Game.currentSlot = 1;
 const g = Game.g;
 
+/* 固定随机数：丧尸 AI 含偶发随机走位分支，导致 T2 偶发 flaky（移动计数 0/1 不定），固定掷骰消除 */
+Math.random = (() => { let i = 0; const seq = [0.5, 0.1, 0.9, 0.3, 0.7, 0.2, 0.8]; return () => seq[i++ % seq.length]; })();
+
 function mkBattle() {
   const b = { units:[], selected:null, terrain:Array.from({length:Battle.ROWS},()=>Array.from({length:Battle.COLS},()=>'plain')),
     mode:null, turn:1, phase:'enemy', weather:'sunny', stats:{}, log:[], logEl:null,
