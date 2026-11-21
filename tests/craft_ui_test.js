@@ -14,7 +14,7 @@ g.chars.push(smith); g.workshopLv = 1; Game.assignWorkshop(smith.id);
   UI.craftTab = null;
   UI.openCraftModal();
   let h = body();
-  assert(['🧪 消耗品 5','🗡️ 武器 8','🛡️ 防具 6','📿 饰品 3'].every(t=>h.includes(t)), 'T1a 四类子标签与数量正确');
+  assert(['🧪 消耗品 5','🗡️ 武器 9','🛡️ 防具 6','📿 饰品 3'].every(t=>h.includes(t)), 'T1a 四类子标签与数量正确');
   assert(/wiki-subtab active[^>]*>🧪 消耗品/.test(h), 'T1b 默认选中消耗品页');
 
   // T2 默认页只渲染消耗品
@@ -83,8 +83,8 @@ g.chars.push(smith); g.workshopLv = 1; Game.assignWorkshop(smith.id);
   assert(cap && cap.slot==='head' && cap.stats.hp===10 && cap.stats.stamina===10, 'T12a 棒球帽：生命+10 / 体力+10');
   assert(helmet && helmet.slot==='head' && helmet.stats.hp===25 && helmet.stats.def===10, 'T12b 安全帽：生命+25 / 防御+10');
   const rc = DATA.RECIPES.find(r=>r.id==='cap'), rh = DATA.RECIPES.find(r=>r.id==='helmet');
-  assert(rc && rc.cost.gold===20 && rc.cost.fabric===2, 'T12c 棒球帽配方 20💰+2🧵');
-  assert(rh && rh.cost.gold===55 && rh.cost.metal===3, 'T12d 安全帽配方 55💰+3⚙️');
+  assert(rc && rc.cost.gold===25 && rc.cost.fabric===3, 'T12c 棒球帽配方 25💰+3🧵');
+  assert(rh && rh.cost.gold===66 && rh.cost.metal===4, 'T12d 安全帽配方 66💰+4⚙️');
 
   // T13 兔兔调整：体力+20 / 防御+10
   const bunny = DATA.EQUIPS.bunny;

@@ -134,9 +134,9 @@ const [s1, s2] = g.chars;
   const stTh = Game.equipStats(probeTh);
   assert(stTh.stamina===25, `T12c equipStats 聚合保温杯 +25⚡（${stTh.stamina}）`);
 
-  // T13 护腕饰品：HP+5 / 防+5，配方 16💰+3🧵
+  // T13 护腕饰品：HP+5 / 防+5，配方 20💰+4🧵（V172 上调）
   assert(DATA.EQUIPS.bracer && DATA.EQUIPS.bracer.slot==='acc' && DATA.EQUIPS.bracer.stats.hp===5 && DATA.EQUIPS.bracer.stats.def===5, 'T13a 护腕：饰品槽 生命+5/防御+5');
-  assert(DATA.RECIPES.some(r=>r.id==='bracer' && r.cost.gold===16 && r.cost.fabric===3), 'T13b 护腕配方 16💰+3🧵');
+  assert(DATA.RECIPES.some(r=>r.id==='bracer' && r.cost.gold===20 && r.cost.fabric===4), 'T13b 护腕配方 20💰+4🧵');
   const probeBr = { equip:{ acc:{ uid:'w', id:'bracer', lv:0 } }, maxHp:0, maxStamina:0, atk:0, def:0 };
   const stBr = Game.equipStats(probeBr);
   assert(stBr.hp===5 && stBr.def===5, `T13c equipStats 聚合护腕 +5❤️+5🛡（${stBr.hp}/${stBr.def}）`);

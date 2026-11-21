@@ -14,9 +14,9 @@ g.res.gold = 500; g.res.wood = 30; g.res.metal = 30; g.res.fabric = 30;
   assert(club.skill && club.skill.name==='棍棒打击' && club.skill.mult===1.4 && club.skill.cost===15 && club.skill.cd===3, 'T1b 棍棒自带技能 140%/15⚡/CD3');
   assert(DATA.EQUIPS.stick.skill && DATA.EQUIPS.stick.skill.name==='棍棒打击' && DATA.EQUIPS.stick.skill.mult===1.4, 'T1c 木棍也带同款技能');
 
-  // T2 配方与工坊：45💰+4🪵+1⚙️ / 20⚡
+  // T2 配方与工坊：54💰+5🪵+2⚙️ / 20⚡（V172 上调）
   const rc = DATA.RECIPES.find(r=>r.id==='club');
-  assert(rc && rc.cost.gold===45 && rc.cost.wood===4 && rc.cost.metal===1 && rc.stamina===20, 'T2 配方 45💰+4🪵+1⚙️ / 20⚡');
+  assert(rc && rc.cost.gold===54 && rc.cost.wood===5 && rc.cost.metal===2 && rc.stamina===20, 'T2 配方 54💰+5🪵+2⚙️ / 20⚡');
   Game.craft('club');
   const inst = (g.bagInst||[]).find(e=>e.id==='club');
   assert(inst && inst.lv===0, 'T2b 棍棒打造入包');

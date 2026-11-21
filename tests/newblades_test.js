@@ -24,9 +24,9 @@ g.res.gold = 1000; g.res.wood = 50; g.res.metal = 50; g.res.fabric = 50;
 
   // ===== T3 配方与打造 =====
   const r1 = DATA.RECIPES.find(r=>r.id==='dagger'), r2 = DATA.RECIPES.find(r=>r.id==='cleaver'), r3 = DATA.RECIPES.find(r=>r.id==='fireaxe');
-  assert(r1 && r1.cost.gold===30 && r1.cost.metal===2 && r1.stamina===12, 'T3a 匕首配方 30💰+2⚙️ / 12⚡');
-  assert(r2 && r2.cost.gold===34 && r2.cost.metal===3 && r2.stamina===14, 'T3b 菜刀配方 34💰+3⚙️ / 14⚡');
-  assert(r3 && r3.cost.gold===70 && r3.cost.wood===5 && r3.cost.metal===4 && r3.stamina===25, 'T3c 消防斧配方 70💰+5🪵+4⚙️ / 25⚡');
+  assert(r1 && r1.cost.gold===36 && r1.cost.metal===3 && r1.stamina===12, 'T3a 匕首配方 36💰+3⚙️ / 12⚡');
+  assert(r2 && r2.cost.gold===42 && r2.cost.metal===4 && r2.stamina===14, 'T3b 菜刀配方 42💰+4⚙️ / 14⚡');
+  assert(r3 && r3.cost.gold===84 && r3.cost.wood===6 && r3.cost.metal===5 && r3.stamina===25, 'T3c 消防斧配方 84💰+6🪵+5⚙️ / 25⚡');
   Game.craft('dagger'); Game.craft('cleaver'); Game.craft('fireaxe');
   ['dagger','cleaver','fireaxe'].forEach(id=>{
     assert((g.bagInst||[]).some(e=>e.id===id), `T3d ${DATA.EQUIPS[id].name} 打造入包`);

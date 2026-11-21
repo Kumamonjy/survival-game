@@ -65,7 +65,7 @@ let g = Game.g;
   // T8 百科装备图鉴木材配方显示（V105 修复 craftMap 漏 wood）
   UI.wikiTab = 'equip'; UI.openWiki();
   const eqHtml = elems['wiki-content'] ? elems['wiki-content'].innerHTML : '';
-  assert(eqHtml.includes('5🪵') && eqHtml.includes('20💰 + 5🪵'), 'T8 装备图鉴显示木棍配方 20💰 + 5🪵');
+  assert(eqHtml.includes('5🪵') && eqHtml.includes('24💰 + 6🪵'), 'T8 装备图鉴显示木棍配方 24💰 + 6🪵');
 
   console.log('--- done ---');
   process.exit(0);
