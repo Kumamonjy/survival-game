@@ -57,7 +57,9 @@ function mkBattle(myRow, myCol) {
 
   // ===== T4 castTargeted 执行：倍率伤害 + 扣费 + 行动标记 =====
   me.stamina = 100; me.hasAttacked = false;
+  const rnd4 = Math.random; Math.random = () => 0.99;   // 固定掷骰避免暴击干扰数值断言
   await Battle.castTargeted(me, skT, e1);
+  Math.random = rnd4;
   assert(e1.hp < e1.maxHp, `T4a 造成伤害（${e1.maxHp-e1.hp}）`);
   assert(e1.hp === e1.maxHp - Math.max(1, Math.round(me.atk*1.5) - e1.def), `T4b 伤害 = 攻×150% 结算防御（${e1.maxHp-e1.hp}）`);
   assert(me.stamina === 90, `T4c 扣 10 体力（余 ${me.stamina}）`);
@@ -89,7 +91,9 @@ function mkBattle(myRow, myCol) {
   me3.row = 3; me3.col = 4; me3.hasAttacked = false;   // 紧贴目标（环形1圈）
   const foe2 = Battle.mkZombie('runner', 4, 5, 1); foe2.maxHp = 200; foe2.hp = 200; Battle.b.units.push(foe2);
   const gold0 = Battle.b.loot.gold;
+  const rnd6 = Math.random; Math.random = () => 0.99;
   await Battle.castTargeted(me3, skSteal, foe2);
+  Math.random = rnd6;
   assert(Battle.b.loot.gold > gold0, `T6c stealPct 偷取金币（+${Battle.b.loot.gold-gold0}）`);
   assert(me3.sts && me3.sts.strong && me3.sts.strong.t===2, 'T6d selfStrong 自身强力2回合');
   const me4 = Battle.mkAlly(Game.createChar('soldier','指四',false), 0, 0); Battle.b.units.push(me4);
@@ -97,7 +101,9 @@ function mkBattle(myRow, myCol) {
   const fA = Battle.mkZombie('walker', 0, 2, 1); const fB = Battle.mkZombie('runner', 1, 1, 1);
   fA.hp=fA.maxHp=300; fB.hp=fB.maxHp=300; Battle.b.units.push(fA, fB);
   const skRand2 = { name:'试千金', cost:10, cd:0, type:'attack', shape:'target2', randMult:[0.5,2], range:2 };
+  const origRnd = Math.random; Math.random = () => 0.99;   // 固定掷骰：randMult≈上界、不触发暴击
   await Battle.castTargeted(me4, skRand2, [fA, fB]);
+  Math.random = origRnd;
   const dA = 300-fA.hp, dB = 300-fB.hp;
   assert(dA>0 && dB>0, `T6e 双目标各自受伤（${dA}/${dB}）`);
   assert(dA >= Math.round(me4.atk*0.5)-fA.def && dA <= Math.round(me4.atk*2), `T6f 随机倍率落界内（${dA}）`);
@@ -108,7 +114,9 @@ function mkBattle(myRow, myCol) {
   const me5 = Battle.mkAlly(Game.createChar('soldier','指五',false), 5, 5); Battle.b.units.push(me5);
   me5.stamina = 100; me5.hasAttacked = false;
   const foe5 = Battle.mkZombie('walker', 5, 6, 1); Battle.b.units.push(foe5);
+  const rnd7 = Math.random; Math.random = () => 0.99;
   await Battle.castTargeted(me5, skReal, foe5);
+  Math.random = rnd7;
   assert(foe5.hp === foe5.maxHp - Math.max(1, Math.round(me5.atk*1.6)-foe5.def), 'T7a 奋力一击 160% 走统一函数数值不变');
   const dog = Battle.mkZombie('runner', 8, 8, 1);   // runner = 丧尸犬
   if (dog) {
