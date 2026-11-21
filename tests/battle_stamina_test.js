@@ -1,6 +1,6 @@
 /* V156 参战体力链路：探险/尸潮出征费 15⚡ + 技能消耗 + 战后回写 */
 const { setup, assert } = require('./_helper.js');
-const { Game, Battle, UI, DATA } = setup();
+const { Game, Battle, UI, DATA, elems } = setup();
 Game.g = Game.newGame(); Game.currentSlot = 1;
 
 const SK = { name:'测试突刺', desc:'', cost:25, cd:3, type:'attack', shape:'target', mult:1, range:99 };
@@ -25,8 +25,11 @@ const HIT = { name:'测试重击', desc:'', cost:30, cd:3, type:'attack', shape:
     assert(ua.stamina === 60, `T1c 战斗中使用技能消耗 25⚡（余 ${ua.stamina}）`);
     const bg = Battle.b.units.find(u => u.ref === b);
     assert(bg.stamina === 85, 'T1d 未用技能的角色体力不变');
+    Battle.b.turn = 5;                   // 模拟历时 5 回合
     Battle.finish('flee');
-    assert(a.stamina === 60 && b.stamina === 85, `T1e 战后回写角色体力（${a.stamina}/${b.stamina}）`);
+    assert(a.stamina === 50 && b.stamina === 75, `T1e 战后回写：技能消耗 + 回合×2（${a.stamina}/${b.stamina}）`);
+    const resHtml = elems['modal-body'] ? elems['modal-body'].innerHTML : '';
+    assert(resHtml.includes('战后续航（5 回合 ×2）') && resHtml.includes('-10 体力'), 'T1f 结算界面显示回合体力消耗');
   }
 
   // ===== T2 尸潮：全员守城同样扣 15⚡ / 技能扣费 / 战后回写 =====
@@ -52,8 +55,22 @@ const HIT = { name:'测试重击', desc:'', cost:30, cd:3, type:'attack', shape:
     const b = Battle.b;
     b.units = b.units.filter(u => u.side !== 'enemy' || u === foe);
     foe.hp = 0;
+    Battle.b.turn = 8;                  // 守城战不按回合扣体力（仍只有 15⚡ 出征费）
     Battle.finish('win');
-    assert(x.stamina === 55 && y.stamina === 85, `T2f 守城战后回写角色体力（${x.stamina}/${y.stamina}）`);
+    assert(x.stamina === 55 && y.stamina === 85, `T2f 守城战后回写角色体力，不额外扣回合消耗（${x.stamina}/${y.stamina}）`);
+  }
+
+  // ===== T3 体力下限：回合消耗不会扣成负数 =====
+  {
+    const g3 = Game.newGame(); Game.g = g3;
+    const c = g3.chars[0];
+    c.injured = false; c.stamina = 20;
+    UI.teamSelected = [c.id];
+    await Battle.start(DATA.ZONES[0]);
+    assert(c.stamina === 5, 'T3a 出战后只剩 5⚡');
+    Battle.b.turn = 10;                 // 10 回合 ×2 = 20⚡
+    Battle.finish('flee');
+    assert(c.stamina === 0, `T3b 体力最低为 0，不会为负（${c.stamina}）`);
   }
 
   console.log('--- done ---');

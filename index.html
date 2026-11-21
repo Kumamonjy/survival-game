@@ -3095,7 +3095,7 @@ const UI = {
   renderTeam() {
     const g = Game.g, z = UI.teamZone;
     const lim = 6;
-    document.getElementById('team-limit').textContent = `目标区域：${z.icon} ${z.name}（危险度 ${'★'.repeat(z.danger)}）｜ 最多 ${lim} 人出战 ｜ 每人消耗 15 ⚡体力`;
+    document.getElementById('team-limit').textContent = `目标区域：${z.icon} ${z.name}（危险度 ${'★'.repeat(z.danger)}）｜ 最多 ${lim} 人出战 ｜ 每人消耗 15 ⚡体力，战后另扣 回合数×2⚡`;
     const available = g.chars.filter(Game.canBattle);
     const warn = document.getElementById('team-stamina-warn');
     if (available.length===0) {
@@ -3262,7 +3262,7 @@ const UI = {
       <div class="wiki-sec panel"><h4>🔄 生存循环</h4>
         <table class="wiki-table">
           <tr><th>项目</th><th>规则</th></tr>
-          <tr><td><b>⚡ 体力</b></td><td>外出探险每人消耗 15；吃到晚饭恢复 50</td></tr>
+          <tr><td><b>⚡ 体力</b></td><td>外出探险每人消耗 15；<b>战斗结束再按回合数 ×2 扣除</b>（如 8 回合 → 每人 -16⚡，最低为 0）；吃到晚饭恢复 50</td></tr>
           <tr><td><b>⏳ 时间</b></td><td>探险不过夜；「进入下一天」过夜才结算晚餐、恢复、建筑产出，并刷新天气与家园访客；同一天可多次探索</td></tr>
           <tr><td><b>❤️ 生命</b></td><td>吃到晚饭每天 +50（重伤者回满自动解除重伤）；急救丸可立即回 60 并解重伤</td></tr>
           <tr><td><b>🍞 食物</b></td><td>每名成员按职业日耗（见「🧍 职业」页表格；贪吃 +1 / 节俭 −1）；不够全营吃时弹晚餐分配勾选谁吃——吃到 +50⚡+50❤️，没吃到当天不恢复（不会饿死）</td></tr>
@@ -5471,6 +5471,8 @@ const Battle = {
     const g = Game.g;
     const loot = b.loot;
     const doubled = b.doubledReward ? 2 : 1;
+    // 战后续航消耗：外出探索结束时，按实际战斗回合数对全体出战角色再扣 回合×2 体力（最低 0）
+    const turnCost = b.horde ? 0 : Math.max(0, (b.turn||1) * 2);
 
     // 我方状态回写（防御工事不是角色，不参与回写与结算）
     const downed = [];
@@ -5478,7 +5480,7 @@ const Battle = {
       const c = u.ref;
       if (u.hp<=0) { c.injured = true; c.hp = 1; downed.push(c.name); }
       else c.hp = u.hp;
-      c.stamina = u.stamina;
+      c.stamina = Math.max(0, u.stamina - turnCost);
       c.item = (u.item && u.item.count>0) ? { id:u.item.id, count:u.item.count } : null;   // 道具消耗回写（用尽规整为空）
     });
 
@@ -5576,6 +5578,7 @@ const Battle = {
       ${downed.length?`<div class="wiki-p" style="color:var(--red2)">🩸 重伤成员：${downed.join('、')}（回基地后用药物治疗）</div>`:''}
       ${lvNotes.length?`<div class="wiki-p" style="color:var(--green2)">📈 升级：${lvNotes.join('，')}</div>`:''}
       <div class="wiki-p" style="color:var(--txt2)">按击败丧尸结算经验：每人 +${expEach}${result==='lose'?'（失败减半）':''}${result==='flee'?'（撤离，按击败数计）':''}${downed.length?`；重伤成员减半 +${expHalf}`:''}</div>
+      ${turnCost>0?`<div class="loot-line"><span>⚡ 战后续航（${b.turn} 回合 ×2）</span><b style="color:var(--red2)">出战全员 -${turnCost} 体力</b></div>`:''}
       <div class="hr"></div>
       ${lootHtml||'<div class="loot-line"><span>🧰 战斗拾取</span><b>无</b></div>'}
       ${killGoldHtml}
