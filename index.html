@@ -1054,7 +1054,7 @@ DATA.TERRAIN = {
 };
 
 /* 残留火焰地形（覆盖层，不替换原地形）：爆炸后地面留火，踩上去会燃烧 */
-DATA.FIRE = { turns:2, burnMin:2, burnMax:3 };
+DATA.FIRE = { turns:2, burnTurns:2 };   // 火焰残留 2 回合；踩火固定燃烧 2 回合
 
 /* 资源显示名：拾取/交易/产出提示统一调用 UI.resName */
 DATA.RES_NAMES = { gold:'金币', med:'药物', metal:'金属', food:'食物', fabric:'布料', wood:'木材' };
@@ -3446,7 +3446,7 @@ const UI = {
         · 胜利可获得该区域的<b>主要 + 次要产出</b>；主动撤离保留已拾取物资但无通关奖励；全员倒下则物资减半<br>
         · 每局固定 1 个<b>精品物资箱</b>（地图最上方三行）：90% 双倍物资 / 10% 特殊饰品<br>
         · 地形互动：废墟可翻找 1 次、瓦砾可攻击清除并留下石头箱、油桶被攻击会爆炸且可连锁引爆<br>
-        · 油桶爆炸/燃烧瓶会在<b>地面残留火焰 2 回合</b>：踩上或停留在火焰中会<b>燃烧 2~3 回合</b>（每回合掉生命与体力）<br>
+        · 油桶爆炸/燃烧瓶会在<b>地面残留火焰 2 回合</b>：踩上或停留在火焰中会<b>燃烧 2 回合</b>（每回合掉生命与体力）<br>
         · 丧尸等级 = <b>出战平均等级 − 1</b>（最低 1），每级生命/攻击/防御按基础值 +10%；「丧尸潮」额外 +2 只且奖励翻倍</div>
       </div>`;
     })();
@@ -4643,10 +4643,10 @@ const Battle = {
     if (v && v.hp>0) Battle.fireBurn(v);
     return true;
   },
-  /* 踩火 / 火中停留：进入燃烧 2~3 回合；已有更长的燃烧不被缩短 */
+  /* 踩火 / 火中停留：进入燃烧固定 2 回合；已有更长的燃烧不被缩短 */
   fireBurn(u) {
     if (!u || u.hp<=0 || u.isTower) return;
-    const dur = DATA.FIRE.burnMin + Math.floor(Math.random() * (DATA.FIRE.burnMax - DATA.FIRE.burnMin + 1));
+    const dur = DATA.FIRE.burnTurns;
     if (u.sts && u.sts.burn) {
       if (u.sts.burn.t < dur) {
         u.sts.burn.t = dur;

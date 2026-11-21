@@ -15,7 +15,7 @@ function mkBattle() {
 
 (async () => {
   // ===== T1 配置与样式 =====
-  assert(DATA.FIRE && DATA.FIRE.turns===2 && DATA.FIRE.burnMin===2 && DATA.FIRE.burnMax===3, 'T1a 火焰持续 2 回合 / 燃烧 2~3 回合');
+  assert(DATA.FIRE && DATA.FIRE.turns===2 && DATA.FIRE.burnTurns===2, 'T1a 火焰持续 2 回合 / 踩火固定燃烧 2 回合');
   assert(html.includes('.cell.fire') && html.includes('.fire-fx') && html.includes('@keyframes fireFlick'), 'T1b 火焰地形样式（跳动火苗动画）');
   assert(html.includes("const fireT = (b.fire && b.fire[r+','+c]) || 0"), 'T1c 渲染读取火焰层');
   assert(html.includes('残留火焰 2 回合'), 'T1d 百科说明残留火焰规则');
@@ -31,18 +31,13 @@ function mkBattle() {
   Battle.ignite(2, 2, 5);
   assert(b.fire['2,2'] === 5, 'T2e 同一格重复点燃取较长时长');
 
-  // ===== T3 踩火燃烧时长（随机 2~3，已有更长燃烧不被缩短）=====
+  // ===== T3 踩火燃烧时长（固定 2 回合，已有更长燃烧不被缩短）=====
   const c1 = Game.createChar('soldier','火一',false); g.chars.push(c1);
   const u1 = Battle.mkAlly(c1, 2, 2);
-  const origRandom = Math.random;
-  Math.random = () => 0;          // burnMin=2
   Battle.fireBurn(u1);
-  Math.random = origRandom;
-  assert(u1.sts && u1.sts.burn && u1.sts.burn.t === 2, `T3a 随机下限 → 燃烧 2 回合（${u1.sts.burn.t}）`);
+  assert(u1.sts && u1.sts.burn && u1.sts.burn.t === 2, `T3a 踩火 → 固定燃烧 2 回合（${u1.sts.burn.t}）`);
   u1.sts.burn.t = 5;
-  Math.random = () => 0.99;       // burnMax=3
   Battle.fireBurn(u1);
-  Math.random = origRandom;
   assert(u1.sts.burn.t === 5, 'T3b 已有更长燃烧不被火焰缩短');
 
   // ===== T4 回合末：火焰 -1 回合并熄灭 =====
@@ -85,7 +80,7 @@ function mkBattle() {
   const u7 = Battle.mkAlly(c7, 3, 3); b7.units.push(u7);
   b7.fire['3,3'] = 2;
   Battle.tickFire();
-  assert(u7.sts && u7.sts.burn && u7.sts.burn.t >= 2, 'T7a 站在火焰上会被点燃');
+  assert(u7.sts && u7.sts.burn && u7.sts.burn.t === 2, 'T7a 站在火焰上会被点燃（固定 2 回合）');
   assert(b7.fire['3,3'] === 1, 'T7b 同时火焰倒计时');
 
   // ===== T8 防御工事不受火焰影响 =====
