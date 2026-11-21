@@ -613,7 +613,7 @@ button:disabled { opacity:.45; cursor:not-allowed; }
       <div class="side-panel ally" id="panel-ally"></div>
     </div>
     <div class="map-wrap"><div id="battle-map"></div></div>
-    <div class="b-unitinfo" id="b-unitinfo"><div class="hint">点击你的角色开始行动</div></div>
+    <div class="b-unitinfo" id="b-unitinfo"></div>
     <div class="b-actions">
       <button class="a-move" onclick="Battle.cmdMove()">移动</button>
       <button class="a-atk" onclick="Battle.cmdAttack()">攻击</button>
@@ -4230,7 +4230,7 @@ const Battle = {
   },
   renderInfo(u) {
     const el = document.getElementById('b-unitinfo');
-    if (!u) { el.innerHTML = '<div class="hint">点击你的角色开始行动；全员行动后按「结束行动」</div>'; return; }
+    if (!u) { el.innerHTML = ''; return; }
     const skillBtn = document.getElementById('btn-skill');
     skillBtn.textContent = '技能';
     /* 防御工事：自动作战，不提供操作指令 */
