@@ -5314,8 +5314,9 @@ const Battle = {
     const b = Battle.b;
     const skills = (u.skills||[]).filter(sk => (u.cds[sk.name]||0) <= 0);
     if (!skills.length && stayOnly) return null;
+    /* stayOnly=true：追击后原地复检，本回合移动已消耗，只评估当前格（防二次移动） */
     const dist = Battle.reachable(u);
-    const cells = [[u.row,u.col]].concat(
+    const cells = stayOnly ? [[u.row,u.col]] : [[u.row,u.col]].concat(
       Object.keys(dist).map(k=>k.split(',').map(Number)).filter(([r,c])=>!Battle.unitAt(r,c))
     );
     let best = null;
@@ -5492,6 +5493,7 @@ const Battle = {
   async _aiActCore(u, foes) {
     const b = Battle.b;
     if (!foes.length) return;
+    let chased = false;   // 本回合是否已追击移动过（每回合最多一次）
     const rg = Battle.effRange(u);
     const Z = DATA.ZOMBIES[u.zombieType];
     const gas = !!(Z && Z.gasMult);
@@ -5499,7 +5501,7 @@ const Battle = {
     // sangshi 风格智能规划（敌方有主动技能时）：移动位 × 行动价值择优；打不着则追击并在到位后原地复检
     if (u.side==='enemy' && !gas && (u.skills||[]).length) {
       let plan = Battle.aiPlanZombie(u, foes);
-      if (!plan && await Battle.aiChase(u, foes)) plan = Battle.aiPlanZombie(u, foes, true);   // 追击后原地复检（移动已消耗）
+      if (!plan && await Battle.aiChase(u, foes)) { chased = true; plan = Battle.aiPlanZombie(u, foes, true); }   // 追击后原地复检（移动已消耗）
       if (plan) {
         if (plan.r!==u.row || plan.c!==u.col) {
           u.row=plan.r; u.col=plan.c;
@@ -5511,7 +5513,7 @@ const Battle = {
         Battle.checkBattleEnd();
         return;
       }
-      // 追击/复检后仍无计划 → 落到下方通用普攻兜底
+      // 追击/复检后仍无计划 → 落到下方通用普攻兜底（本回合已追击过则不再移动）
     }
     const pickMax = () => {
       let t = null, best = -1;
@@ -5524,8 +5526,9 @@ const Battle = {
       return t;
     };
     let atk = pickMax();
-    if (!atk && (u.side==='enemy' || !u.hasMoved)) {
-      // 射程内没有目标：按「实际距离（地形距离场）」朝最近目标追击（丧尸每回合都可移动；我方自动行动限一次）
+    if (!atk && !chased && (u.side==='enemy' || !u.hasMoved)) {
+      // 射程内没有目标：按「实际距离（地形距离场）」朝最近目标追击（丧尸每回合只追击移动一次；我方自动行动限一次）
+      chased = true;
       await Battle.aiChase(u, foes);
       atk = pickMax();
     }
