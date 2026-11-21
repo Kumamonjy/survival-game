@@ -4498,23 +4498,13 @@ const Battle = {
       b.mode='skill'; b.targetMode='line';
       b.targetSet = [[1,0],[-1,0],[0,1],[0,-1]].flatMap(([dr,dc])=>Battle.lineCells(u.row, u.col, dr, dc, sk.lineLen||3));
       if (!b.targetSet.length) { UI.toast('没有可用的直线方向'); b.mode=null; b.targetMode=null; return; }
-    } else if (sk.shape==='ring1') {
-      // 妙手神偷：选择周围 1 圈（8 格，含斜角）的一名敌人
-      b.mode='skill'; b.targetMode='target';
-      b.targetSet = [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]]
-        .map(([dr,dc])=>[u.row+dr, u.col+dc])
-        .filter(([r,c])=>Battle.inMap(r,c) && (()=>{ const t=Battle.unitAt(r,c); return t && t.side==='enemy'; })());
-      if (!b.targetSet.length) { UI.toast('周围 1 格内没有丧尸'); b.mode=null; b.targetMode=null; return; }
-    } else if (sk.shape==='target2') {
-      // 一掷千金：选择射程内至多 2 个敌人（点选 2 个齐射；同一目标点两次=单独施放）
-      b.mode='skill'; b.targetMode='target2'; b.multiTargets=[];
-      b.targetSet = Battle.attackCells(u, skRange).filter(([r,c])=>{ const t=Battle.unitAt(r,c); return t && t.side==='enemy'; });
-      if (!b.targetSet.length) { UI.toast(`技能射程（${Battle.effRange(u,skRange)}格）内没有丧尸`); b.mode=null; b.targetMode=null; return; }
     } else {
-      // 单体指定：选择射程内一名敌人
+      // 指定类型技能（target / ring1 / target2）：统一走 targetCells 生成可选目标格
       b.mode='skill'; b.targetMode='target';
-      b.targetSet = Battle.attackCells(u, skRange).filter(([r,c])=>{ const t=Battle.unitAt(r,c); return t && t.side==='enemy'; });
-      if (!b.targetSet.length) { UI.toast(`技能射程（${Battle.effRange(u,skRange)}格）内没有丧尸`); b.mode=null; b.targetMode=null; return; }
+      if (sk.shape==='target2') b.multiTargets=[];
+      b.targetSet = Battle.targetCells(u, sk);
+      const rngWord = sk.shape==='ring1' ? '周围 1 格内' : `技能射程（${Battle.effRange(u, sk.range||u.range)}格）内`;
+      if (!b.targetSet.length) { UI.toast(`${rngWord}没有丧尸`); b.mode=null; b.targetMode=null; return; }
     }
     Battle.renderMap();
   },
@@ -4576,14 +4566,14 @@ const Battle = {
       if (sk.shape==='target2') {
         // 双目标选择：第一个目标高亮，第二个不同目标齐射；同一目标再点一次=单独施放
         b.multiTargets = b.multiTargets || [];
-        if (b.multiTargets[0] && b.multiTargets[0].uid===u.uid) return Battle.execSkill(u0, { sk, targets:[u] });
+        if (b.multiTargets[0] && b.multiTargets[0].uid===u.uid) return Battle.castTargeted(u0, sk, [u]);
         b.multiTargets.push(u);
-        if (b.multiTargets.length >= 2) return Battle.execSkill(u0, { sk, targets:b.multiTargets });
+        if (b.multiTargets.length >= 2) return Battle.castTargeted(u0, sk, b.multiTargets);
         Battle.subtitle('🎯 已锁定 1 个目标：点另一目标齐射，或再点同一目标单独施放');
         return Battle.renderMap();
       }
       if (!u || u.side!=='enemy') return;
-      return Battle.execSkill(u0, { sk, target:u });
+      return Battle.castTargeted(u0, sk, u);
     }
     if (u) return Battle.selectUnit(u);
   },
@@ -4972,6 +4962,49 @@ const Battle = {
    *   p.cell    : AOE 落点 [r,c]，对落点周围 sk.area 格内敌人结算（shape:'aoe'）
    *   p.dir     : 直线方向上的选中格 [r,c]，贯穿该方向 sk.lineLen 格（shape:'line'）
    * 结算统一走 calcDamage（支持 sk.pierce 无视防御比例）+ applyDamage，自动处理暴击/击杀/经验/结束判定 */
+  /* ================= 指定类型技能（统一入口） =================
+     「选择 X 格范围内 X 个目标，造成 X 伤害」的技能统称指定类型技能。
+     新角色 / 新武器只需按 schema 填一段技能数据，无需再写执行代码：
+       sk = {
+         name, cost, cd, type:'attack',
+         shape:'target',      // 'target' 单体指定（默认）| 'ring1' 周围1圈含斜角 | 'target2' 双目标
+         range:2,             // 曼哈顿射程（ring1 忽略，固定周围 1 圈；缺省用自身射程）
+         mult:1.5,            // 伤害 = 攻击力 × mult（与 fixedDmg / randMult 三选一）
+         randMult:[0.5,2],    // 随机倍率区间（每个目标独立掷骰，如 孤注一掷）
+         fixedDmg:10,         // 固定伤害（无视防御、不暴击，如 注射毒药）
+         poison:{turns:5},    // 命中附加状态，可任意组合：poison / stun / bleed / burn
+         stealPct:0.02,       // 窃取目标总生命百分比的金币（妙手神偷）
+         selfStrong:2,        // 命中后自身「强力」N 回合（近身格斗）
+         goldCost:10,         // 额外金币消耗（一掷千金）
+         equipSkill:true, eqName:'石块',  // 道具技能：携带生效、用后消耗
+       }
+     管线：targetCells（可选目标格，UI 高亮与校验共用）→ castTargeted（合法性校验+施放）
+       → execSkill 共用结算（伤害/暴击/状态/偷窃/强力/油桶/火焰/击杀/字幕）。
+     丧尸 AI（aiSkillDamage）按同一 schema 评估，敌方技能同样免写代码。 */
+  targetCells(u, sk) {
+    if (sk.shape==='ring1') {
+      return [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]]
+        .map(([dr,dc])=>[u.row+dr, u.col+dc])
+        .filter(([r,c])=>{ if (!Battle.inMap(r,c)) return false; const t=Battle.unitAt(r,c); return t && t.side!==u.side && t.hp>0; });
+    }
+    return Battle.attackCells(u, sk.range||u.range)
+      .filter(([r,c])=>{ const t=Battle.unitAt(r,c); return t && t.side!==u.side && t.hp>0; });
+  },
+  maxTargetsOf(sk) { return sk.maxTargets || (sk.shape==='target2' ? 2 : 1); },
+  /* 统一施放：picked 为目标单位或单位数组；过滤非法/越程/重复目标后进入 execSkill 共用管线 */
+  async castTargeted(u, sk, picked) {
+    let targets = (Array.isArray(picked) ? picked : [picked]).filter(Boolean);
+    const cells = Battle.targetCells(u, sk), maxN = Battle.maxTargetsOf(sk);
+    const seen = new Set();
+    targets = targets.filter(t=>{
+      if (t.hp<=0 || t.side===u.side || seen.has(t.uid)) return false;
+      if (!cells.some(([r,c])=>r===t.row && c===t.col)) return false;   // 越出可选格（射程/环形外）→ 无效
+      seen.add(t.uid); return true;
+    }).slice(0, maxN);
+    if (!targets.length) { UI.toast('目标无效或不在技能范围内'); return; }
+    return Battle.execSkill(u, { sk, targets });
+  },
+
   async execSkill(u, p) {
     const b = Battle.b;
     const sk = p.sk || b.pendingSkill || (u.skills&&u.skills[0]) || u.skill;
@@ -5411,7 +5444,7 @@ const Battle = {
     if (cast.shape==='target' || cast.shape==='ring1') {
       if (cast.target && Battle.manhattan(u,cast.target)<=1) Battle.fxLunge(u, cast.target);
       else if (cast.target) await Battle.fxProjectile(u, cast.target, '🟢');
-      await Battle.execSkill(u, { sk, target:cast.target });
+      await Battle.castTargeted(u, sk, cast.target);   // 指定类型技能统一入口（与玩家同一管线）
     } else if (cast.shape==='sweep') {
       const victims = Battle.cellsAround(u.row, u.col, sk.area||1)
         .map(([r,c])=>Battle.unitAt(r,c)).filter(t=>t&&t.side!==u.side&&t.hp>0);
