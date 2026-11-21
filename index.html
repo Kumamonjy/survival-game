@@ -4280,12 +4280,13 @@ const Battle = {
     let out = '';
     for (let i = 0; i < chars.length; i += 20) out += (out ? '<br>' : '') + chars.slice(i, i + 20).join('');
     el.innerHTML = out;
-    /* 字幕定位：地图底部三行网格的中间（倒数约 1.5 行处，相对地图实时计算） */
+    /* 字幕定位：贴近地图底部（离底边约 1.2 行高），相对战斗界面自身计算，避免被顶栏/侧面板抬高 */
     try {
       const map = document.getElementById('battle-map');
-      const mr = map.getBoundingClientRect(), wr = map.parentElement.getBoundingClientRect();
+      const mr = map.getBoundingClientRect();
+      const sr = (el.parentElement || document.body).getBoundingClientRect();
       const ch = mr.height / Battle.ROWS;
-      el.style.top = Math.round(mr.bottom - wr.top - ch*1.5) + 'px';
+      el.style.top = Math.round(mr.bottom - sr.top - ch*1.2) + 'px';
       el.style.transform = 'translate(-50%, -50%)';
     } catch(e) {}
     el.classList.remove('show'); void el.offsetWidth;

@@ -36,7 +36,7 @@ const [s1] = g.chars;
   mapEl.parentElement = { getBoundingClientRect: ()=>({ top:0 }) };
   mapEl.getBoundingClientRect = ()=>({ top:0, bottom:546, height:546, width:400 });   // 13 行 × 42px
   Battle.subtitle('定位测试');
-  assert(elems['battle-subtitle'].style.top==='483px', `T2e subtitle() 运行时计算 top（地图底 546 - 1.5 行 63 = ${elems['battle-subtitle'].style.top}）`);
+  assert(elems['battle-subtitle'].style.top==='496px', `T2e subtitle() 贴近地图底部（546 - 1.2 行 50.4 ≈ ${elems['battle-subtitle'].style.top}）`);
 
   // ===== T3 速度倍率 =====
   Battle.b = { speed:1 };
