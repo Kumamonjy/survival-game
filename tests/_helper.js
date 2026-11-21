@@ -28,7 +28,18 @@ function setup() {
   global.navigator = { userAgent:'node' };
   global.getComputedStyle = () => ({ getPropertyValue:()=>'' });
   eval(code);
-  return Object.assign({}, window.__T, { elems, store, html, mkEl });
+  /* 单一数据源派生工具：测试期望值一律从 DATA.RECIPES / Game.craftCost 生成，调价只改 RECIPES 一处
+   *   REC(id)      配方定义（含 cost/stamina）
+   *   CC(id, lv)   craftCost：打造/升级实际扣减（含工坊折扣，lv=当前级 0 为打造）
+   *   FM(cost)     fmtMats：统一材料字符串（UI 同源）
+   *   SB(id)       salvageBack：分解返还
+   */
+  const T = window.__T;
+  const REC = id => T.DATA.RECIPES.find(r=>r.id===id);
+  const CC = (id, lv=0) => T.Game.craftCost(id, lv);
+  const FM = (c, sep) => T.UI.fmtMats(c, sep);
+  const SB = id => T.Game.salvageBack(id);
+  return Object.assign({}, window.__T, { elems, store, html, mkEl, REC, CC, FM, SB });
 }
 function assert(c, n) { console.log(c ? 'PASS ' + n : 'FAIL ' + n); }
 module.exports = { setup, assert };

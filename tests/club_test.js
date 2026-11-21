@@ -1,6 +1,6 @@
 /* V132 棍棒（atk+10 近战）+ 木棍/棍棒共用技能「棍棒打击」（1格 140%，15⚡ CD3） */
 const { setup, assert } = require('./_helper.js');
-const { Game, Battle, UI, Recruit, DATA, elems, html, store } = setup();
+const { Game, Battle, UI, Recruit, DATA, elems, html, store, REC, CC, FM, SB } = setup();
 Game.g = Game.newGame(); Game.currentSlot = 1;
 const g = Game.g;
 { const sm = Game.createChar('civilian','工匠甲'); sm.stamina = 9999; sm.injured = false;
@@ -15,8 +15,8 @@ g.res.gold = 500; g.res.wood = 30; g.res.metal = 30; g.res.fabric = 30;
   assert(DATA.EQUIPS.stick.skill && DATA.EQUIPS.stick.skill.name==='棍棒打击' && DATA.EQUIPS.stick.skill.mult===1.4, 'T1c 木棍也带同款技能');
 
   // T2 配方与工坊：54💰+5🪵+2⚙️ / 20⚡（V172 上调）
-  const rc = DATA.RECIPES.find(r=>r.id==='club');
-  assert(rc && rc.cost.gold===43 && rc.cost.wood===6 && rc.cost.metal===3 && rc.stamina===20, 'T2 配方 43💰+6🪵+3⚙️ / 20⚡');
+  const rc = REC('club');
+  assert(rc && rc.stamina===20 && CC('club').gold===rc.cost.gold && CC('club').wood===rc.cost.wood && CC('club').metal===rc.cost.metal, 'T2 配方与 craftCost 派生一致 / 20⚡');
   Game.craft('club');
   const inst = (g.bagInst||[]).find(e=>e.id==='club');
   assert(inst && inst.lv===0, 'T2b 棍棒打造入包');

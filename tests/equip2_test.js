@@ -1,6 +1,6 @@
 /* V56 装备实例化：升级（+20%/级、成本×级数、上限+5、身上可升）+ 分解（50% 向上取整、身上不可分解）+ 旧档迁移 */
 const { setup, assert } = require('./_helper.js');
-const { Game, Battle, UI, Recruit, DATA, elems, html, store } = setup();
+const { Game, Battle, UI, Recruit, DATA, elems, html, store, REC, CC, FM, SB } = setup();
 Game.g = Game.newGame(); Game.currentSlot = 1;
   { // V110 工坊当值：指派专属工匠（独立角色，避免污染既有体力断言）
     const sm = Game.createChar('civilian','工匠甲'); sm.stamina = 9999; sm.injured = false;
@@ -17,20 +17,22 @@ const [s1, s2] = g.chars;
 
   // T2 制造产生新实例（独立 uid）
   g.workshopLv = 1;
-  g.res.gold = 200; g.res.wood = 20;
+  g.res.gold = CC('stick').gold + 100; g.res.wood = CC('stick').wood + 10;   // 预置随配方派生
   const n0 = g.bagInst.length;
   Game.craft('stick');
   assert(g.bagInst.length===n0+1 && Game.bagCount('stick')===1, 'T2 制造生成独立实例');
   const stick = g.bagInst[g.bagInst.length-1];
 
-  // T3 升级：成本 = 制造成本 × (lv+1)，属性 +20%
-  g.res.gold = 500; g.res.wood = 50;
+  // T3 升级：成本 = 制造成本 × (lv+1)，属性 +20%（期望值派生自 craftCost）
+  g.res.gold = (CC('stick').gold + CC('stick',1).gold) * 3; g.res.wood = (CC('stick').wood + CC('stick',1).wood) * 3;
+  const g30 = g.res.gold, w30 = g.res.wood;
   const stickE = DATA.EQUIPS.stick;
-  Game.upgradeEquip(stick.uid);          // +1（当前级0，系数×1）：19💰+8🪵
+  const u1 = CC('stick', 0), u2 = CC('stick', 1);
+  Game.upgradeEquip(stick.uid);          // +1（当前级0，系数×1）
   assert(stick.lv===1 && g.bagInst.length===n0+1, `T3a 升级到 +1（${stick.lv}）`);
-  assert(g.res.gold===500-19 && g.res.wood===42, `T3b +1 成本 19💰+8🪵（${g.res.gold}/${g.res.wood}）`);
-  Game.upgradeEquip(stick.uid);          // +2（当前级1，系数×2）：38💰+16🪵
-  assert(stick.lv===2 && g.res.gold===481-38 && g.res.wood===26, `T3c +2 成本 38💰+16🪵`);
+  assert(g.res.gold===g30-u1.gold && g.res.wood===w30-u1.wood, `T3b +1 成本 = craftCost 派生值（${g.res.gold}/${g.res.wood}）`);
+  Game.upgradeEquip(stick.uid);          // +2（当前级1，系数×2）
+  assert(stick.lv===2 && g.res.gold===g30-u1.gold-u2.gold && g.res.wood===w30-u1.wood-u2.wood, `T3c +2 成本 = craftCost 派生值累计`);
   // 属性系数：攻 +5 → +1 级 = round(5*1.2)=6
   const probe = { equip:{ weapon:{ uid:'x', id:'stick', lv:1 } }, maxHp:0, maxStamina:0, atk:0, def:0 };
   const st1 = Game.equipStats(probe);
@@ -52,12 +54,13 @@ const [s1, s2] = g.chars;
   Game.upgradeEquip(stick.uid);
   assert(stick.lv===lvBefore, 'T5 材料不足无法升级');
 
-  // T6 分解：返还 50% 向上取整，实例移除
+  // T6 分解：返还 50% 向上取整，实例移除（期望值派生自 salvageBack）
   g.res.gold = 100; g.res.wood = 0;
   const cntBefore = g.bagInst.length;
-  Game.salvageEquip(stick.uid);          // 木棍 19💰+8🪵 → 返 10💰+4🪵
+  const sb = SB('stick');
+  Game.salvageEquip(stick.uid);
   assert(g.bagInst.length===cntBefore-1 && Game.bagCount('stick')===0, 'T6a 分解移除实例+投影');
-  assert(g.res.gold===110 && g.res.wood===4, `T6b 返还 ceil(9.5)=10💰+ceil(4)=4🪵（${g.res.gold}/${g.res.wood}）`);
+  assert(g.res.gold===100+sb.gold && g.res.wood===sb.wood, `T6b 返还 = salvageBack 派生值（${g.res.gold}/${g.res.wood}）`);
 
   // T7 穿戴实例：穿上后离开背包、卸下放回、lv 跟随
   const clothInst = g.bagInst.find(e=>e.id==='cloth');
@@ -76,9 +79,10 @@ const [s1, s2] = g.chars;
   g.res.gold = 500; g.res.fabric = 100;
   const g0 = g.res.gold;
   const wearRef = s1.equip.armor;                       // 穿戴槽对象引用（bagInst 中为另一实例对象）
-  Game.upgradeEquip(wearRef.uid);                       // 布衣 +3→+4（系数×4）：46×4=184💰+32🧵
+  const uC = CC('cloth', 3);                            // 布衣 +3→+4（系数×4）
+  Game.upgradeEquip(wearRef.uid);
   assert(wearRef.lv===4, `T8a 身上件升级（${wearRef.lv}）`);
-  assert(g.res.gold===g0-184 && g.res.fabric===68, 'T8b 布衣 +4 成本 184💰+32🧵');
+  assert(g.res.gold===g0-uC.gold && g.res.fabric===100-uC.fabric, 'T8b 布衣 +4 成本 = craftCost 派生值');
   assert(s1.equip.armor.lv===4, 'T8c 穿戴槽同步');
   Game.equipChar(s1.id, 'armor', null);
 

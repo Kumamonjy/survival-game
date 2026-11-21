@@ -1,6 +1,6 @@
 /* V135 打造界面精简：按类别子标签（消耗品/武器/防具/饰品）+ 紧凑单行卡片 + 一行技能摘要 */
 const { setup, assert } = require('./_helper.js');
-const { Game, Battle, UI, Recruit, DATA, elems, html, store } = setup();
+const { Game, Battle, UI, Recruit, DATA, elems, html, store, REC, CC, FM, SB } = setup();
 Game.g = Game.newGame(); Game.currentSlot = 1;
 const g = Game.g;
 const body = () => elems['modal-body'] ? elems['modal-body'].innerHTML : '';
@@ -82,9 +82,9 @@ g.chars.push(smith); g.workshopLv = 1; Game.assignWorkshop(smith.id);
   const cap = DATA.EQUIPS.cap, helmet = DATA.EQUIPS.helmet;
   assert(cap && cap.slot==='head' && cap.stats.hp===10 && cap.stats.stamina===10, 'T12a 棒球帽：生命+10 / 体力+10');
   assert(helmet && helmet.slot==='head' && helmet.stats.hp===25 && helmet.stats.def===10, 'T12b 安全帽：生命+25 / 防御+10');
-  const rc = DATA.RECIPES.find(r=>r.id==='cap'), rh = DATA.RECIPES.find(r=>r.id==='helmet');
-  assert(rc && rc.cost.gold===20 && rc.cost.fabric===4, 'T12c 棒球帽配方 20💰+4🧵');
-  assert(rh && rh.cost.gold===53 && rh.cost.metal===5, 'T12d 安全帽配方 53💰+5⚙️');
+  const rc = REC('cap'), rh = REC('helmet');
+  assert(rc && CC('cap').gold===rc.cost.gold && CC('cap').fabric===rc.cost.fabric, 'T12c 棒球帽配方与 craftCost 派生一致');
+  assert(rh && CC('helmet').gold===rh.cost.gold && CC('helmet').metal===rh.cost.metal, 'T12d 安全帽配方与 craftCost 派生一致');
 
   // T13 兔兔调整：体力+20 / 防御+10
   const bunny = DATA.EQUIPS.bunny;

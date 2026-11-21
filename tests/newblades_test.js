@@ -1,6 +1,6 @@
 /* V132 新武器：匕首(atk+12) / 菜刀(atk+10) / 消防斧(atk+20)；菜刀与消防斧带「凶猛劈砍」（1格 150% + 流血2回合） */
 const { setup, assert } = require('./_helper.js');
-const { Game, Battle, UI, Recruit, DATA, elems, html, store } = setup();
+const { Game, Battle, UI, Recruit, DATA, elems, html, store, REC, CC, FM, SB } = setup();
 Game.g = Game.newGame(); Game.currentSlot = 1;
 const g = Game.g;
 { const sm = Game.createChar('civilian','工匠乙'); sm.stamina = 9999; sm.injured = false;
@@ -23,10 +23,10 @@ g.res.gold = 1000; g.res.wood = 50; g.res.metal = 50; g.res.fabric = 50;
   assert(axe.skill && axe.skill.name==='凶猛劈砍' && axe.skill.mult===1.5 && axe.skill.bleed.turns===2, 'T2d 消防斧同款技能');
 
   // ===== T3 配方与打造 =====
-  const r1 = DATA.RECIPES.find(r=>r.id==='dagger'), r2 = DATA.RECIPES.find(r=>r.id==='cleaver'), r3 = DATA.RECIPES.find(r=>r.id==='fireaxe');
-  assert(r1 && r1.cost.gold===29 && r1.cost.metal===4 && r1.stamina===12, 'T3a 匕首配方 29💰+4⚙️ / 12⚡');
-  assert(r2 && r2.cost.gold===34 && r2.cost.metal===5 && r2.stamina===14, 'T3b 菜刀配方 34💰+5⚙️ / 14⚡');
-  assert(r3 && r3.cost.gold===67 && r3.cost.wood===8 && r3.cost.metal===6 && r3.stamina===25, 'T3c 消防斧配方 67💰+8🪵+6⚙️ / 25⚡');
+  const r1 = REC('dagger'), r2 = REC('cleaver'), r3 = REC('fireaxe');
+  assert(r1 && r1.stamina===12 && CC('dagger').gold===r1.cost.gold && CC('dagger').metal===r1.cost.metal, 'T3a 匕首配方与 craftCost 派生一致 / 12⚡');
+  assert(r2 && r2.stamina===14 && CC('cleaver').gold===r2.cost.gold && CC('cleaver').metal===r2.cost.metal, 'T3b 菜刀配方与 craftCost 派生一致 / 14⚡');
+  assert(r3 && r3.stamina===25 && CC('fireaxe').gold===r3.cost.gold && CC('fireaxe').wood===r3.cost.wood && CC('fireaxe').metal===r3.cost.metal, 'T3c 消防斧配方与 craftCost 派生一致 / 25⚡');
   Game.craft('dagger'); Game.craft('cleaver'); Game.craft('fireaxe');
   ['dagger','cleaver','fireaxe'].forEach(id=>{
     assert((g.bagInst||[]).some(e=>e.id===id), `T3d ${DATA.EQUIPS[id].name} 打造入包`);

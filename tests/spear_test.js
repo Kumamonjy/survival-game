@@ -1,6 +1,6 @@
 /* V85 长矛（武器自带技能「穿刺」）+ 毛衣（衣服 hp35/def10） */
 const { setup, assert } = require('./_helper.js');
-const { Game, Battle, UI, Recruit, DATA, elems, html, store } = setup();
+const { Game, Battle, UI, Recruit, DATA, elems, html, store, REC, CC, FM, SB } = setup();
 Game.g = Game.newGame(); Game.currentSlot = 1;
   { // V110 工坊当值：指派专属工匠（独立角色，避免污染既有体力断言）
     const sm = Game.createChar('civilian','工匠甲'); sm.stamina = 9999; sm.injured = false;
@@ -15,9 +15,9 @@ const g = Game.g;
   assert(SP && SP.slot==='weapon' && SP.stats.atk===15 && SP.range===2, 'T1a 长矛：攻+15 / 射程 2');
   assert(SP.skill && SP.skill.shape==='line' && SP.skill.lineLen===2 && SP.skill.mult===1.0 && SP.skill.cost===20 && SP.skill.cd===2 && !SP.skill.equipSkill, 'T1b 穿刺：直线2格 100% / 20⚡ / CD2 / 非消耗型');
   assert(SW && SW.slot==='armor' && SW.stats.hp===35 && SW.stats.def===10, 'T1c 毛衣：生命+35 / 防御+10');
-  const rSp = DATA.RECIPES.find(r=>r.id==='spear'), rSw = DATA.RECIPES.find(r=>r.id==='sweater');
-  assert(rSp && rSp.cost.gold===58 && rSp.cost.wood===6 && rSp.cost.metal===5, 'T1d 长矛配方 58💰+6🪵+5⚙️');
-  assert(rSw && rSw.cost.gold===72 && rSw.cost.fabric===12, 'T1e 毛衣配方 72💰+12🧵');
+  const rSp = REC('spear'), rSw = REC('sweater');
+  assert(rSp && CC('spear').gold===rSp.cost.gold && CC('spear').wood===rSp.cost.wood && CC('spear').metal===rSp.cost.metal, 'T1d 长矛配方与 craftCost 派生一致');
+  assert(rSw && CC('sweater').gold===rSw.cost.gold && CC('sweater').fabric===rSw.cost.fabric, 'T1e 毛衣配方与 craftCost 派生一致');
 
   // T2 属性与射程落地
   const s1 = Game.createChar('soldier', '老兵', false);

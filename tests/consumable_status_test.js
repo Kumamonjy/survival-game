@@ -1,6 +1,6 @@
 /* V133 消耗品：香烟（+15体力 + 调息2回合）/ 药汤（+20生命 + 治愈3回合） */
 const { setup, assert } = require('./_helper.js');
-const { Game, Battle, UI, Recruit, DATA, elems, html, store } = setup();
+const { Game, Battle, UI, Recruit, DATA, elems, html, store, REC, CC, FM, SB } = setup();
 Game.g = Game.newGame(); Game.currentSlot = 1;
 const g = Game.g;
 const [s1, s2] = g.chars;
@@ -25,9 +25,9 @@ const mkB = units => ({ units, selected:units[0], terrain:Array.from({length:Bat
   assert(sp.skill.healStatus && sp.skill.healStatus.turns===3, 'T1f 附带治愈 3 回合');
 
   // ===== T2 工坊配方 =====
-  const r1 = DATA.RECIPES.find(r=>r.id==='cigarette'), r2 = DATA.RECIPES.find(r=>r.id==='soup');
-  assert(r1 && r1.cost.gold===8 && r1.cost.fabric===2 && r1.stamina===5, 'T2a 香烟配方 8💰+2🧵 / 5⚡');
-  assert(r2 && r2.cost.gold===16 && r2.cost.med===2 && r2.cost.fabric===2 && r2.stamina===10, 'T2b 药汤配方 16💰+2💊+2🧵 / 10⚡');
+  const r1 = REC('cigarette'), r2 = REC('soup');
+  assert(r1 && r1.stamina===5 && CC('cigarette').gold===r1.cost.gold && CC('cigarette').fabric===r1.cost.fabric, 'T2a 香烟配方与 craftCost 派生一致 / 5⚡');
+  assert(r2 && r2.stamina===10 && CC('soup').gold===r2.cost.gold && CC('soup').med===r2.cost.med && CC('soup').fabric===r2.cost.fabric, 'T2b 药汤配方与 craftCost 派生一致 / 10⚡');
 
   // ===== T3 打造入包 =====
   Game.craft('cigarette'); Game.craft('soup');

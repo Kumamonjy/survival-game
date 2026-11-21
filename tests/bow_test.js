@@ -1,6 +1,6 @@
 /* V79 远程武器：弹弓(攻5/射程2)/木弓(攻10/射程3)，战斗射程 = max(自身, 武器) */
 const { setup, assert } = require('./_helper.js');
-const { Game, Battle, UI, Recruit, DATA, elems, html, store } = setup();
+const { Game, Battle, UI, Recruit, DATA, elems, html, store, REC, CC, FM, SB } = setup();
 Game.g = Game.newGame(); Game.currentSlot = 1;
 const g = Game.g;
 
@@ -9,9 +9,9 @@ const SL = DATA.EQUIPS.slingshot, BOW = DATA.EQUIPS.bow, ST = DATA.EQUIPS.stick;
 assert(SL && SL.slot==='weapon' && SL.stats.atk===5 && SL.range===2, 'T1a 弹弓：攻+5 / 射程 2');
 assert(BOW && BOW.slot==='weapon' && BOW.stats.atk===10 && BOW.range===3, 'T1b 木弓：攻+10 / 射程 3');
 assert(ST.range===1, 'T1c 木棍补 range:1（近战统一）');
-const rSl = DATA.RECIPES.find(r=>r.id==='slingshot'), rBow = DATA.RECIPES.find(r=>r.id==='bow');
-assert(rSl && rSl.cost.gold===20 && rSl.cost.wood===5 && rSl.cost.fabric===2, 'T1d 弹弓配方 20💰+5🪵+2🧵');
-assert(rBow && rBow.cost.gold===43 && rBow.cost.wood===8 && rBow.cost.fabric===5, 'T1e 木弓配方 43💰+8🪵+5🧵');
+const rSl = REC('slingshot'), rBow = REC('bow');
+assert(rSl && CC('slingshot').gold===rSl.cost.gold && CC('slingshot').wood===rSl.cost.wood && CC('slingshot').fabric===rSl.cost.fabric, 'T1d 弹弓配方与 craftCost 派生一致');
+assert(rBow && CC('bow').gold===rBow.cost.gold && CC('bow').wood===rBow.cost.wood && CC('bow').fabric===rBow.cost.fabric, 'T1e 木弓配方与 craftCost 派生一致');
 
 // T2 effRange：max(自身, 武器)
 const soldier = Game.createChar('soldier', '老兵', false);    // 自身射程 1

@@ -1,6 +1,6 @@
 /* V57 道具消耗品：无属性/不可升级/携带≤3占用背包/战斗使用消耗/迁移 */
 const { setup, assert } = require('./_helper.js');
-const { Game, Battle, UI, Recruit, DATA, elems, html, store } = setup();
+const { Game, Battle, UI, Recruit, DATA, elems, html, store, REC, CC, FM, SB } = setup();
 Game.g = Game.newGame(); Game.currentSlot = 1;
 const g = Game.g;
 const [s1, s2] = g.chars;
@@ -104,7 +104,7 @@ const [s1, s2] = g.chars;
   const dart = DATA.EQUIPS.dart;
   assert(dart && dart.icon==='🎯' && dart.consumable && !dart.stats && dart.slot==='item'
     && dart.skill.name==='投掷飞镖' && dart.skill.mult===0.3 && dart.skill.range===2 && dart.skill.cost===10, 'T10a 飞镖定义（消耗品，2格30%）');
-  assert(DATA.RECIPES.some(r=>r.id==='dart' && r.cost.gold===6 && r.cost.metal===3), 'T10b 工坊配方 6💰+3⚙️');
+  assert(REC('dart') && CC('dart').gold===REC('dart').cost.gold && CC('dart').metal===REC('dart').cost.metal, 'T10b 工坊配方与 craftCost 派生一致');
   assert(DATA.EQUIPS.stone.skill.name==='投掷石头', 'T10c 石块技能已改名「投掷石头」');
   Game.addEquip('dart', 2);
   Game.carryItem(s1.id, 'dart'); Game.carryItem(s1.id, 'dart');   // carryItem 每次携带 1 个（同类叠加）
@@ -122,21 +122,21 @@ const [s1, s2] = g.chars;
 
   // T11 水瓶饰品：acc 槽体力加成
   assert(DATA.EQUIPS.bottle && DATA.EQUIPS.bottle.slot==='acc' && DATA.EQUIPS.bottle.stats.stamina===15 && !DATA.EQUIPS.bottle.consumable, 'T11a 水瓶：饰品槽 体力+15 非消耗品');
-  assert(DATA.RECIPES.some(r=>r.id==='bottle' && r.cost.gold===16 && r.cost.metal===2 && r.cost.fabric===2), 'T11b 水瓶配方 16💰+2⚙️+2🧵');
+  assert(REC('bottle') && CC('bottle').gold===REC('bottle').cost.gold && CC('bottle').metal===REC('bottle').cost.metal && CC('bottle').fabric===REC('bottle').cost.fabric, 'T11b 水瓶配方与 craftCost 派生一致');
   const probeAcc = { equip:{ acc:{ uid:'y', id:'bottle', lv:0 } }, maxHp:0, maxStamina:0, atk:0, def:0 };
   const stAcc = Game.equipStats(probeAcc);
   assert(stAcc.stamina===15 && stAcc.atk===0 && stAcc.hp===0, `T11c equipStats 聚合 acc 槽 +15⚡（${stAcc.stamina}）`);
 
   // T12 保温杯饰品：acc 槽体力 +25
   assert(DATA.EQUIPS.thermos && DATA.EQUIPS.thermos.slot==='acc' && DATA.EQUIPS.thermos.stats.stamina===25 && !DATA.EQUIPS.thermos.consumable, 'T12a 保温杯：饰品槽 体力+25 非消耗品');
-  assert(DATA.RECIPES.some(r=>r.id==='thermos' && r.cost.gold===28 && r.cost.metal===3 && r.cost.fabric===2), 'T12b 保温杯配方 28💰+3⚙️+2🧵');
+  assert(REC('thermos') && CC('thermos').gold===REC('thermos').cost.gold && CC('thermos').metal===REC('thermos').cost.metal && CC('thermos').fabric===REC('thermos').cost.fabric, 'T12b 保温杯配方与 craftCost 派生一致');
   const probeTh = { equip:{ acc:{ uid:'z', id:'thermos', lv:0 } }, maxHp:0, maxStamina:0, atk:0, def:0 };
   const stTh = Game.equipStats(probeTh);
   assert(stTh.stamina===25, `T12c equipStats 聚合保温杯 +25⚡（${stTh.stamina}）`);
 
   // T13 护腕饰品：HP+5 / 防+5，配方 20💰+4🧵（V172 上调）
   assert(DATA.EQUIPS.bracer && DATA.EQUIPS.bracer.slot==='acc' && DATA.EQUIPS.bracer.stats.hp===5 && DATA.EQUIPS.bracer.stats.def===5, 'T13a 护腕：饰品槽 生命+5/防御+5');
-  assert(DATA.RECIPES.some(r=>r.id==='bracer' && r.cost.gold===16 && r.cost.fabric===5), 'T13b 护腕配方 16💰+5🧵');
+  assert(REC('bracer') && CC('bracer').gold===REC('bracer').cost.gold && CC('bracer').fabric===REC('bracer').cost.fabric, 'T13b 护腕配方与 craftCost 派生一致');
   const probeBr = { equip:{ acc:{ uid:'w', id:'bracer', lv:0 } }, maxHp:0, maxStamina:0, atk:0, def:0 };
   const stBr = Game.equipStats(probeBr);
   assert(stBr.hp===5 && stBr.def===5, `T13c equipStats 聚合护腕 +5❤️+5🛡（${stBr.hp}/${stBr.def}）`);

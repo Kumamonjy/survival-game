@@ -1,6 +1,6 @@
 /* V172 新武器 手枪：攻+40 / 暴击+3% / 射程3，自带军人技能「火力压制」（3格单体160%，25⚡ CD3）；全场最贵配方 110💰+8⚙️+3🧵 */
 const { setup, assert } = require('./_helper.js');
-const { Game, Battle, UI, Recruit, DATA, elems, html, store } = setup();
+const { Game, Battle, UI, Recruit, DATA, elems, html, store, REC, CC, FM, SB } = setup();
 Game.g = Game.newGame(); Game.currentSlot = 1;
 const g = Game.g;
 { const sm = Game.createChar('civilian','工匠甲'); sm.stamina = 9999; sm.injured = false;
@@ -21,9 +21,9 @@ g.res.gold = 1000; g.res.wood = 50; g.res.metal = 50; g.res.fabric = 50;
   assert(sk.equipSkill===undefined && !sk.eqName, 'T2c 手枪技能对象无消耗品标记');
 
   // T3 配方：110💰+8⚙️+3🧵 / 30⚡，全场最贵
-  const rc = DATA.RECIPES.find(r=>r.id==='pistol');
-  assert(rc && rc.cost.gold===88 && rc.cost.metal===10 && rc.cost.fabric===4 && rc.stamina===30, 'T3a 配方 88💰+10⚙️+4🧵 / 30⚡');
-  assert(DATA.RECIPES.every(r=>r.cost.gold<=88), 'T3b 金币造价全场最高（强力装备定位）');
+  const rc = REC('pistol');
+  assert(rc && rc.stamina===30 && CC('pistol').gold===rc.cost.gold && CC('pistol').metal===rc.cost.metal && CC('pistol').fabric===rc.cost.fabric, 'T3a 配方与 craftCost 派生一致 / 30⚡');
+  assert(DATA.RECIPES.every(r=>r.cost.gold<=REC('pistol').cost.gold), 'T3b 金币造价全场最高（强力装备定位）');
 
   // T4 打造 + 装备：effAtk +40 / 射程 3 / 暴击 +3
   Game.craft('pistol');

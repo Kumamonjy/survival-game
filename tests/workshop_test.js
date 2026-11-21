@@ -1,6 +1,6 @@
 /* 工坊建筑 + 布料资源 + 装备制造 验证 */
 const { setup, assert } = require('./_helper.js');
-const { Game, Battle, UI, Recruit, DATA, elems, html, store } = setup();
+const { Game, Battle, UI, Recruit, DATA, elems, html, store, REC, CC, FM, SB } = setup();
 Game.g = Game.newGame(); Game.currentSlot = 1;
   { // V110 工坊当值：指派专属工匠（独立角色，避免污染既有体力断言）
     const sm = Game.createChar('civilian','工匠甲'); sm.stamina = 9999; sm.injured = false;
@@ -24,8 +24,9 @@ const g = Game.g;
 
   // ===== T3 制造石块（金币+金属） =====
   g.res.gold = 100; g.res.metal = 5; g.res.fabric = 0;
+  const cs = CC('stone');
   Game.craft('stone');
-  assert(g.bag.stone===3 && g.res.gold===90 && g.res.metal===1, 'T3a 制造石块：扣 10💰+4⚙️（初始2+造1=3）');
+  assert(g.bag.stone===3 && g.res.gold===100-cs.gold && g.res.metal===5-cs.metal, 'T3a 制造石块：实扣 = craftCost 派生值（初始2+造1=3）');
 
   // ===== T4 材料不足拒绝 =====
   g.res.wood = 0;
@@ -38,12 +39,13 @@ const g = Game.g;
 
   // ===== T5 制造布系装备（布料）=====
   g.res.gold = 500; g.res.fabric = 20;
+  const cCh = CC('chood'), cCs = CC('cshoes'), cCl = CC('cloth');
   Game.craft('chood');
-  assert(g.bag.chood===1 && g.res.fabric===20-6 && g.res.gold===500-32, 'T5a 制造布帽：扣 6🧵+32💰');
+  assert(g.bag.chood===1 && g.res.fabric===20-cCh.fabric && g.res.gold===500-cCh.gold, 'T5a 制造布帽：实扣 = craftCost 派生值');
   Game.craft('cshoes');
-  assert(g.bag.cshoes===3 && g.res.fabric===14-6 && g.res.gold===468-30, 'T5b 制造布鞋：扣 6🧵+30💰（初始2+造1=3）');
+  assert(g.bag.cshoes===3 && g.res.fabric===20-cCh.fabric-cCs.fabric && g.res.gold===500-cCh.gold-cCs.gold, 'T5b 制造布鞋：实扣累计 = craftCost 派生值（初始2+造1=3）');
   Game.craft('cloth');
-  assert(g.bag.cloth===3 && g.res.fabric===8-8 && g.res.gold===438-46, 'T5c 制造布衣：扣 8🧵+46💰（初始2+造1=3）');
+  assert(g.bag.cloth===3 && g.res.fabric===20-cCh.fabric-cCs.fabric-cCl.fabric && g.res.gold===500-cCh.gold-cCs.gold-cCl.gold, 'T5c 制造布衣：实扣累计 = craftCost 派生值（初始2+造1=3）');
 
   // ===== T6 未建工坊不能造（新档） =====
   const g2 = Game.newGame();

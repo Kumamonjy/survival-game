@@ -1,6 +1,6 @@
 /* V101 新资源「木材」🪵：新档初始化 / 旧档迁移 / 区域产出 / 物资箱与废墟拾取 / 资源栏与百科展示 */
 const { setup, assert } = require('./_helper.js');
-const { Game, Battle, UI, Recruit, DATA, elems, html, store } = setup();
+const { Game, Battle, UI, Recruit, DATA, elems, html, store, REC, CC, FM, SB } = setup();
 Game.g = Game.newGame(); Game.currentSlot = 1;
 let g = Game.g;
 
@@ -62,10 +62,11 @@ let g = Game.g;
   const invHtml = elems['inv-list'] ? elems['inv-list'].innerHTML : '';
   assert(invHtml.includes('🪵') && invHtml.includes('木材'), 'T7 物资面板显示木材');
 
-  // T8 百科装备图鉴木材配方显示（V105 修复 craftMap 漏 wood）
+  // T8 百科装备图鉴木材配方显示（V105 修复 craftMap 漏 wood；V176 起断言值从 RECIPES 派生）
   UI.wikiTab = 'equip'; UI.openWiki();
   const eqHtml = elems['wiki-content'] ? elems['wiki-content'].innerHTML : '';
-  assert(eqHtml.includes('8🪵') && eqHtml.includes('19💰 + 8🪵'), 'T8 装备图鉴显示木棍配方 19💰 + 8🪵');
+  const stickMats = FM(REC('stick').cost, ' + ');
+  assert(eqHtml.includes(stickMats) && stickMats.includes('🪵'), 'T8 装备图鉴显示木棍配方（fmtMats 统一格式且含木材）');
 
   console.log('--- done ---');
   process.exit(0);

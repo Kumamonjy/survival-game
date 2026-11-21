@@ -1544,15 +1544,19 @@ const Game = {
     UI.renderChars();
     if (UI.itemSlotCid) UI.openItemSlot(UI.itemSlotCid);   // 弹窗内库存同步刷新
   },
+  /* 分解返还（唯一定义）：打造材料 × 50% 向上取整；执行层与分解弹窗共用 */
+  salvageBack(id) {
+    const r = DATA.RECIPES.find(x=>x.id===id);
+    if (!r) return null;
+    return Object.fromEntries(Object.entries(r.cost).map(([k,v])=>[k, Math.ceil(v*0.5)]));
+  },
   salvageEquip(uid) {
     const g = Game.g;
     const inst = (g.bagInst||[]).find(e=>e.uid===uid);
     if (!inst) { UI.toast('穿戴中的装备不能分解（请先卸下）'); return; }
     const e = DATA.EQUIPS[inst.id];
-    const r = DATA.RECIPES.find(x=>x.id===inst.id);
-    if (!r) return;
-    const back = {};
-    Object.entries(r.cost).forEach(([k,v])=>{ back[k] = Math.ceil(v*0.5); });
+    const back = Game.salvageBack(inst.id);
+    if (!back) return;
     Object.entries(back).forEach(([k,v])=>{ g.res[k]=(g.res[k]||0)+v; });
     Game.removeEquipInst(uid);
     Game.saveToSlot(Game.currentSlot, true);
@@ -2881,8 +2885,7 @@ const UI = {
       ${insts.length
         ? insts.map(inst=>{
             const e = DATA.EQUIPS[inst.id];
-            const r = DATA.RECIPES.find(x=>x.id===inst.id);
-            const back = r ? UI.fmtMats(Object.fromEntries(Object.entries(r.cost).map(([k,v])=>[k,Math.ceil(v*0.5)]))) : '';
+            const back = UI.fmtMats(Game.salvageBack(inst.id) || {});
             return `<div class="char-card" style="align-items:center;margin-top:8px">
               <div style="font-size:22px">${e.icon}</div>
               <div style="flex:1;min-width:0">
@@ -3391,7 +3394,7 @@ const UI = {
         <div class="wiki-p" style="margin-top:6px">丧尸强度与队伍实力挂钩：<b>丧尸等级 = 出战角色平均等级 - 1</b>（向下取整，最低 1），每级<b>生命 / 攻击 / 防御按基础值 +10%</b>（与角色成长一致）；「丧尸潮」额外增加 2 只并使奖励翻倍。各区域的丧尸构成、数量与 Boss 见「🗺️ 地图」页。</div>
       </div>`;
     const slotName = id => (DATA.SLOTS.find(s=>s.id===id)||{name:id}).name;
-    const craftMap = {}; DATA.RECIPES.forEach(r=>{ craftMap[r.id] = `${r.cost.gold}💰` + (r.cost.wood?` + ${r.cost.wood}🪵`:'') + (r.cost.metal?` + ${r.cost.metal}⚙️`:'') + (r.cost.fabric?` + ${r.cost.fabric}🧵`:'') + ` + ${r.stamina}⚡`; });
+    const craftMap = {}; DATA.RECIPES.forEach(r=>{ craftMap[r.id] = UI.fmtMats(r.cost, ' + ') + ` + ${r.stamina}⚡`; });
     const PROD_B = { kitchenLv:'厨房', hospitalLv:'医院', labLv:'实验室' };
     const prodMap = {};
     Object.entries(DATA.PRODUCE).forEach(([pid,P])=>{
