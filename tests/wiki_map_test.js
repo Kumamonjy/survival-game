@@ -27,9 +27,11 @@ assert(DATA.ZONES.every(z=>body.includes(`${z.count[0]}-${z.count[1]} 只`)), 'T
 // T6 地形配方
 assert(body.includes('🛢️</span>24') && body.includes('🌊6'), 'T6 地形配方（加油站油桶红化/医院积水减半）');
 
-// T6b 装备掉落列（表格内呈现概率与类型；底部探险规则不再重复）
-assert(body.includes('<th>装备掉落</th>') && body.includes('15% · 仅武器') && body.includes('100%</b> 必掉一件') && body.includes('20% · 全类型'), 'T6b 探险地图表含装备掉落列');
-assert(!body.includes('装备掉落分层'), 'T6c 探险规则不再重复掉落介绍');
+// T6b 装备掉落列（概率阶梯 15/20/25/30/100 + 类型 + 顶级武器标注；表格可左右滚动）
+assert(body.includes('<th>装备掉落</th>') && body.includes('15% · 仅武器') && body.includes('100%</b> 必掉一件')
+  && body.includes('25% · 全类型') && body.includes('30% · 全类型') && body.includes('20% · 全类型'), 'T6b 探险地图表含装备掉落列（概率阶梯生效）');
+assert(body.includes('<span style="color:var(--yellow)">含顶级武器</span>') && body.includes('不含顶级武器') && body.includes('table-scroll'), 'T6c 掉落列标注顶级武器获取，表格可左右滑动');
+assert(!body.includes('装备掉落分层'), 'T6d 探险规则不再重复掉落介绍');
 
 // T7 规则说明
 ['6 人', '15⚡', '精品物资箱', '不消耗天数', '出战平均等级'].forEach(k=>{

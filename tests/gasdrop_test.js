@@ -28,9 +28,17 @@ Game.g = Game.newGame(); Game.currentSlot = 1;
   assert(Battle.rollDropEquip({id:'__test_gear', gearDrop:true, dropSlot:'weapon', danger:1}), 'T3c gearDrop 区域无视概率必掉（dropSlot 仍生效）');
 
   // ===== T4 百科同步更新 =====
-  assert(html.includes('<th>装备掉落</th>') && html.includes("?'仅武器':'全类型'") && html.includes('100%</b> 必掉一件'), 'T4a 百科地图页表格含装备掉落列（15% 仅武器/营地必掉）');
-  assert(html.includes('普通区域 20%、加油站 15% 只掉武器、野外营地必掉一件'), 'T4b 玩法页掉落说明保留');
+  assert(html.includes('<th>装备掉落</th>') && html.includes("?'仅武器':'全类型'") && html.includes('100%</b> 必掉一件') && html.includes('不含顶级武器') && html.includes('table-scroll'), 'T4a 百科地图页表格含装备掉落列（概率+类型+顶级武器标注，可滚动）');
+  assert(html.includes('普通区域 20%、工厂/商业街 25%、军事基地 30%、加油站 15% 只掉武器、野外营地必掉一件'), 'T4b 玩法页掉落说明保留');
   assert(!html.includes('装备掉落分层'), 'T4c 底部探险规则不再重复掉落介绍');
+
+  // ===== T5 高难度概率阶梯：工厂/商业街 25%，军事基地 30% =====
+  const fz = DATA.ZONES.find(z=>z.id==='factory'), sz = DATA.ZONES.find(z=>z.id==='street'), bz = DATA.ZONES.find(z=>z.id==='base');
+  assert(fz.dropRate===0.25 && sz.dropRate===0.25 && bz.dropRate===0.3, 'T5a 工厂/商业街 dropRate 25%、基地 30%');
+  assert(fz.danger===3 && bz.danger===4, 'T5b 高难度区域（顶级武器分层不受影响）');
+  let bdrops = 0;
+  for (let i=0;i<300;i++){ if (Battle.rollDropEquip('base')) bdrops++; }
+  assert(bdrops>=55 && bdrops<=135, `T5c 基地 300 次采样掉落 ${bdrops} 次（期望 90，30% 概率生效）`);
 
   console.log('--- done ---');
   process.exit(0);
