@@ -65,7 +65,7 @@ let g = Game.g;
   // T8 百科装备图鉴木材配方显示（V105 修复 craftMap 漏 wood；V176 起断言值从 RECIPES 派生）
   UI.wikiTab = 'equip'; UI.openWiki();
   const eqHtml = elems['wiki-content'] ? elems['wiki-content'].innerHTML : '';
-  const stickMats = FM(REC('stick').cost, ' + ');
+  const stickMats = FM(REC('stick').cost, '<br>');
   assert(eqHtml.includes(stickMats) && stickMats.includes('🪵'), 'T8 装备图鉴显示木棍配方（fmtMats 统一格式且含木材）');
 
   console.log('--- done ---');

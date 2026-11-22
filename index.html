@@ -3477,14 +3477,14 @@ const UI = {
         <div class="wiki-p" style="margin-top:6px">敌人强度与队伍实力挂钩：<b>敌人等级 = 出战角色平均等级 - 1</b>（向下取整，最低 1），每级<b>生命 / 攻击 / 防御按基础值 +10%</b>（与角色成长一致，丧尸与劫掠者通用）；「丧尸潮」额外增加 2 只并使奖励翻倍。各区域的敌人构成、数量与 Boss 见「🗺️ 地图」页。</div>
       </div>`;
     const slotName = id => (DATA.SLOTS.find(s=>s.id===id)||{name:id}).name;
-    const craftMap = {}; DATA.RECIPES.forEach(r=>{ craftMap[r.id] = UI.fmtMats(r.cost, ' + ') + ` + ${r.stamina}⚡`; });
+    const craftMap = {}; DATA.RECIPES.forEach(r=>{ craftMap[r.id] = UI.fmtMats(r.cost,'<br>') + `<br>${r.stamina}⚡`; });
     const PROD_B = { kitchenLv:'厨房', hospitalLv:'医院', labLv:'实验室' };
     const prodMap = {};
     Object.entries(DATA.PRODUCE).forEach(([pid,P])=>{
       const mats = [['food','🍞'],['fabric','🧵'],['metal','⚙️'],['med','💊'],['gold','💰']]
-        .filter(([k])=>P.mats[k]).map(([k,ic])=>`${P.mats[k]}${ic}`).join(' + ');
+        .filter(([k])=>P.mats[k]).map(([k,ic])=>`${P.mats[k]}${ic}`).join('<br>');
       const bs = [].concat(P.building).map(b=>PROD_B[b]).join('/');
-      prodMap[pid] = (pid==='bread' ? '厨房烤面包' : bs+'生产') + `：${P.stamina}⚡` + (mats?` + ${mats}`:'')
+      prodMap[pid] = (pid==='bread' ? '厨房烤面包' : bs+'生产') + `：${P.stamina}⚡` + (mats?`<br>${mats}`:'')
         + (pid==='firstaid'?'（营地使用可解除重伤）':'');
     });
     const eqSlot = UI.wikiEquipSlot || 'all';

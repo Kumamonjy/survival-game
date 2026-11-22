@@ -61,7 +61,12 @@ UI.equipSort = 'desc'; h = body();
 assert(h.indexOf('手枪') < h.indexOf('消防斧') && h.indexOf('消防斧') < h.indexOf('木棍'), 'T7d 金币降序：手枪88 > 消防斧67 > 木棍19');
 assert(h.indexOf('木棍') < h.indexOf('熊熊'), 'T7f 降序下无配方装备仍排尾');
 assert(/wiki-subtab active[^>]*>💰 金币↓/.test(h), 'T7e 选中按钮高亮');
-UI.equipSort = null;
+
+// T8 获取途径逐资源换行（工坊制造：首行标签+金币，其余资源各占一行）
+UI.wikiEquipSlot = 'weapon'; h = body();
+assert(h.includes('工坊制造 💰×19<br>🪵×8<br>10⚡'), 'T8a 木棍配方逐行显示');
+assert(!h.includes('工坊制造 💰×19 + '), 'T8b 不再使用 + 连接');
+UI.wikiEquipSlot = 'all'; UI.equipSort = null;
 
 console.log('--- done ---');
 process.exit(0);
