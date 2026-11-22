@@ -21,7 +21,7 @@ g.res.gold = 500; g.res.wood = 40; g.res.metal = 30; g.res.fabric = 30;
   const rc = DATA.RECIPES.find(r=>r.id==='compoundbow');
   assert(rc && rc.cost.gold===95 && rc.cost.wood===12 && rc.cost.fabric===6 && rc.cost.metal===8 && rc.stamina===26, 'T2a 配方 95💰+12🪵+6🧵+8⚙️ / 26⚡');
   const rcPistol = DATA.RECIPES.find(r=>r.id==='pistol');
-  assert(rc.cost.gold>rcPistol.cost.gold, 'T2b 金币消耗高于手枪（88💰）');
+  assert(rcPistol.cost.gold>rc.cost.gold, 'T2b 金币消耗低于手枪（手枪 110💰 全场最贵）');
   Game.craft('compoundbow');
   const inst = (g.bagInst||[]).find(e=>e.id==='compoundbow');
   assert(inst && inst.lv===0, 'T2b 打造入包');
