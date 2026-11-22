@@ -3502,12 +3502,19 @@ const UI = {
       </div>`;
     /* 地图页：区域门槛/产出 + 敌情/地形 + 通用规则（数据全部来自 DATA.ZONES，新增地图自动出现在此处） */
     const secMap = (() => {
+      const dropStr = z=>{
+        const Z = Battle.zoneDef(z);
+        if (Z.gearDrop) return '<b style="color:var(--yellow)">100%</b> 必掉一件';
+        const rate = Math.round((Z.dropRate||0.2)*100);
+        return `${rate}% · ${Z.dropSlot==='weapon'?'仅武器':'全类型'}`;
+      };
       const zRows = DATA.ZONES.map(z=>{
         const Z = Battle.zoneDef(z);
         return `<tr>
           <td><b>${z.icon} ${z.name}</b><br><span style="font-size:11px">${z.desc}</span></td>
           <td>${'★'.repeat(Z.danger)}</td>
           <td>${UI.lootRangeStr(Z.main)}<br>＋ ${UI.lootRangeStr(Z.sub)}</td>
+          <td style="white-space:nowrap">${dropStr(z)}</td>
         </tr>`;
       }).join('');
       const eRows = DATA.ZONES.map(z=>{
@@ -3522,7 +3529,9 @@ const UI = {
       }).join('');
       return `
       <div class="wiki-sec panel"><h4>🗺️ 探险地图（${DATA.ZONES.length} 张）</h4>
-        <table class="wiki-table"><tr><th>区域</th><th>危险度</th><th>产出（主要 ＋ 次要）</th></tr>${zRows}</table>
+        <table class="wiki-table"><tr><th>区域</th><th>危险度</th><th>产出（主要 ＋ 次要）</th><th>装备掉落</th></tr>${zRows}</table>
+        <div class="wiki-p" style="margin-top:6px">· 装备掉落仅在<b>胜利</b>后判定（撤离/失败不掉，尸潮守城战不掉），池内装备均等随机<br>
+        · <b>危险度 ≤2</b> 区域不会掉落顶级武器（手枪/消防斧/长矛/木弓/铁锹）——需深入 d3+ 区域获取或工坊打造；特殊饰品（熊熊/兔兔）<b>任何区域</b>都有概率掉落（「仅武器」区域除外）</div>
       </div>
       <div class="wiki-sec panel"><h4>🧭 敌情与地形</h4>
         <table class="wiki-table"><tr><th>区域</th><th>丧尸构成（概率）</th><th>地形</th></tr>${eRows}</table>
@@ -3533,7 +3542,6 @@ const UI = {
         · 编队最多 <b>6 人</b>，每人出发消耗 <b>15⚡</b> 体力；探险<b>不消耗天数</b><br>
         · 胜利可获得该区域的<b>主要 + 次要产出</b>；主动撤离保留已拾取物资但无通关奖励；全员倒下则物资减半<br>
         · 每局固定 1 个<b>精品物资箱</b>（地图最上方三行）：90% 双倍物资 / 10% 特殊饰品<br>
-        · 装备掉落分层：胜利后普通区域 <b>20%</b> 概率掉一件装备，加油站 <b>15%</b> 且只掉武器，野外营地<b>必掉一件</b>；<b>危险度 ≤2 的区域不会掉落顶级武器</b>（手枪/消防斧/长矛/木弓/铁锹）——需深入 d3+ 区域获取或工坊打造；特殊饰品（熊熊/兔兔）<b>任何区域</b>都有概率掉落<br>
         · 地形互动：废墟可翻找 1 次、瓦砾可攻击清除并留下石头箱、油桶被攻击会爆炸且可连锁引爆<br>
         · 油桶爆炸/燃烧瓶会在<b>地面残留火焰 2 回合</b>：踩上或停留在火焰中会<b>燃烧 2 回合</b>（每回合掉生命与体力）<br>
         · 丧尸等级 = <b>出战平均等级 − 1</b>（最低 1），每级生命/攻击/防御按基础值 +10%；「丧尸潮」额外 +2 只且奖励翻倍</div>
