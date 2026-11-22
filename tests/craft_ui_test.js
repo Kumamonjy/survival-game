@@ -14,7 +14,7 @@ g.chars.push(smith); g.workshopLv = 1; Game.assignWorkshop(smith.id);
   UI.craftTab = null;
   UI.openCraftModal();
   let h = body();
-  assert(['🧪 消耗品 5','🗡️ 武器 13','🛡️ 防具 8','📿 饰品 3'].every(t=>h.includes(t)), 'T1a 四类子标签与数量正确（V208 防具 6→8：雨靴/棉鞋）');
+  assert(['🧪 消耗品 5','🗡️ 武器 14','🛡️ 防具 8','📿 饰品 3'].every(t=>h.includes(t)), 'T1a 四类子标签与数量正确（V209 武器 13→14：木盾）');
   assert(/wiki-subtab active[^>]*>🧪 消耗品/.test(h), 'T1b 默认选中消耗品页');
 
   // T2 默认页只渲染消耗品

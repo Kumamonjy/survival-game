@@ -954,6 +954,8 @@ DATA.EQUIPS = {
   hammer: { id:'hammer', name:'大铁锤', slot:'weapon', icon:'🔨', stats:{atk:28, move:-1, stamina:-10}, range:2,
             skill:{ name:'挥扫', desc:'消耗25体力，选择一个方向，对身前 3×1 范围内的所有敌人造成 70% 攻击力的伤害。', cost:25, cd:3, type:'attack', shape:'sweep2', sweepLen:3, sweepWid:1, mult:0.7 },
             desc:'攻击力 +28，移速 -1，体力值 -10，射程 2（中距）；自带「挥扫」：横扫身前 3×1 范围，70% 攻击力伤害（冷却 3 回合，消耗 25 体力）' },
+  woodshield: { id:'woodshield', name:'木盾', slot:'weapon', icon:'🛡️', stats:{hp:50, def:15, stamina:-10, move:-1}, range:1,
+            desc:'生命值 +50，防御力 +15，体力值 -10，移动 -1，射程 1；纯防御盾牌（武器槽），无攻击力加成——坦克定位，输出交给队友' },
   cleaver:{ id:'cleaver',name:'菜刀', slot:'weapon', icon:'🔪', stats:{atk:10}, range:1,
             skill:{ name:'凶猛劈砍', desc:'消耗15体力，对 1 格内的一名敌人造成 150% 攻击力的伤害，并使其流血 2 回合。', cost:15, cd:3, type:'attack', shape:'target', mult:1.5, range:1, bleed:{turns:2} },
             desc:'攻击力 +10，射程 1；自带技能「凶猛劈砍」：1 格内单体 150% 伤害并附加流血 2 回合（冷却 3 回合，消耗 15 体力）' },
@@ -1028,7 +1030,7 @@ DATA.TOWERS = {
    生命 +5    ≈ 4💰        体力 +5 ≈ 3💰
    ── 价格锚点（自带技能/特殊能力另计 15~25💰 溢价）──
    武器：木棍19 → 匕首29 → 菜刀34(流血) → 双截棍36 → 棍棒43 → 木弓43(TOP) →
-        长矛58 → 铁锹62 → 消防斧67 → 大铁锤70(-1移速/-10体力) → 复合弓95(TOP) →
+        长矛58 → 铁锹62 → 消防斧67 → 木盾68(纯防御·HP50/防15·移-1/体-10) → 大铁锤70(-1移速/-10体力) → 复合弓95(TOP) →
         手枪110(TOP 全场最贵)
    头部：棒球帽20 → 布帽32 → 安全帽53      护甲：布衣46 → 毛衣72
    鞋子：布鞋30 → 棉鞋55 → 雨靴58（V208 补齐鞋子升级线）  饰品：护腕16 → 水瓶16 → 保温杯28
@@ -1062,6 +1064,7 @@ DATA.RECIPES = [
   { id:'pistol', cost:{ gold:110, metal:15, fabric:6 }, stamina:30 },
   { id:'shovel', cost:{ gold:62, wood:10, metal:5 }, stamina:25 },
   { id:'hammer', cost:{ gold:70, wood:4, metal:12 }, stamina:28 },
+  { id:'woodshield', cost:{ gold:68, wood:8, fabric:3 }, stamina:18 },
   { id:'sweater', cost:{ gold:72, fabric:12 }, stamina:15 },
   { id:'chood',  cost:{ gold:32, fabric:6 }, stamina:10 },
   { id:'cap',    cost:{ gold:20, fabric:4 }, stamina:8 },
