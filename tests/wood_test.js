@@ -15,7 +15,7 @@ let g = Game.g;
   assert(sz && Array.isArray(sz.sub.wood) && sz.sub.wood[0]===1 && sz.sub.wood[1]===2, 'T2b 商业街副产出 木材 1-2');
   const fs2 = DATA.ZONES.find(z=>z.id==='forest');
   assert(fs2 && fs2.main.wood[0]>=6, 'T2e 林场木材主产 6-10');
-  assert(DATA.ZONES.filter(z=>z.sub.wood).length===3, 'T2c 三个区域副产出木材（加油站/工厂/商业街）');
+  assert(DATA.ZONES.filter(z=>z.sub.wood).length===4, 'T2c 四个区域副产出木材（加油站/工厂/商业街/野外营地）');
   assert(fz.terrain && sz.terrain, 'T2d 地形配方不受影响');
 
   // T3 旧档迁移：res 缺 wood 字段 → applySave 后补 0

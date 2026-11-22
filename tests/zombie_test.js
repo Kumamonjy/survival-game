@@ -7,7 +7,7 @@ const Z = id => DATA.ZONES.find(z=>z.id===id);
 
 (async () => {
   // ===== T1 区域配置 =====
-  assert(DATA.ZONES.length===7 && DATA.ZONES.every(z=>z.pool && z.count && z.count[0]<=z.count[1]), 'T1a 7 区域均有概率池与数量区间');
+  assert(DATA.ZONES.length===8 && DATA.ZONES.every(z=>z.pool && z.count && z.count[0]<=z.count[1]), 'T1a 8 区域均有概率池与数量区间');
   assert(Z('gas') && Z('gas').danger===1 && Z('gas').main.gold, 'T1d 新增 1★ 加油站（金币主产）');
   assert(Z('forest') && Z('forest').danger===2 && Z('forest').main.wood[0]>=6, 'T1e 新增 2★ 林场（木材主产）');
   assert(DATA.ZONES.every(z=>z.unlockDay===undefined), 'T1f 全部区域开局即解锁（无 unlockDay 门槛）');

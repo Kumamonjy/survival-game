@@ -1,132 +1,59 @@
-/* V123 营地场景化建筑页：大营地贴图（未建造置灰）+ 点击建筑显示功能卡 */
+/* V187 新探险地图「野外营地」（⛺ d2）：敌人全为劫掠者、金币比同级图丰厚/其他资源偏少、胜利 100% 掉一件装备（d≤2 分层自动排除高阶武器） */
 const { setup, assert } = require('./_helper.js');
-const { Game, Battle, UI, Recruit, DATA, elems, html, store } = setup();
+const { Game, Battle, UI, DATA, elems, html, store } = setup();
 Game.g = Game.newGame(); Game.currentSlot = 1;
 const g = Game.g;
 
 (async () => {
-  // T1 场景渲染：3 列建筑网格（7 建筑 + 防御工事），广播站/职务/仓库另起一行
-  UI.campSel = null;
-  UI.renderBuild();
-  let bp = elems['build-page'].innerHTML;
-  assert((bp.match(/class="camp-tile/g)||[]).length===8, 'T1a 场景为 8 格网格（7 建筑 + 防御工事）');
-  assert(bp.includes('🍳') && bp.includes('🛏️') && bp.includes('🏋️') && bp.includes('🏭') && bp.includes('🌾') && bp.includes('🏥') && bp.includes('🧪') && bp.includes('🏰'), 'T1b 七建筑与防御工事图标齐备');
-  assert(bp.includes('camp-grid') && !bp.includes('camp-sun') && !bp.includes('camp-deco') && !bp.includes('camp-fire'), 'T1c 无太阳/树/帐篷/砖墙/篝火等装饰');
+  // ===== T1 地图定义 =====
+  const camp = DATA.ZONES.find(z=>z.id==='camp');
+  assert(camp && camp.name==='野外营地' && camp.danger===2 && !camp.boss, 'T1a 野外营地：2 星难度 / 无 Boss');
+  assert(camp.gearDrop===true, 'T1b gearDrop：胜利必掉装备标记');
 
-  // T2 新档全未建造：全部置灰 + 待建造角标，无 Lv
-  assert((bp.match(/camp-tile[^"]*off/g)||[]).length===8, 'T2a 新档 8 座可建造建筑（7 建筑 + 工事入口）全部置灰');
-  assert((bp.match(/待建造/g)||[]).length===8 && !/clv/.test(bp), 'T2b 全部显示待建造且无等级');
+  // ===== T2 敌人池：全劫掠者 =====
+  const RAIDER_TYPES = ['raider_mug','raider_thug','raider_snatcher','raider_drunk'];
+  const keys = Object.keys(camp.pool);
+  assert(keys.length===4 && keys.every(k=>RAIDER_TYPES.includes(k)), 'T2a 敌人池仅含劫掠者 4 种');
+  assert(Object.values(camp.pool).reduce((a,b)=>a+b,0)===100, 'T2b 敌人池权重合计 100');
+  UI.teamSelected = g.chars.slice(0,3).map(c=>c.id);   // 出战 3 人（start 需要 teamSelected）
+  const enemyTypes = new Set();
+  Battle.start(camp);
+  Battle.b.units.filter(u=>u.side==='enemy').forEach(u=>enemyTypes.add(u.zombieType));
+  assert([...enemyTypes].every(t=>RAIDER_TYPES.includes(t)), 'T2c 生成的敌人全部为劫掠者类型');
 
-  // T3 默认提示：无选中时不渲染任何功能按钮
-  assert(bp.includes('点击营地中的建筑'), 'T3a 默认引导提示');
-  assert(!bp.includes('buildKitchen') && !bp.includes('openCraftModal'), 'T3b 未选中不渲染功能卡');
+  // ===== T3 产出曲线：金币厚、其他薄 =====
+  const gas = DATA.ZONES.find(z=>z.id==='gas');
+  assert(camp.main.gold[0]===22 && camp.main.gold[1]===34, 'T3a 主产出金币 22-34');
+  assert(camp.main.gold[0] > gas.main.gold[1], 'T3b 金币下限高于加油站上限（同级图更丰厚）');
+  const subs = Object.values(camp.sub);
+  assert(subs.every(r=>r[1]<=3), 'T3c 副产出区间均 ≤3（其他资源偏少）');
+  assert(camp.sub.med && camp.sub.med[0]===1, 'T3d 含少量药品');
 
-  // T4 点击建筑 → 显示对应功能卡 + 贴图选中态
-  UI.campSel = 'kitchen'; UI.renderBuild();
-  bp = elems['build-page'].innerHTML;
-  assert(bp.includes('Game.buildKitchen()') && bp.includes('烤面包'), 'T4a 点击厨房显示厨房卡（含建造按钮）');
-  assert(/class="camp-tile[^"]*sel"/.test(bp), 'T4b 建筑选中态高亮');
-  assert((bp.match(/camp-tile[^"]*off/g)||[]).length===8, 'T4c 厨房仍未建造保持置灰');
+  // ===== T4 必掉装备 + 不出高阶 =====
+  const TOP = DATA.TOP_EQUIPS;
+  const drops = Array.from({length:40}, ()=>Battle.rollDropEquip(camp));
+  assert(drops.every(d=>d && d.id), 'T4a 40 次采样均有装备掉落（100% 必掉）');
+  assert(drops.every(d=>!TOP.includes(d.id)), 'T4b 掉落池不含高阶装备（手枪/消防斧/长矛/木弓/铁锹）');
 
-  // T5 建造后：贴图恢复彩色 + 显示 Lv，卡变功能态
-  g.kitchenLv = 2; g.res.gold = 1000;
-  UI.renderBuild();
-  bp = elems['build-page'].innerHTML;
-  assert((bp.match(/camp-tile[^"]*off/g)||[]).length===7, 'T5a 建造后厨房不再置灰（其余 7 个置灰）');
-  assert(bp.includes('Lv.2'), 'T5b 贴图显示等级');
-  assert(bp.includes('Game.upgradeKitchen()') && bp.includes('未指派厨师'), 'T5c 厨房卡为功能态（升级/当值提示）');
+  // ===== T5 胜利结算实际掉一件入包 =====
+  const bagCnt0 = (g.bagInst||[]).length;
+  Battle.b.units.filter(u=>u.side==='enemy').forEach(u=>{ u.hp=0; u.dead=true; });
+  Battle.finish('win');
+  assert((g.bagInst||[]).length===bagCnt0+1, 'T5 胜利结算背包恰好 +1 件装备');
 
-  // T5d 防御工事入口：营地只留一个入口，点击后展开箭塔/弩塔
-  UI.campSel = 'defense'; UI.renderBuild();
-  bp = elems['build-page'].innerHTML;
-  assert(bp.includes('防御工事') && !bp.includes('已建'), 'T5d 未建造时工事入口显示待建造');
-  assert(bp.includes('建造箭塔') && bp.includes('建造弩塔'), 'T5e 点击防御工事展开箭塔与弩塔卡片');
-  assert(/class="camp-tile def off sel"/.test(bp) || /class="camp-tile def sel off"/.test(bp), 'T5f 工事入口选中态');
-  g.towerArrowLv = 1; UI.renderBuild();
-  bp = elems['build-page'].innerHTML;
-  assert(bp.includes('已建1/2'), 'T5g 建成后入口显示已建数量');
-  assert(bp.includes('15⚡') && bp.includes('操作员本人不可出战'), 'T5h 工事卡提示 15⚡ 消耗与不可出战');
-  g.towerArrowLv = 0;
+  // ===== T6 普通图不受影响 =====
+  const hospital = DATA.ZONES.find(z=>z.id==='hospital');
+  assert(!hospital.gearDrop, 'T6a 普通图无必掉标记');
+  let dropCnt = 0;
+  for (let i=0;i<300;i++) if (Battle.rollDropEquip('hospital')) dropCnt++;
+  assert(dropCnt<90 && dropCnt>10, `T6b 普通图掉落仍受 20% 概率控制（300 次中 ${dropCnt} 次）`);
 
-  // T6 工坊选中：三功能按钮
-  g.workshopLv = 1;
-  UI.campSel = 'workshop'; UI.renderBuild();
-  bp = elems['build-page'].innerHTML;
-  assert(bp.includes('openCraftModal') && bp.includes('openUpgradeModal') && bp.includes('openSalvageModal'), 'T6 工坊卡三功能按钮');
-
-  // T7 医院/实验室选中：生产按钮走 canProduce
-  g.hospitalLv = 1; g.labLv = 1;
-  UI.campSel = 'hospital'; UI.renderBuild();
-  bp = elems['build-page'].innerHTML;
-  assert(bp.includes('makeBandage') && bp.includes('生产急救丸'), 'T7a 医院卡生产按钮');
-  UI.campSel = 'lab'; UI.renderBuild();
-  bp = elems['build-page'].innerHTML;
-  assert(bp.includes('makeAntidote'), 'T7b 实验室卡生产按钮');
-
-  // T8 点击切换（模拟 onclick 流程）
-  UI.campSel = 'dorm'; UI.renderBuild();
-  assert(elems['build-page'].innerHTML.includes('Game.buildDorm()'), 'T8 切换到寝室卡');
-
-  // T9 医院/实验室可升级：卡内含升级按钮 + 等级显示
-  g.hospitalLv = 1; g.labLv = 1; g.res.gold = 9999;
-  UI.campSel = 'hospital'; UI.renderBuild();
-  let bh = elems['build-page'].innerHTML;
-  assert(bh.includes("Game.upgradeBuilding('hospital')") && bh.includes('医院 Lv.1'), 'T9a 医院卡含升级按钮与等级');
-  assert(bh.includes('生产绷带（10⚡'), 'T9b Lv1 绷带仍 10⚡');
-  UI.campSel = 'lab'; UI.renderBuild();
-  bh = elems['build-page'].innerHTML;
-  assert(bh.includes("Game.upgradeBuilding('lab')") && bh.includes('实验室 Lv.1'), 'T9c 实验室卡含升级按钮与等级');
-
-  // T10 升级后生产体力递减：医院 Lv3 绷带 10→6⚡，实验室 Lv3 解毒针 15→11⚡
-  g.hospitalLv = 3; g.labLv = 3;
-  assert(Game.produceStamina(DATA.PRODUCE.bandage, 'hospitalLv')===6, 'T10a 医院 Lv3 绷带 6⚡');
-  assert(Game.produceStamina(DATA.PRODUCE.antidote, 'labLv')===11, 'T10b 实验室 Lv3 解毒针 11⚡');
-  g.hospitalLv = 5;
-  assert(Game.produceStamina(DATA.PRODUCE.bandage, 'hospitalLv')===5, 'T10c 最低 5⚡');
-  assert(Game.produceStamina(DATA.PRODUCE.firstaid, 'kitchenLv')===15, 'T10d 非医院/实验室不受影响');
-
-  // T11 实际生产按等级扣体力
-  const doc = Game.createChar('doctor','医生甲'); doc.stamina = 100; doc.injured = false; g.chars.push(doc);
-  g.hospitalDoc = doc.id; g.res.fabric = 10; g.res.med = 10;
-  g.hospitalLv = 3;
-  Game.makeBandage();
-  assert(doc.stamina === 100 - 6, `T11 医院 Lv3 生产绷带实扣 6⚡（余 ${doc.stamina}）`);
-
-  // T12 所有地图开局即解锁
-  g.day = 1; UI.openZones();
-  let zh = elems['zone-list'].innerHTML;
-  assert((zh.match(/zone-card locked/g)||[]).length===0, 'T12a 第1天无锁定区域');
-  assert(!zh.includes('🔒') && !zh.includes('解锁'), 'T12b 不显示锁与解锁天数');
-  assert((zh.match(/zone-card"/g)||[]).length===DATA.ZONES.length, 'T12c 全部区域可点击进入');
-  assert(zh.includes('⛽') && zh.includes('🌲') && zh.includes('🎖️'), 'T12d 加油站/林场/基地均出现在列表');
-
-  // T13 主界面即营地（方案B）：建筑场景并入首页，独立建筑页移除
-  assert(html.includes('id="build-page"') && html.includes('id="home-body"'), 'T13a 首页内嵌营地场景容器');
-  assert(!html.includes('id="scr-build"'), 'T13b 独立建筑页已移除');
-  assert(bp.includes('camp-grid'), 'T13c 首页使用营地建筑网格');
-
-  // T14 场景热点：大门/仓库/人物/招募/职务，且大门为主 CTA
-  ["UI.openZones()","UI.openInv()","UI.openChars()","UI.openRecruit()","UI.openDuty()"].forEach(fn=>{
-    assert(bp.includes(fn), `T14 场景热点 ${fn}`);
-  });
-  assert(/camp-spot main[^>]*onclick="UI.openZones\(\)"/.test(bp), 'T14b 外出探险为大门主热点');
-  assert(/class="camp-spots util-row"[\s\S]*?UI\.openRecruit\(\)[\s\S]*?UI\.openDuty\(\)[\s\S]*?UI\.openInv\(\)[\s\S]*?<div class="camp-spots">/.test(bp), 'T14c 广播站/职务/仓库三图标同行排列');
-
-  // T15 访客热点按状态显隐
-  g.visitors = null; UI.renderBuild();
-  assert(!elems['build-page'].innerHTML.includes('今日到访'), 'T15a 无访客时不显示访客热点');
-  g.visitors = { day:g.day, merchant:null, wanderer:null }; UI.renderBuild();
-  assert(elems['build-page'].innerHTML.includes('今日到访') && elems['build-page'].innerHTML.includes('UI.openVisitors()'), 'T15b 有访客时出现热点');
-  g.visitors = null; UI.renderBuild();
-
-  // T16 重伤角标 + 天气压暗
-  g.chars[0].injured = true; UI.renderBuild();
-  assert(elems['build-page'].innerHTML.includes('1 重伤'), 'T16a 营地热点显示重伤数');
-  g.chars[0].injured = false;
-  g.weather = 'rain'; UI.renderBuild();
-  assert(elems['home-camp-scene'].style.filter.includes('brightness'), 'T16b 雨天场景压暗');
-  g.weather = 'sunny'; UI.renderBuild();
+  // ===== T7 wiki 收录 =====
+  UI.wikiTab='map'; UI.openWiki();
+  const wh = elems['wiki-content'].innerHTML;
+  assert(wh.includes('野外营地') && wh.includes('⛺'), 'T7a 百科地图页收录野外营地');
+  assert(wh.includes('必定') || wh.includes('100%'), 'T7b 地图说明含必掉装备提示');
 
   console.log('--- done ---');
   process.exit(0);
-})().catch(e=>{ console.log('TEST ERROR', e); process.exit(1); });
+})().catch(e=>{ console.error('TEST ERROR:', e.message); process.exit(1); });

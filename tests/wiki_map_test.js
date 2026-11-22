@@ -8,7 +8,7 @@ const body = elems['wiki-content'].innerHTML;
 
 // T1 分页标签
 assert(body.includes("UI.wikiTab='map'") && body.includes('🗺️ 地图'), 'T1 百科新增地图分页标签');
-assert(body.includes('🗺️ 探险地图（7 张）'), 'T2 地图页标题显示总数');
+assert(body.includes('🗺️ 探险地图（8 张）'), 'T2 地图页标题显示总数');
 
 // T3 七个区域全部列出（含新图）
 assert(DATA.ZONES.every(z=>body.includes(z.name)) && body.includes('废弃加油站') && body.includes('林场'),
@@ -38,7 +38,7 @@ DATA.ZONES.push({ id:'__tmp__', name:'临时测试区', icon:'🧪', danger:5,
   terrain:{ water:1 } });
 UI.openWiki();
 const body2 = elems['wiki-content'].innerHTML;
-assert(body2.includes('临时测试区') && body2.includes('（8 张）'), 'T8 新增地图自动出现在百科');
+assert(body2.includes('临时测试区') && body2.includes('（9 张）'), 'T8 新增地图自动出现在百科');
 DATA.ZONES.pop();
 
 // T9 敌人页不再重复罗列地图解锁（改为指向地图页）

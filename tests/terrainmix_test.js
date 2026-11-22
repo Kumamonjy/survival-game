@@ -10,9 +10,10 @@ const g = Game.g;
     gas:{water:4,rubble:9,ruin:5,crate:7,barrel:24},
     hospital:{water:12,rubble:8,ruin:7,crate:7,barrel:2},
     forest:{water:6,rubble:16,ruin:12,crate:5,barrel:6},
+    camp:{water:4,rubble:6,ruin:4,crate:4,barrel:3},
     factory:{water:4,rubble:15,ruin:8,crate:4,barrel:10}, street:{water:6,rubble:10,ruin:14,crate:6,barrel:3},
     base:{water:6,rubble:14,ruin:12,crate:5,barrel:6} };
-  assert(DATA.ZONES.length===7 && DATA.ZONES.every(z=>JSON.stringify(z.terrain)===JSON.stringify(EXP[z.id])), 'T1 七区域地形配方正确');
+  assert(DATA.ZONES.length===8 && DATA.ZONES.every(z=>JSON.stringify(z.terrain)===JSON.stringify(EXP[z.id])), 'T1 八区域地形配方正确');
 
   // T2 start 按配方散布：工厂应出现 10 桶
   const c = Game.createChar('soldier','兵',false); g.chars.push(c);
