@@ -12,7 +12,8 @@ const g = Game.g;
 
   // ===== T2 价格锚点未被破坏 =====
   const R = id => { const r = DATA.RECIPES.find(x=>x.id===id); return r && r.cost.gold; };
-  assert(R('stick')===19 && R('dagger')===29 && R('cleaver')===34 && R('nunchaku')===36, 'T2a 武器锚点 19/29/34/36');
+  assert(R('stick')===19 && R('slingshot')===20 && R('whip')===28 && R('dagger')===29 && R('cleaver')===34 && R('nunchaku')===36, 'T2a 武器锚点 19/20/28/29/34/36（V210 加鞭子）');
+  assert(R('throwknife')===22, 'T2h 消耗品锚点 飞刀22（3格100%攻，强于石块10💰/50%）');
   assert(R('club')===43 && R('spear')===58 && R('shovel')===62 && R('fireaxe')===67, 'T2b 武器锚点 43/58/62/67');
   assert(R('woodshield')===68 && R('hammer')===70 && R('compoundbow')===95 && R('pistol')===110, 'T2c 武器锚点 木盾68/大铁锤70/复合弓95/手枪110');
   assert(R('cap')===20 && R('chood')===32 && R('helmet')===53, 'T2d 头部锚点 20/32/53');
