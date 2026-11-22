@@ -375,11 +375,11 @@ button:disabled { opacity:.45; cursor:not-allowed; }
 @keyframes dmgFloat { 0%{opacity:1; transform:translateY(0);} 100%{opacity:0; transform:translateY(-22px);} }
 
 .b-unitinfo {
-  flex-shrink:0; margin:0 10px; padding:7px 12px; border-radius:10px;
+  flex-shrink:0; margin:0 10px; padding:6px 12px; border-radius:10px;
   background:linear-gradient(180deg,var(--panel2),var(--panel)); border:1px solid var(--line);
-  min-height:52px;
+  height:58px; overflow:hidden;
 }
-.b-unitinfo:empty { display:none; }   /* 未选中单位时不占位（隐藏空白面板） */
+.b-unitinfo:empty { visibility:hidden; }   /* V212 未选中单位时保留固定占位（visibility 而非 display:none），地图区域高度恒定、格子尺寸不再随选中/取消重算跳动 */
 .b-unitinfo .u-name { display:flex; align-items:center; gap:8px; font-weight:bold; }
 .b-unitinfo .u-name .cls { font-size:11px; }
 .b-unitinfo .u-stats { display:flex; gap:10px; flex-wrap:wrap; font-size:12px; color:var(--txt2); margin-top:3px; }
