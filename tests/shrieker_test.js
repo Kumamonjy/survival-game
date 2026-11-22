@@ -10,8 +10,8 @@ const g = Game.g;
   assert(S && S.name==='尖啸者' && S.icon==='📢' && S.skill && S.skill.name==='尖啸' && S.skill.cd===5, 'T1a 尖啸者定义（CD5）');
   assert(S.base.maxHp===150 && S.base.atk===25 && S.base.def===5 && S.base.move===2, 'T1b 150❤️/25⚔️/5🛡️/移速2');
   assert(DATA.ZONES.find(z=>z.id==='hospital').pool.shrieker===8 && DATA.ZONES.find(z=>z.id==='factory').pool.shrieker===5
-    && DATA.ZONES.find(z=>z.id==='street').pool.shrieker===7 && DATA.ZONES.find(z=>z.id==='base').pool.shrieker===7
-    && !DATA.ZONES.find(z=>z.id==='market').pool.shrieker, 'T1c 医8/厂5/街7/基7，超市无');
+    && DATA.ZONES.find(z=>z.id==='street').pool.shrieker===6 && DATA.ZONES.find(z=>z.id==='base').pool.shrieker===5
+    && !DATA.ZONES.find(z=>z.id==='market').pool.shrieker, 'T1c 医8/厂5/街6/基5，超市无');
 
   // T2 构造战斗：受伤尖啸者 → 召唤 2 只游荡丧尸
   const c = Game.createChar('soldier','兵',false);

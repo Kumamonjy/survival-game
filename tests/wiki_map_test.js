@@ -44,7 +44,7 @@ DATA.ZONES.pop();
 // T9 敌人页不再重复罗列地图解锁（改为指向地图页）
 UI.wikiTab='enemy'; UI.openWiki();
 const enemyBody = elems['wiki-content'].innerHTML;
-assert(enemyBody.includes('各区域的丧尸构成、数量与 Boss 见「🗺️ 地图」页') && !enemyBody.includes('1★ 第 1 天'),
+assert(enemyBody.includes('各区域的敌人构成、数量与 Boss 见「🗺️ 地图」页') && !enemyBody.includes('1★ 第 1 天'),
   'T9 敌人页去重并指向地图页');
 
 console.log('--- done ---');
