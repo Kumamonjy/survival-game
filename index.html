@@ -3575,7 +3575,7 @@ const UI = {
         }).join('　');
         const boss = Z.boss ? `<br><b style="color:var(--yellow)">Boss：${(DATA.ZOMBIES[Z.bossType||'behemoth']||{}).name||''}</b>` : '';
         return `<tr><td><b>${z.icon} ${z.name}</b><br><span style="font-size:11px">${Z.count[0]}-${Z.count[1]} 只</span></td>
-          <td>${pool}${boss}</td><td>${UI.terrainStr(Z.terrain)}</td></tr>`;
+          <td>${UI.terrainStr(Z.terrain)}</td><td>${pool}${boss}</td></tr>`;
       }).join('');
       return `
       <div class="wiki-sec panel"><h4>🗺️ 探险地图（${DATA.ZONES.length} 张）</h4>
@@ -3583,8 +3583,8 @@ const UI = {
         <div class="wiki-p" style="margin-top:6px">· 装备掉落仅在<b>胜利</b>后判定（撤离/失败不掉，尸潮守城战不掉），池内装备均等随机；特殊饰品（熊熊/兔兔）<b>任何区域</b>都有概率掉落（「仅武器」区域除外）；表格可<b>左右滑动</b>查看完整内容</div>
       </div>
       <div class="wiki-sec panel"><h4>🧭 敌情与地形</h4>
-        <table class="wiki-table"><tr><th>区域</th><th>丧尸构成（概率）</th><th>地形</th></tr>${eRows}</table>
-        <div class="wiki-p" style="margin-top:6px">概率为该区域抽到该类型丧尸的权重；<b>N-M 只</b>为每局丧尸数量区间。丧尸属性成长见「🧟 敌人」页。</div>
+        <div class="table-scroll"><table class="wiki-table zone-table"><colgroup><col style="width:22%"><col style="width:28%"><col style="width:50%"></colgroup><tr><th>区域</th><th>地形</th><th>丧尸构成（概率）</th></tr>${eRows}</table></div>
+        <div class="wiki-p" style="margin-top:6px">概率为该区域抽到该类型丧尸的权重；<b>N-M 只</b>为每局丧尸数量区间；表格可<b>左右滑动</b>查看完整内容。丧尸属性成长见「🧟 敌人」页。</div>
       </div>
       <div class="wiki-sec panel"><h4>📌 探险规则</h4>
         <div class="wiki-p">

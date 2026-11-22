@@ -24,6 +24,10 @@ assert(body.includes('🧭 敌情与地形') && body.includes('Boss：暴君变�
 assert(body.includes('长舌丧尸') && body.includes('自爆丧尸') && body.includes('暴君变异体'), 'T5b 敌情表列出丧尸名称');
 assert(DATA.ZONES.every(z=>body.includes(`${z.count[0]}-${z.count[1]} 只`)), 'T5c 每区域显示丧尸数量区间');
 
+// T5e 敌情表布局：列顺序 区域→地形→丧尸构成，加宽列 + 横向滚动（V207）
+assert(body.includes('<th>区域</th><th>地形</th><th>丧尸构成（概率）</th>'), 'T5e 敌情表列顺序为 区域/地形/丧尸构成');
+assert(body.includes('width:22%') && body.includes('width:28%') && body.includes('width:50%'), 'T5f 敌情表列宽 22/28/50');
+
 // T6 地形配方
 assert(body.includes('🛢️</span>24') && body.includes('🌊6'), 'T6 地形配方（加油站油桶红化/医院积水减半）');
 
