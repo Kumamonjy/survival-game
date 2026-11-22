@@ -18,7 +18,7 @@ const [s1, s2] = g.chars;
   const sk = tk.skill;
   assert(sk && sk.name==='小李飞刀' && sk.equipSkill===true, 'T2b 自带道具技能「小李飞刀」');
   assert(sk.type==='attack' && sk.shape==='target' && sk.range===3 && sk.mult===1.0, 'T2c 攻击技能：单体 / 射程3 / 100% 攻击力');
-  assert(sk.cost===10 && sk.cd===0, 'T2d 消耗 10 体力 / 冷却 0（消耗品统一无冷却）');
+  assert(sk.cost===10 && sk.cd===1, 'T2d 消耗 10 体力 / 冷却 1 回合（V211 消耗品统一 CD1：同回合不可重复使用）');
   const kr = DATA.RECIPES.find(r=>r.id==='throwknife');
   assert(kr && kr.cost.gold===22 && kr.cost.metal===5 && kr.stamina===8, 'T2e 飞刀配方 22💰+5⚙️ / 8⚡');
 
@@ -57,6 +57,9 @@ const [s1, s2] = g.chars;
   assert(me.stamina === 90, `T6b 消耗 10 体力（余 ${me.stamina}）`);
   assert(me.item.count === 1, `T6c 用后消耗 1 把（余 ${me.item.count}）`);
   assert(me.hasAttacked === true, 'T6d 本回合行动结束');
+  assert(Battle.skCd(me, msk)===1, 'T6e 冷却 1 回合：同一回合不可再次使用');
+  Battle.newRoundReset(me);
+  assert(Battle.skCd(me, msk)===0, 'T6f 下一回合冷却结束，可再次使用');
 
   console.log('--- done ---');
   process.exit(0);

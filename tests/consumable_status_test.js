@@ -72,7 +72,7 @@ const mkB = units => ({ units, selected:units[0], terrain:Array.from({length:Bat
 
   // ===== T6 selfOnly：regren 目标集不含队友 =====
   Battle.b.selected = me;
-  me.stamina = 10; me.hasAttacked = false;
+  me.stamina = 10; me.hasAttacked = false; me.cds = {};   // V211 消耗品 CD1：清冷却以专注测 selfOnly 目标集
   const mate = Battle.mkAlly(s2, 5, 4);
   Battle.b.units.push(mate);
   mate.stamina = 10;

@@ -106,7 +106,7 @@ function mkB(units){
   me.skills = [DATA.EQUIPS.bandage.skill];
   me.item = { id:'bandage', count:2 };
   me.stamina = 100; me.maxStamina = 150;
-  me.hasAttacked = false; me.hasMoved = false;
+  me.hasAttacked = false; me.hasMoved = false; me.cds = {};   // V211 消耗品 CD1：清冷却以专注测目标集
   Battle.b.selected = me; Battle.b.mode = null;
   Battle.pickSkill(0);
   const tset = (Battle.b.targetSet||[]).map(p=>p.join(','));

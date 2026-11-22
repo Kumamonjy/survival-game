@@ -15,7 +15,7 @@ const [s1, s2] = g.chars;
 
   // ===== T2 技能参数 =====
   assert(sk.type === 'attack' && sk.shape === 'aoe' && sk.range === 2 && sk.area === 1, 'T2a 攻击技能：aoe / 射程2 / 半径1');
-  assert(sk.cost === 15 && sk.cd === 0, 'T2b 消耗 15 体力 / 无冷却');
+  assert(sk.cost === 15 && sk.cd === 1, 'T2b 消耗 15 体力 / 冷却 1 回合（V211 消耗品统一 CD1）');
   assert(sk.fixedDmg === 40, 'T2c 固定 40 点伤害（无视防御）');
   assert(sk.burn && sk.burn.turns === 2, 'T2d 附加燃烧 2 回合');
   assert(sk.hitsAll === true, 'T2e 敌我不分（hitsAll）');

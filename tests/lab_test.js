@@ -94,7 +94,7 @@ function mkB(units){
   me.skills = [DATA.EQUIPS.antidote.skill];
   me.item = { id:'antidote', count:2 };
   me.stamina = 100; me.maxStamina = 150;
-  me.hasAttacked = false; me.hasMoved = false;   // 清除 T7 治疗后的行动标记
+  me.hasAttacked = false; me.hasMoved = false; me.cds = {};   // 清除 T7 治疗后的行动标记与 CD（V211 消耗品 CD1）
   Battle.b.selected = me; Battle.b.mode = null;
   Battle.pickSkill(0);
   const tset = (Battle.b.targetSet||[]).map(p=>p.join(','));
