@@ -13,7 +13,7 @@ const flatCnt = (b, t) => b.terrain.flat().filter(x=>x===t).length;
   const stale = { ...DATA.ZONES.find(z=>z.id==='forest') };
   delete stale.terrain; delete stale.pool;
   const fixed = Battle.zoneDef(stale);
-  assert(fixed.terrain.rubble===16 && fixed.pool.brute===20, 'T1b 老存档快照按 id 回查最新配方');
+  assert(fixed.terrain.rubble===20 && fixed.pool.brute===20, 'T1b 老存档快照按 id 回查最新配方');
   assert(Battle.zoneDef(DATA.ZONES[0]).id==='market', 'T1c 正常区域原样返回');
 
   // ===== T2 权重随机 =====

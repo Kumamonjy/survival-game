@@ -8,9 +8,9 @@ const g = Game.g;
   // T1 配方数据
   const EXP = { market:{water:10,rubble:8,ruin:6,crate:8,barrel:1,iceN:2},
     gas:{water:4,rubble:9,ruin:5,crate:7,barrel:24},
-    hospital:{water:12,rubble:8,ruin:7,crate:7,barrel:2,iceN:5},
-    forest:{water:6,rubble:16,ruin:12,crate:5,barrel:3},
-    camp:{water:4,rubble:6,ruin:4,crate:4,barrel:10},
+    hospital:{water:6,rubble:8,ruin:10,crate:7,barrel:2,iceN:5},
+    forest:{water:6,rubble:20,ruin:8,crate:5,barrel:3},
+    camp:{water:7,rubble:6,ruin:4,crate:4,barrel:10},
     factory:{water:4,rubble:15,ruin:8,crate:4,barrel:10,iceN:10}, street:{water:6,rubble:10,ruin:14,crate:6,barrel:3,iceN:2},
     base:{water:6,rubble:14,ruin:12,crate:5,barrel:6,iceN:7} };
   assert(DATA.ZONES.length===8 && DATA.ZONES.every(z=>JSON.stringify(z.terrain)===JSON.stringify(EXP[z.id])), 'T1 八区域地形配方正确');
@@ -28,7 +28,7 @@ const g = Game.g;
   // T3 换区域：医院积水 12、超市物资箱 8
   UI.teamSelected = [c.id];
   await Battle.start(DATA.ZONES.find(z=>z.id==='hospital'));
-  assert(cnt('water')===12 && cnt('barrel')===2, `T3a 医院 water12/barrel2（${cnt('water')}/${cnt('barrel')}）`);
+  assert(cnt('water')===6 && cnt('ruin')===10 && cnt('barrel')===2, `T3a 医院 water6/ruin10/barrel2（${cnt('water')}/${cnt('ruin')}/${cnt('barrel')}）`);
   UI.teamSelected = [c.id];
   await Battle.start(DATA.ZONES.find(z=>z.id==='market'));
   assert(cnt('crate')===8 && cnt('barrel')===1, `T3b 超市 crate8/barrel1（${cnt('crate')}/${cnt('barrel')}）`);

@@ -25,7 +25,7 @@ assert(body.includes('长舌丧尸') && body.includes('自爆丧尸') && body.in
 assert(DATA.ZONES.every(z=>body.includes(`${z.count[0]}-${z.count[1]} 只`)), 'T5c 每区域显示丧尸数量区间');
 
 // T6 地形配方
-assert(body.includes('🛢️</span>24') && body.includes('🌊12'), 'T6 地形配方（加油站油桶红化/医院积水）');
+assert(body.includes('🛢️</span>24') && body.includes('🌊6'), 'T6 地形配方（加油站油桶红化/医院积水减半）');
 
 // T7 规则说明
 ['6 人', '15⚡', '精品物资箱', '不消耗天数', '出战平均等级'].forEach(k=>{
