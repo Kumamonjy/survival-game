@@ -949,6 +949,9 @@ DATA.EQUIPS = {
   shovel: { id:'shovel', name:'铁锹', slot:'weapon', icon:'⛏️', stats:{atk:18}, range:2,
             skill:{ name:'挥扫', desc:'消耗25体力，选择一个方向，对身前 3×1 范围内的所有敌人造成 70% 攻击力的伤害。', cost:25, cd:3, type:'attack', shape:'sweep2', sweepLen:3, sweepWid:1, mult:0.7 },
             desc:'攻击力 +18，射程 2（中距）；自带「挥扫」：横扫身前 3×1 范围，70% 攻击力伤害（冷却 3 回合，消耗 25 体力）' },
+  hammer: { id:'hammer', name:'大铁锤', slot:'weapon', icon:'🔨', stats:{atk:28, move:-1, stamina:-10}, range:2,
+            skill:{ name:'挥扫', desc:'消耗25体力，选择一个方向，对身前 3×1 范围内的所有敌人造成 70% 攻击力的伤害。', cost:25, cd:3, type:'attack', shape:'sweep2', sweepLen:3, sweepWid:1, mult:0.7 },
+            desc:'攻击力 +28，移速 -1，体力值 -10，射程 2（中距）；自带「挥扫」：横扫身前 3×1 范围，70% 攻击力伤害（冷却 3 回合，消耗 25 体力）' },
   cleaver:{ id:'cleaver',name:'菜刀', slot:'weapon', icon:'🔪', stats:{atk:10}, range:1,
             skill:{ name:'凶猛劈砍', desc:'消耗15体力，对 1 格内的一名敌人造成 150% 攻击力的伤害，并使其流血 2 回合。', cost:15, cd:3, type:'attack', shape:'target', mult:1.5, range:1, bleed:{turns:2} },
             desc:'攻击力 +10，射程 1；自带技能「凶猛劈砍」：1 格内单体 150% 伤害并附加流血 2 回合（冷却 3 回合，消耗 15 体力）' },
@@ -1034,6 +1037,7 @@ DATA.RECIPES = [
   { id:'spear',  cost:{ gold:58, wood:9, metal:8 }, stamina:25 },
   { id:'pistol', cost:{ gold:110, metal:15, fabric:6 }, stamina:30 },
   { id:'shovel', cost:{ gold:62, wood:10, metal:5 }, stamina:25 },
+  { id:'hammer', cost:{ gold:70, wood:4, metal:12 }, stamina:28 },
   { id:'sweater', cost:{ gold:72, fabric:12 }, stamina:15 },
   { id:'chood',  cost:{ gold:32, fabric:6 }, stamina:10 },
   { id:'cap',    cost:{ gold:20, fabric:4 }, stamina:8 },
@@ -1503,6 +1507,7 @@ const Game = {
   effSt(c){ return c.maxStamina + (c.equip ? Game.equipStats(c).stamina : 0); },
   effAtk(c){ return c.atk + (c.equip ? Game.equipStats(c).atk : 0); },
   effDef(c){ return c.def + (c.equip ? Game.equipStats(c).def : 0); },
+  effMove(c){ return Math.max(1, c.move + (c.equip ? (Game.equipStats(c).move||0) : 0)); },
   /* 暴击率/暴伤 = 角色值 + 装备加成（熊熊等特殊饰品） */
   effCrit(c){ return c.critRate + (c.equip ? (Game.equipStats(c).critRate||0) : 0); },
   effCritDmg(c){ return c.critDmg + (c.equip ? (Game.equipStats(c).critDmg||0) : 0); },
@@ -3147,7 +3152,7 @@ const UI = {
         <div class="avatar ${C.color}">${c.av||C.icon}<span class="lvl">Lv.1</span></div>
         <div style="flex:1;min-width:0">
           <div class="row" style="flex-wrap:wrap"><b>${c.name}</b><span class="tag">${C.name}</span>${UI.talentTags(c)}</div>
-          <div class="wiki-p" style="margin-top:2px">❤️${Game.effHp(c)} 🗡️${Game.effAtk(c)} 🛡️${Game.effDef(c)} 🎯${Game.effRange(c)} 👟${c.move} ✨${c.critRate}%${tdesc?' ｜ 天赋：'+tdesc:''}</div>
+          <div class="wiki-p" style="margin-top:2px">❤️${Game.effHp(c)} 🗡️${Game.effAtk(c)} 🛡️${Game.effDef(c)} 🎯${Game.effRange(c)} 👟${Game.effMove(c)} ✨${c.critRate}%${tdesc?' ｜ 天赋：'+tdesc:''}</div>
           <div class="cand-actions">
             <button class="btn primary small" onclick="Recruit.hire(${i})">招募（${C.price} 💰）</button>
             <button class="btn small" onclick="Recruit.preview(${i})">详情</button>
@@ -3186,7 +3191,7 @@ const UI = {
   fmtMats(mats, sep){ return Object.entries(mats||{}).map(([k,v])=>`${UI.resIcon(k)}×${v}`).join(sep||'　'); },
   closeRow(){ return '<div class="row" style="margin-top:12px"><button class="btn" style="width:100%" onclick="UI.closeModal()">关闭</button></div>'; },
   statLine(c, full){ return full
-    ? `❤️ ${c.hp}/${Game.effHp(c)}　⚡ ${c.stamina}/${Game.effSt(c)}　🗡️${Game.effAtk(c)} 🛡️${Game.effDef(c)} 🎯${Game.effRange(c)} 👟${c.move}　✨${Game.effCrit(c)}% 💥${Game.effCritDmg(c)}%`
+    ? `❤️ ${c.hp}/${Game.effHp(c)}　⚡ ${c.stamina}/${Game.effSt(c)}　🗡️${Game.effAtk(c)} 🛡️${Game.effDef(c)} 🎯${Game.effRange(c)} 👟${Game.effMove(c)}　✨${Game.effCrit(c)}% 💥${Game.effCritDmg(c)}%`
     : `❤️ ${c.hp}/${Game.effHp(c)}　⚡ ${c.stamina}/${Game.effSt(c)}　📈 经验 ${c.exp}/${Game.expNeed(c.level)}`; },
 
   /* ---- 出战编队 ---- */
@@ -4112,7 +4117,7 @@ const Battle = {
     const skills = baseSkills.concat(eq && eq.skill ? [eq.skill] : [], wEq && wEq.skill ? [wEq.skill] : []);
     return {
       uid:'u'+uidCounter++, side:'ally', ref:c, name:c.name, icon:c.av||C.icon, clsTag:C.name, level:c.level,
-      hp:Math.max(1, Math.min(c.hp, Game.effHp(c))), maxHp:Game.effHp(c), atk:Game.effAtk(c), def:Game.effDef(c), range:Game.effRange(c), move:c.move,
+      hp:Math.max(1, Math.min(c.hp, Game.effHp(c))), maxHp:Game.effHp(c), atk:Game.effAtk(c), def:Game.effDef(c), range:Game.effRange(c), move:Game.effMove(c),
       critRate:Game.effCrit(c), critDmg:Game.effCritDmg(c), stamina:c.stamina, maxStamina:Game.effSt(c),
       skill:C.skill, skills, cds:{}, sts:{},
       item: c.item ? { id:c.item.id, count:c.item.count } : null,
