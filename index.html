@@ -854,10 +854,10 @@ DATA.HORDE = {
 
 DATA.ZONES = [
   { id:'market',  name:'废弃超市', icon:'🛒', danger:1, desc:'货架上还残留着末日前的物资，衣物货架或许还保有布料。',
-    main:{food:[8,14]}, sub:{gold:[4,8],fabric:[2,4]}, count:[4,5], pool:{walker:60, runner:40}, boss:false,
+    main:{food:[8,14]}, sub:{gold:[4,8],fabric:[2,4]}, count:[4,5], pool:{walker:60, runner:40}, boss:false, dropRate:0.15,
     terrain:{ water:10, rubble:8, ruin:6, crate:8, barrel:1, iceN:2 } },
   { id:'gas',     name:'废弃加油站', icon:'⛽', danger:1, desc:'便利店收银台里还留着零钱，拆下来的木托盘堆在后院；遍地都是易爆的油桶，一点火星就会引发连环爆炸。',
-    main:{gold:[12,20]}, sub:{wood:[1,3],food:[2,4]}, count:[4,5], pool:{walker:65, runner:23, bomber:12}, boss:false, dropRate:0.15, dropSlot:'weapon',
+    main:{gold:[12,20]}, sub:{wood:[1,3],food:[2,4]}, count:[4,5], pool:{walker:65, runner:23, bomber:12}, boss:false, dropRate:0.1, dropSlot:'weapon',
     terrain:{ water:4, rubble:9, ruin:5, crate:7, barrel:24 } },
   { id:'hospital',name:'市中心医院', icon:'🏥', danger:2, desc:'药房或许还有没被搜刮的药品。',
     main:{med:[5,9]}, sub:{food:[3,6],fabric:[1,3]}, count:[5,6], pool:{walker:20, runner:30, licker:25, bomber:12, shrieker:8, witch:5}, boss:false,
@@ -3384,7 +3384,7 @@ const UI = {
     const secBuild = `
       <div class="wiki-sec panel"><h4>🧰 装备与工坊</h4>
         <div class="wiki-p">
-        · 每名角色 <b>5 个装备位</b>（武器/头盔/衣服/鞋子/饰品）+ <b>1 个道具位</b>；初始无装备，工坊制造后到人物信息点击格位穿卸，探险胜利掉落装备（普通区域 20%、工厂/商业街 25%、军事基地 30%、加油站 15% 只掉武器、野外营地必掉一件）；新档背包自带 2 布衣、2 布鞋、2 石块<br>
+        · 每名角色 <b>5 个装备位</b>（武器/头盔/衣服/鞋子/饰品）+ <b>1 个道具位</b>；初始无装备，工坊制造后到人物信息点击格位穿卸，探险胜利掉落装备（普通区域 20%、超市 15%、工厂/商业街 25%、军事基地 30%、加油站 10% 只掉武器、野外营地必掉一件）；新档背包自带 2 布衣、2 布鞋、2 石块<br>
         · 全部配方成本、升级（+20%/级，最高 +5）与分解（返 50%）规则见「🧰 装备」页表格<br>
         · 材料来源：金属——工厂/基地/商业街；木材——林场类区域；布料——超市/商业街与物资箱；药物——医院/商业街
         </div>
