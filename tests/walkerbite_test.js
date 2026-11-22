@@ -23,6 +23,7 @@ function mkB(units){
   // ===== T2 AI 评估：优先撕咬 =====
   Battle.b = mkB([]);
   const z = Battle.mkZombie('walker', 5, 5, 1);
+  z.critRate = 0;   // 固定不暴击，排除随机性
   Battle.b.units.push(z);
   const p1 = Battle.mkAlly({ uid:'p1', name:'幸存者', cls:'civilian', level:1, exp:0, av:'🧍',
     hp:250, maxHp:250, stamina:100, maxStamina:100, atk:20, def:5, range:1, move:2, critRate:0, critDmg:150 }, 5, 6);

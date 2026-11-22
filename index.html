@@ -281,6 +281,7 @@ button:disabled { opacity:.45; cursor:not-allowed; }
 .cell.water { background:#26404d; }
 .cell.rubble { background:#3b3222; }
 .cell.barrel { background:#4a3520; }
+.cell.barrel .terr { filter: hue-rotate(155deg) saturate(2.6) brightness(.95); }   /* 油桶图标转为红色 */
 @keyframes fxBoom { 0%{box-shadow:inset 0 0 0 0 rgba(255,150,60,.95); background:rgba(255,170,70,.6);} 60%{box-shadow:inset 0 0 18px 8px rgba(255,110,40,.7);} 100%{box-shadow:inset 0 0 0 0 rgba(255,90,40,0); background:transparent;} }
 .cell.fx-boom { animation:fxBoom .5s ease-out; z-index:7; }
 /* 油桶爆炸：白热核心 + 扩散火环 + 地图震屏（独立特效层，不会被 renderMap 冲掉） */
@@ -1251,6 +1252,7 @@ DATA.STATUSES = {
   strong: { name:'强力', icon:'💪', color:'#f2c14e', atkMod:0.20, desc:'攻击力提升 20%' },
   lame:   { name:'瘸腿', icon:'🦽', color:'#d0d0d0', moveMod:-1, bad:true, desc:'移动速度降低 1' },
   stun:   { name:'眩晕', icon:'💫', color:'#e8d06a', bad:true, desc:'无法行动' },
+  frozen: { name:'冰冻', icon:'❄️', color:'#a8d8f0', bad:true, desc:'无法行动（与眩晕一致）' },
   root:   { name:'禁锢', icon:'⛓️', color:'#e0a060', bad:true, desc:'无法移动，但仍可攻击 / 使用技能 / 休息' },
 };
 
@@ -3445,7 +3447,7 @@ const UI = {
         <div class="wiki-p" style="margin-top:6px">🧱 <b>废墟翻找</b>：站在废墟旁点击攻击选择废墟（消耗 1 次攻击），每处限翻 1 次，随机获得 1-2 种物资（金币/食物/金属/布料/药物）。</div>
       </div>`;
     /* 状态页与 DATA.STATUSES 全量对应；持续时间由施加的技能决定 */
-    const STATUS_WHEN = { poison:'每回合结束', bleed:'每次行动后', burn:'每回合结束', weak:'持续生效', heal:'每回合结束', regen:'每回合结束', strong:'持续生效', lame:'持续生效', stun:'被眩晕的回合（无法行动）', root:'持续生效（无法移动，可攻击/技能/休息）' };
+    const STATUS_WHEN = { poison:'每回合结束', bleed:'每次行动后', burn:'每回合结束', weak:'持续生效', heal:'每回合结束', regen:'每回合结束', strong:'持续生效', lame:'持续生效', stun:'被眩晕的回合（无法行动）', root:'持续生效（无法移动，可攻击/技能/休息）', frozen:'被冰冻的回合（无法行动）' };
     const statusRows = Object.entries(DATA.STATUSES).map(([k,S])=>
       `<tr><td><span style="color:${S.color}">${S.icon} ${S.name}</span></td><td>${S.desc}</td><td>${STATUS_WHEN[k]}</td></tr>`
     ).join('');
@@ -4899,7 +4901,7 @@ const Battle = {
   newRoundReset(u) {
     u.hasMoved=false; u.hasAttacked=false; u.isDefending=false;
     for (const k in u.cds) if (u.cds[k]>0) u.cds[k]--;
-    if (u.sts && u.sts.stun) { u.hasMoved=true; u.hasAttacked=true; Battle.log(`💫 ${u.name} 眩晕中，本回合无法行动`, 'bad'); }
+    if (u.sts && (u.sts.stun || u.sts.frozen)) { u.hasMoved=true; u.hasAttacked=true; Battle.log(`${u.sts.stun?'💫':'❄️'} ${u.name} ${u.sts.stun?'眩晕':'冰冻'}中，本回合无法行动`, 'bad'); }
   },
 
   /* 战报统计：按单位累计伤害/治疗/击杀 */
@@ -5688,7 +5690,7 @@ const Battle = {
   },
   async zombieAct(z) {
     for (const k in (z.cds||{})) if (z.cds[k]>0) z.cds[k]--;   // 丧尸技能冷却递减（眩晕回合也照减）
-    if (z.sts && z.sts.stun) { Battle.log(`💫 ${z.name} 眩晕中，无法行动`, ''); Battle.renderPanels(); return; }
+    if (z.sts && (z.sts.stun || z.sts.frozen)) { Battle.log(`${z.sts.stun?'💫':'❄️'} ${z.name} ${z.sts.stun?'眩晕':'冰冻'}中，无法行动`, ''); Battle.renderPanels(); return; }
     return Battle.aiAct(z, Battle.b.units.filter(u=>u.side==='ally'&&u.hp>0));
   },
 
