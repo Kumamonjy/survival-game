@@ -81,7 +81,7 @@ const mkB=(units)=>({ units, selected:units[0], terrain:Array.from({length:Battl
 
   // ===== T10 状态表完整 =====
   const S = DATA.STATUSES;
-  assert(S.poison.dmgPct===0.10 && S.bleed.dmgPct===0.06 && S.burn.dmgPct===0.08 && S.weak.atkMod===-0.20 && S.strong.atkMod===0.20 && S.heal.healPct===0.05 && S.regen.regenPct===0.05 && S.lame.moveMod===-1 && S.stun && S.stun.bad===true && Object.keys(S).length===9, 'T10 状态表完整');
+  assert(S.poison.dmgPct===0.10 && S.bleed.dmgPct===0.06 && S.burn.dmgPct===0.08 && S.weak.atkMod===-0.20 && S.strong.atkMod===0.20 && S.heal.healPct===0.05 && S.regen.regenPct===0.05 && S.lame.moveMod===-1 && S.stun && S.stun.bad===true && S.root && S.root.icon==='⛓️' && Object.keys(S).length===10, 'T10 状态表完整');
 
   console.log('--- done ---');
   process.exit(0);

@@ -822,6 +822,9 @@ DATA.ZOMBIES = {
   raider_thug:{ name:'暴徒', icon:'🦹', species:'raider', desc:'劫掠者团伙中的打手，出手狠辣，惯用钝器重创猎物要害。会使用「击晕」重创并眩晕猎物——被眩晕的回合将无法行动。',
              base:{ maxHp:220, atk:55, def:10, range:1, move:3, critRate:10, critDmg:180 }, exp:35, gold:[5,8], weight:0,
              skills:[{ name:'击晕', desc:'对 1 格内一名敌人造成 120% 攻击力的伤害，并使其眩晕 1 回合。', cost:0, cd:3, type:'attack', shape:'target', mult:1.2, range:1, stun:{turns:1} }] },
+  raider_snatcher:{ name:'绑匪', icon:'🪢', species:'raider', desc:'劫掠者团伙中的猎手，擅长用绳索与铁链限制目标行动。会使用「绑架」捆缚猎物——被禁锢的回合无法移动，但仍可攻击与施放技能。',
+             base:{ maxHp:180, atk:40, def:5, range:1, move:3, critRate:5, critDmg:150 }, exp:30, gold:[4,6], weight:0,
+             skills:[{ name:'绑架', desc:'对 1 格内一名敌人造成 120% 攻击力的伤害，并使其陷入禁锢状态持续 1 回合。', cost:0, cd:3, type:'attack', shape:'target', mult:1.2, range:1, root:{turns:1} }] },
   behemoth:{ name:'暴君变异体', icon:'😈', desc:'区域霸主级变异体，见识过它的人类寥寥无几。毁灭重击能一下撕碎防线。',
              base:{ maxHp:510, atk:43, def:19, range:2, move:3, critRate:5, critDmg:150 }, exp:60, gold:[10,10], weight:0, boss:true,
              skills:[{ name:'毁灭重击', desc:'对 2 格内一名敌人造成 180% 攻击力的伤害。', cost:0, cd:4, type:'attack', shape:'target', mult:1.8, range:2 }] }
@@ -858,10 +861,10 @@ DATA.ZONES = [
     main:{metal:[5,9]}, sub:{gold:[8,15],fabric:[1,2],wood:[1,3],med:[1,2]}, count:[5,7], pool:{walker:15, runner:15, brute:30, licker:15, bomber:15, behemoth:5, shrieker:5}, boss:false,
     terrain:{ water:4, rubble:15, ruin:8, crate:4, barrel:10 } },
   { id:'street',  name:'商业街废墟', icon:'🏙️', danger:3, desc:'银行的保险柜还没有被完全搬空。服装店废墟里能翻到布料，倒塌的商铺木架是木材来源——盘踞在此的劫掠者同样觊觎着这些物资。',
-    main:{gold:[35,60]}, sub:{metal:[3,6],fabric:[1,2],wood:[1,2],med:[1,2]}, count:[5,7], pool:{runner:16, brute:15, licker:15, savage:13, bomber:8, gasbag:8, shrieker:6, witch:3, raider_mug:10, raider_thug:6}, boss:false,
+    main:{gold:[35,60]}, sub:{metal:[3,6],fabric:[1,2],wood:[1,2],med:[1,2]}, count:[5,7], pool:{runner:13, brute:13, licker:13, savage:12, bomber:7, gasbag:7, shrieker:5, witch:3, raider_mug:11, raider_thug:8, raider_snatcher:8}, boss:false,
     terrain:{ water:6, rubble:10, ruin:14, crate:6, barrel:3 } },
   { id:'base',    name:'军事基地', icon:'🎖️', danger:4, desc:'武装到牙齿——驻守的已不只是变异体，还有武装到牙齿的劫掠者团伙。有大变异体坐镇。',
-    main:{metal:[7,11]}, sub:{med:[2,4],gold:[28,45],fabric:[1,2]}, count:[6,8], pool:{brute:17, licker:15, runner:12, savage:14, bomber:6, gasbag:10, shrieker:5, witch:3, raider_mug:10, raider_thug:8}, boss:true,
+    main:{metal:[7,11]}, sub:{med:[2,4],gold:[28,45],fabric:[1,2]}, count:[6,8], pool:{brute:15, licker:13, runner:11, savage:13, bomber:5, gasbag:9, shrieker:5, witch:3, raider_mug:10, raider_thug:8, raider_snatcher:8}, boss:true,
     terrain:{ water:6, rubble:14, ruin:12, crate:5, barrel:6 } },
 ];
 
@@ -1242,6 +1245,7 @@ DATA.STATUSES = {
   strong: { name:'强力', icon:'💪', color:'#f2c14e', atkMod:0.20, desc:'攻击力提升 20%' },
   lame:   { name:'瘸腿', icon:'🦽', color:'#d0d0d0', moveMod:-1, bad:true, desc:'移动速度降低 1' },
   stun:   { name:'眩晕', icon:'💫', color:'#e8d06a', bad:true, desc:'无法行动' },
+  root:   { name:'禁锢', icon:'⛓️', color:'#e0a060', bad:true, desc:'无法移动，但仍可攻击 / 使用技能 / 休息' },
 };
 
 /* =====================================================
@@ -3435,7 +3439,7 @@ const UI = {
         <div class="wiki-p" style="margin-top:6px">🧱 <b>废墟翻找</b>：站在废墟旁点击攻击选择废墟（消耗 1 次攻击），每处限翻 1 次，随机获得 1-2 种物资（金币/食物/金属/布料/药物）。</div>
       </div>`;
     /* 状态页与 DATA.STATUSES 全量对应；持续时间由施加的技能决定 */
-    const STATUS_WHEN = { poison:'每回合结束', bleed:'每次行动后', burn:'每回合结束', weak:'持续生效', heal:'每回合结束', regen:'每回合结束', strong:'持续生效', lame:'持续生效', stun:'被眩晕的回合（无法行动）' };
+    const STATUS_WHEN = { poison:'每回合结束', bleed:'每次行动后', burn:'每回合结束', weak:'持续生效', heal:'每回合结束', regen:'每回合结束', strong:'持续生效', lame:'持续生效', stun:'被眩晕的回合（无法行动）', root:'持续生效（无法移动，可攻击/技能/休息）' };
     const statusRows = Object.entries(DATA.STATUSES).map(([k,S])=>
       `<tr><td><span style="color:${S.color}">${S.icon} ${S.name}</span></td><td>${S.desc}</td><td>${STATUS_WHEN[k]}</td></tr>`
     ).join('');
@@ -4468,6 +4472,7 @@ const Battle = {
     if (!u || u.side!=='ally' || b.phase!=='player') return;
     if (u.isTower) { UI.toast('防御工事无法移动，会自动开火'); return; }
     if (u.hasMoved) { UI.toast(u.hasAttacked ? '本回合已移动且攻击过，行动完毕' : '该角色本回合已移动过'); return; }   // 攻击/技能后仍可移动
+    if (u.sts && u.sts.root) { UI.toast('⛓️ 被禁锢，本回合无法移动（仍可攻击 / 技能 / 休息）'); return; }
     b.mode='move'; b.moveSet = Battle.reachable(u); b.targetSet = null;
     Battle.renderMap();
   },
@@ -5165,6 +5170,9 @@ const Battle = {
           if (t.hp > 0 && sk.stun) {
             Battle.applyStatus(t, 'stun', sk.stun.turns, u.uid);   // 麻醉飞镖：命中后眩晕
           }
+          if (t.hp > 0 && sk.root) {
+            Battle.applyStatus(t, 'root', sk.root.turns, u.uid);   // 绑架/捆缚类：命中后禁锢（无法移动，可攻击技能休息）
+          }
           if (t.hp > 0 && sk.bleed) {
             Battle.applyStatus(t, 'bleed', sk.bleed.turns, u.uid);   // 凶猛劈砍：命中后流血
           }
@@ -5402,9 +5410,9 @@ const Battle = {
     const b = Battle.b;
     const skills = (u.skills||[]).filter(sk => (u.cds[sk.name]||0) <= 0);
     if (!skills.length && stayOnly) return null;
-    /* stayOnly=true：追击后原地复检，本回合移动已消耗，只评估当前格（防二次移动） */
+    /* stayOnly=true：追击后原地复检，本回合移动已消耗，只评估当前格（防二次移动）；被禁锢（root）同样只评估当前格 */
     const dist = Battle.reachable(u);
-    const cells = stayOnly ? [[u.row,u.col]] : [[u.row,u.col]].concat(
+    const cells = (stayOnly || (u.sts && u.sts.root)) ? [[u.row,u.col]] : [[u.row,u.col]].concat(
       Object.keys(dist).map(k=>k.split(',').map(Number)).filter(([r,c])=>!Battle.unitAt(r,c))
     );
     let best = null;
