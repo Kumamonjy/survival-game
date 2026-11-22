@@ -3488,16 +3488,30 @@ const UI = {
         + (pid==='firstaid'?'（营地使用可解除重伤）':'');
     });
     const eqSlot = UI.wikiEquipSlot || 'all';
-    const eqList = Object.values(DATA.EQUIPS).filter(e=>eqSlot==='all' || e.slot===eqSlot);
+    /* 金币排序：金币↑/↓ 按工坊制造金币升/降序，无配方装备固定排尾，再点一次恢复默认 */
+    const goldOf = e => { const r = DATA.RECIPES.find(x=>x.id===e.id); return r ? r.cost.gold : null; };
+    let eqList = Object.values(DATA.EQUIPS).filter(e=>eqSlot==='all' || e.slot===eqSlot);
+    if (UI.equipSort==='asc' || UI.equipSort==='desc') {
+      eqList = eqList.slice().sort((a,b)=>{
+        const ga = goldOf(a), gb = goldOf(b);
+        if (ga===null && gb===null) return 0;
+        if (ga===null) return 1;
+        if (gb===null) return -1;
+        return UI.equipSort==='asc' ? ga-gb : gb-ga;
+      });
+    }
     const eqRows = eqList.map(e=>`<tr><td>${e.icon} ${e.name}</td><td>${slotName(e.slot)}${e.consumable?'<br><span style="color:var(--txt2);font-size:11px">消耗品</span>':''}</td><td>${e.desc}</td><td>${craftMap[e.id]?('工坊制造 '+craftMap[e.id]):(prodMap[e.id]||(e.special?'精品物资箱 10%':'探险掉落'))}</td></tr>`).join('');
     // 装备子标签：全部 + 各部位（数据来自 DATA.SLOTS，新增部位自动出现）
     const eqSubTabs = [{ id:'all', name:'全部', icon:'📦' }, ...DATA.SLOTS]
       .map(s=>`<button class="wiki-subtab${s.id===eqSlot?' active':''}" onclick="UI.wikiEquipSlot='${s.id}';UI.openWiki()">${s.icon||''} ${s.name}</button>`).join('');
+    const sortBtn = s => `<button class="wiki-subtab${UI.equipSort===s?' active':''}" onclick="UI.equipSort=UI.equipSort==='${s}'?null:'${s}';UI.openWiki()">💰 金币${s==='asc'?'↑':'↓'}</button>`;
     const secEquip = `
       <div class="wiki-sec panel"><h4>🧰 装备图鉴（${eqList.length} 件${eqSlot==='all'?'':' · '+slotName(eqSlot)}）</h4>
         <div class="wiki-subtabs">${eqSubTabs}</div>
+        <div class="wiki-subtabs">${sortBtn('asc')}${sortBtn('desc')}</div>
         <table class="wiki-table"><tr><th>装备</th><th>部位</th><th>效果</th><th>获取途径</th></tr>${eqRows||'<tr><td colspan="4" style="text-align:center;color:var(--txt2)">该部位暂无装备</td></tr>'}</table>
-        <div class="wiki-p" style="margin-top:6px">· 每人有 <b>6 个装备槽位</b>（武器/头盔/衣服/鞋子/饰品/道具），同一部位只能穿一件；造好/掉落的装备在<b>背包</b>中，到人物信息里点击格位穿戴<br>
+        <div class="wiki-p" style="margin-top:6px">· 点击「金币↑ / 金币↓」按工坊制造金币<b>从低到高 / 从高到低</b>排序，再点一次已选中的按钮恢复默认顺序；无制造配方的装备固定排在最后<br>
+        · 每人有 <b>6 个装备槽位</b>（武器/头盔/衣服/鞋子/饰品/道具），同一部位只能穿一件；造好/掉落的装备在<b>背包</b>中，到人物信息里点击格位穿戴<br>
         · <b>升级</b>：每级属性加成 +20%（基于初始值），最高 +5 级，费用 = 制造成本 ×（当前级+1）；射程不随升级变化<br>
         · <b>分解</b>：返还 50% 制造成本（向上取整）；穿戴中的装备需先卸下才能分解<br>
         · <b>武器射程</b>：战斗中角色射程 = <b>max(自身射程, 武器射程)</b>——取较高值，猎人（射程3）穿弹弓不会降为 2<br>
