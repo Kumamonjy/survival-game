@@ -17,6 +17,7 @@ const g = Game.g;
   assert(R('hammer')===70 && R('compoundbow')===95 && R('pistol')===110, 'T2c 武器锚点 70/95/110');
   assert(R('cap')===20 && R('chood')===32 && R('helmet')===53, 'T2d 头部锚点 20/32/53');
   assert(R('cloth')===46 && R('sweater')===72 && R('cshoes')===30, 'T2e 护甲/鞋子锚点 46/72/30');
+  assert(R('cottonshoes')===55 && R('rainboots')===58, 'T2g 鞋子升级线锚点 棉鞋55/雨靴58（def 溢价 > hp 溢价）');
   assert(R('bracer')===16 && R('bottle')===16 && R('thermos')===28, 'T2f 饰品锚点 16/16/28');
 
   // ===== T3 权重体系一致性抽查：射程3 卖得比同级近战贵 =====

@@ -924,6 +924,8 @@ DATA.SLOTS = [
 DATA.EQUIPS = {
   cloth:  { id:'cloth',  name:'布衣', slot:'armor',  icon:'👕', stats:{hp:25, def:5},                 desc:'生命值 +25，防御力 +5' },
   cshoes: { id:'cshoes', name:'布鞋', slot:'shoes',  icon:'👟', stats:{hp:10, stamina:10, def:3},     desc:'生命值 +10，体力值 +10，防御力 +3' },
+  rainboots: { id:'rainboots', name:'雨靴', slot:'shoes', icon:'👢', stats:{hp:15, def:10},            desc:'生命值 +15，防御力 +10' },
+  cottonshoes: { id:'cottonshoes', name:'棉鞋', slot:'shoes', icon:'🧦', stats:{hp:25, def:8},        desc:'生命值 +25，防御力 +8' },
   chood:  { id:'chood',  name:'布帽', slot:'head',   icon:'👒', stats:{hp:20, def:5},                 desc:'生命值 +20，防御力 +5' },
   cap:    { id:'cap',    name:'棒球帽', slot:'head', icon:'🧢', stats:{hp:10, stamina:10},            desc:'生命值 +10，体力值 +10' },
   helmet: { id:'helmet', name:'安全帽', slot:'head', icon:'🪖', stats:{hp:25, def:10},               desc:'生命值 +25，防御力 +10' },
@@ -1029,7 +1031,7 @@ DATA.TOWERS = {
         长矛58 → 铁锹62 → 消防斧67 → 大铁锤70(-1移速/-10体力) → 复合弓95(TOP) →
         手枪110(TOP 全场最贵)
    头部：棒球帽20 → 布帽32 → 安全帽53      护甲：布衣46 → 毛衣72
-   鞋子：布鞋30                            饰品：护腕16 → 水瓶16 → 保温杯28
+   鞋子：布鞋30 → 棉鞋55 → 雨靴58（V208 补齐鞋子升级线）  饰品：护腕16 → 水瓶16 → 保温杯28
    ── 规则 ──
    ① 新装备总价 = Σ(属性×单价) + 技能溢价 + 射程档位修正
    ② 破表定价 = 设计溢价，必须注明理由（如手枪可跨地形射击）
@@ -1065,6 +1067,8 @@ DATA.RECIPES = [
   { id:'cap',    cost:{ gold:20, fabric:4 }, stamina:8 },
   { id:'helmet', cost:{ gold:53, metal:5 }, stamina:12 },
   { id:'cshoes', cost:{ gold:30, fabric:6 }, stamina:10 },
+  { id:'rainboots', cost:{ gold:58, fabric:6, metal:2 }, stamina:12 },
+  { id:'cottonshoes', cost:{ gold:55, fabric:8 }, stamina:12 },
   { id:'cloth',  cost:{ gold:46, fabric:8 }, stamina:15 },
 ];
 
