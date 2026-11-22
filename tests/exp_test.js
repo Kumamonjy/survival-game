@@ -41,7 +41,7 @@ Game.g = Game.newGame(); Game.currentSlot = 1;
 
   // ===== T5 丧尸经验表 =====
   const Z = DATA.ZOMBIES;
-  assert(Z.walker.exp===15 && Z.runner.exp===15 && Z.brute.exp===20 && Z.licker.exp===20 && Z.savage.exp===25 && Z.behemoth.exp===60, 'T5 经验表 15/15/20/20/25/60');
+  assert(Z.walker.exp===10 && Z.runner.exp===10 && Z.brute.exp===14 && Z.licker.exp===14 && Z.savage.exp===18 && Z.behemoth.exp===60, 'T5 经验表 10/10/14/14/18/60（V213 低阶敌人经验下调）');
 
   // ===== T6 胜利结算：全员全额 + 重伤减半 =====
   const mkU = (ref, side, hp, zt) => ({ uid:'x'+Math.random(), side, ref, hp, maxHp:200, atk:30, def:5, row:1, col:1,
@@ -57,8 +57,8 @@ Game.g = Game.newGame(); Game.currentSlot = 1;
             mkU(null,'enemy',150,'savage') ] };
   Battle.b = b1;
   await Battle.finish('win');
-  assert(cA.exp===30 && !cA.injured, 'T6a 存活者全额 +30（2×游荡15）');
-  assert(cB.exp===Math.ceil(30*0.5) && cB.injured, 'T6b 重伤者 +15 = 50%向上取整');
+  assert(cA.exp===20 && !cA.injured, 'T6a 存活者全额 +20（2×游荡10）');
+  assert(cB.exp===Math.ceil(20*0.5) && cB.injured, 'T6b 重伤者 +10 = 50%向上取整');
 
   // ===== T7 失败减半 / 撤离按击败数 =====
   const cC = Game.createChar('civilian', '平民丙');
@@ -69,7 +69,7 @@ Game.g = Game.newGame(); Game.currentSlot = 1;
             mkU(null,'enemy',0,'walker'), mkU(null,'enemy',0,'savage') ] };
   Battle.b = b2;
   await Battle.finish('lose');
-  assert(cC.exp===Math.ceil(Math.ceil(40/2)*0.5) && cC.injured, 'T7a 失败减半20再重伤减半=10');
+  assert(cC.exp===Math.ceil(Math.ceil(28/2)*0.5) && cC.injured, 'T7a 失败减半14再重伤减半=7');
   const cD = Game.createChar('civilian', '平民丁');
   Game.g.chars.push(cD); cD.exp = 0;
   const b3 = { zone: DATA.ZONES[0], turn:1, phase:'player', over:false, doubledReward:false,
@@ -78,7 +78,7 @@ Game.g = Game.newGame(); Game.currentSlot = 1;
             mkU(null,'enemy',0,'brute'), mkU(null,'enemy',150,'licker') ] };
   Battle.b = b3;
   await Battle.finish('flee');
-  assert(cD.exp===20, 'T7b 撤离按击败数计 +20（未减半）');
+  assert(cD.exp===14, 'T7b 撤离按击败数计 +14（未减半，肥胖丧尸）');
 
   console.log('--- done ---');
   process.exit(0);

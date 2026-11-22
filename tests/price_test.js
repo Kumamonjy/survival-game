@@ -1,9 +1,9 @@
-/* V149 招募价格：广播站各职业与流浪者金币消耗均下调 20 */
+/* V213 招募价格：广播站各职业金币再下调 20；V213 播报免费 */
 const { setup, assert } = require('./_helper.js');
 const { DATA } = setup();
 
-const expect = { civilian:80, soldier:230, doctor:180, nurse:160, scout:180, brawler:180, hunter:180,
-  chef:130, scientist:200, musician:160, explorer:230, thief:240, gambler:200 };
+const expect = { civilian:60, soldier:210, doctor:160, nurse:140, scout:160, brawler:160, hunter:160,
+  chef:110, scientist:180, musician:140, explorer:210, thief:220, gambler:180 };
 
 Object.entries(expect).forEach(([id,p])=>{
   const C = DATA.CLASSES[id];

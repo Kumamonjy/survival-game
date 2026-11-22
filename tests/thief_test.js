@@ -7,7 +7,7 @@ const g = Game.g;
 (async () => {
   // T1 定义
   const T = DATA.CLASSES.thief;
-  assert(T.name==='小偷' && T.price===240 && T.food===2, 'T1a 小偷定义：240💰 / 2🍞');
+  assert(T.name==='小偷' && T.price===220 && T.food===2, 'T1a 小偷定义：220💰 / 2🍞');
   assert(T.base.maxHp===150 && T.base.maxStamina===130 && T.base.atk===45 && T.base.def===5, 'T1b 基础 150❤️/130⚡/45⚔️/5🛡️');
   assert(T.base.range===1 && T.base.move===4 && T.base.critRate===5 && T.base.critDmg===150, 'T1c 射程1 / 移速4 / 暴击5%/150%');
 

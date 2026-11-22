@@ -15,7 +15,7 @@ function mkB(units){
   const db = DK.base;
   assert(db.maxHp===250 && db.atk===55 && db.def===10 && db.range===2 && db.move===3, 'T1a 酒鬼：250/55/10/射程2/移速3');
   assert(db.critRate===10 && db.critDmg===180, 'T1b 暴击 10% / 暴伤 180%');
-  assert(DK.species==='raider' && DK.exp===40 && DK.gold[0]===6 && DK.gold[1]===9, 'T1c 劫掠者种类 / 经验40 / 赏金6-9');
+  assert(DK.species==='raider' && DK.exp===28 && DK.gold[0]===6 && DK.gold[1]===9, 'T1c 劫掠者种类 / 经验28 / 赏金6-9');
 
   // ===== T2 技能：复刻玩家燃烧瓶（CD4 / 无消耗）=====
   const bs = DATA.EQUIPS.molotov.skill, ds = DK.skills[0];

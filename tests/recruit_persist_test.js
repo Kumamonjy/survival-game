@@ -38,15 +38,15 @@ let g = Game.g;
   const rl = elems['recruit-list'] ? elems['recruit-list'].innerHTML : '';
   assert(rl.includes('暂无候选者'), 'T4d 空列表提示去播报');
 
-  // ===== T5 金币不足 20：播报失败，名单不变 =====
+  // ===== T5 播报免费（V213）：金币不变，名单换新 =====
   g.res.gold = 10;
   Recruit.refreshCandidates();
-  assert(g.res.gold === 10 && g.recruitCandidates.length === 0, 'T5 金币不足播报被拒');
+  assert(g.res.gold === 10 && g.recruitCandidates.length === 3, 'T5 免费播报出新 3 名（金币不变）');
 
-  // ===== T6 唯一刷新途径：20💰 播报换新 3 名 =====
+  // ===== T6 唯一刷新途径：免费播报换新 3 名 =====
   g.res.gold = 100;
   Recruit.refreshCandidates();
-  assert(g.res.gold === 80 && g.recruitCandidates.length === 3, 'T6a 扣 20 金播报出新 3 名');
+  assert(g.res.gold === 100 && g.recruitCandidates.length === 3, 'T6a 免费播报出新 3 名');
   assert(g.recruitCandidates.map(c=>c.name).join(',') !== '', 'T6b 新名单已生成');
 
   // ===== T7 源码断言：两处免费自动补充已移除 =====

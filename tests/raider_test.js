@@ -23,7 +23,7 @@ function mkB(units){
   const mb = mug.base;
   assert(mb.maxHp===220 && mb.atk===50 && mb.def===10 && mb.range===1 && mb.move===3, 'T2a 劫匪：220/50/10/射程1/移速3');
   assert(mb.critRate===5 && mb.critDmg===150, 'T2b 劫匪：暴击 5% / 暴伤 150%');
-  assert(mug.exp===30 && mug.gold[0]===4 && mug.gold[1]===6, 'T2c 劫匪：经验 30 / 赏金 4-6（对标 d3）');
+  assert(mug.exp===20 && mug.gold[0]===4 && mug.gold[1]===6, 'T2c 劫匪：经验 20 / 赏金 4-6（对标 d3）');
   assert(!mug.skills && !mug.skill, 'T2d 劫匪无技能');
 
   // ===== T3 暴徒定义 + 击晕 =====

@@ -178,7 +178,7 @@ const mkB = (units) => ({ units, selected:units[0], terrain:mkTerrain(), mode:nu
     units:[allyLive, twEnd, zDead] };
   Battle.b = b6;
   await Battle.finish('win');
-  assert(b6.over===true && cLive.exp===15 && !cLive.injured, 'T10a 结算正常发放角色经验且不崩溃');
+  assert(b6.over===true && cLive.exp===10 && !cLive.injured, 'T10a 结算正常发放角色经验且不崩溃');
   assert(twEnd.hp===twEnd.maxHp, 'T10b 工事状态不回写、不受影响');
 
   console.log('--- done ---');

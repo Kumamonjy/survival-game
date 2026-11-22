@@ -75,7 +75,8 @@ const [s1, s2] = g.chars;
   }
   assert(oldC.item && oldC.item.id==='stone' && oldC.item.count===3 && oldC.equip.item===null, 'T7 旧档道具迁移为 ×3 消耗品');
 
-  // T8 道具管理弹窗渲染
+  // T8 道具管理弹窗渲染（先清空 T4 战斗结算可能随机掉落的装备，保证断言确定性）
+  g.bag = {}; g.bagInst = [];
   Game.addEquip('stone', 2);
   Game.carryItem(s2.id, 'stone');
   UI.openItemSlot(s2.id);
@@ -86,9 +87,8 @@ const [s1, s2] = g.chars;
   assert(!itHtml.includes('背包 ×0'), 'T8d 不再出现「背包 ×0」行');
   assert(itHtml.includes('背包 ×'), 'T8e 有库存道具正常显示库存');
   // T8f 弹窗内携带最后一件后，库存行即时消失（弹窗自动刷新）
-  g.bagInst = (g.bagInst||[]).filter(e=>e.id!=='stone'); g.bag.stone = 0;
+  g.bag = {}; g.bagInst = []; s2.item = null;
   Game.addEquip('stone', 1);
-  s2.item = null;
   UI.openItemSlot(s2.id);
   assert(elems['modal-body'].innerHTML.includes('石块'), 'T8f 有库存时显示石块行');
   Game.carryItem(s2.id, 'stone');

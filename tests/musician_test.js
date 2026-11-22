@@ -13,7 +13,7 @@ function mkB(units){
   // ===== T1 职业定义 =====
   const M = DATA.CLASSES.musician;
   const b = M.base;
-  assert(M && M.name==='音乐家' && M.price===160 && M.food===2, 'T1a 音乐家定义（160 金币 / 食物 2）');
+  assert(M && M.name==='音乐家' && M.price===140 && M.food===2, 'T1a 音乐家定义（140 金币 / 食物 2）');
   assert(b.maxHp===150 && b.maxStamina===100 && b.atk===25 && b.def===5, 'T1b 基础属性 150/100/25/5');
   assert(b.range===2 && b.move===2 && b.critRate===5 && b.critDmg===150, 'T1c 射程2/移速2/暴击5%/150%');
 
