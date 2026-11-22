@@ -35,7 +35,7 @@ const mkAllyAt = (cls,name,r,c) => { const ch = Game.createChar(cls,name,false);
   const zw = Battle.mkZombie('witch', 0, 1, 1);
   assert(zw.skills && zw.skills[0].name==='腐血仪式', 'T2b witch 聚合技能');
   const zk = Battle.mkZombie('walker', 0, 2, 1);
-  assert(Array.isArray(zk.skills) && zk.skills.length===0, 'T2c walker 无技能（空数组）');
+  assert(zk.skills && zk.skills[0].name==='凶猛撕咬', 'T2c walker 自带凶猛撕咬（V183 起不再是空技能表）');
 
   // ---- T3 敌方无体力限制 ----
   Battle.paySkillCost(zw, zw.skills[0]);

@@ -792,8 +792,9 @@ DATA.CLASSES = {
 
 /* 丧尸图鉴：基础值同步角色加强；等级成长 = 生命/攻击/防御按基础值 +10% 每级（丧尸等级 = 出战平均等级 - 1） */
 DATA.ZOMBIES = {
-  walker:  { name:'游荡丧尸', icon:'🧟', desc:'最常见的丧尸，行动迟缓但成群出没。',
-             base:{ maxHp:200, atk:30, def:5, range:1, move:2, critRate:5, critDmg:150 }, exp:15, gold:[1,2], weight:40 },
+  walker:  { name:'游荡丧尸', icon:'🧟', desc:'最常见的丧尸，行动迟缓但成群出没。偶尔会凶猛撕咬，撕开猎物伤口。',
+             base:{ maxHp:200, atk:30, def:5, range:1, move:2, critRate:5, critDmg:150 }, exp:15, gold:[1,2], weight:40,
+             skills:[{ name:'凶猛撕咬', desc:'对 1 格内一名敌人造成 120% 攻击力的伤害，并使其陷入流血状态持续 2 回合。', cost:0, cd:3, type:'attack', shape:'target', mult:1.2, range:1, bleed:{turns:2} }] },
   runner:  { name:'丧尸犬', icon:'🐕', desc:'变异的猎犬，皮薄但撕咬凶狠，移动速度极快，威胁后排。会使用「凶猛撕咬」撕开猎物伤口。',
              base:{ maxHp:150, atk:50, def:5, range:1, move:4, critRate:5, critDmg:150 }, exp:15, gold:[2,3], weight:25,
              skills:[{ name:'凶猛撕咬', desc:'对 1 格内一名敌人造成 120% 攻击力的伤害，并使其陷入流血状态持续 2 回合。', cost:0, cd:3, type:'attack', shape:'target', mult:1.2, range:1, bleed:{turns:2} }] },
