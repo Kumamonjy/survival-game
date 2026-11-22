@@ -880,7 +880,7 @@ DATA.ZONES = [
 ];
 
 /* 顶级装备分层：危险度 ≤2 的区域探险不掉落（需深入 d3+ 区域获取或工坊打造） */
-DATA.TOP_EQUIPS = ['pistol','fireaxe','spear','bow','shovel'];
+DATA.TOP_EQUIPS = ['pistol','fireaxe','spear','bow','shovel','compoundbow'];
 
 /* 天赋：招募角色随机获得1~3个（最多3个，互不重复；1个60%/2个30%/3个10%；生命/攻击/防御/体力作用于基础值并随升级成长，射程/移速/暴击为固定加成）
    一览排序：正面在前、负面在后，组内按属性数值降序 */
@@ -935,6 +935,9 @@ DATA.EQUIPS = {
             desc:'攻击力 +10，射程 1；自带技能「棍棒打击」：1 格内单体 140% 伤害（冷却 3 回合，消耗 15 体力）' },
   slingshot: { id:'slingshot', name:'弹弓', slot:'weapon', icon:'🪃', stats:{atk:5}, range:2,       desc:'攻击力 +5，射程 2（远程）' },
   bow:    { id:'bow',    name:'木弓', slot:'weapon', icon:'🏹', stats:{atk:10}, range:3,             desc:'攻击力 +10，射程 3（远程）' },
+  compoundbow: { id:'compoundbow', name:'复合弓', slot:'weapon', icon:'🎯', stats:{atk:25}, range:3,
+            skill:{ name:'精准射箭', desc:'消耗20体力，对 3 格内的一名敌人造成 120% 攻击力的伤害。', cost:20, cd:3, type:'attack', shape:'target', mult:1.2, range:3 },
+            desc:'攻击力 +25，射程 3（远程）；自带技能「精准射箭」：3 格内单体 120% 伤害（冷却 3 回合，消耗 20 体力）' },
   spear:  { id:'spear',  name:'长矛', slot:'weapon', icon:'🔱', stats:{atk:15}, range:2,
             skill:{ name:'穿刺', desc:'消耗20体力，选择一个方向，对直线上 2 格内的所有敌人造成 100% 攻击力的伤害。', cost:20, cd:2, type:'attack', shape:'line', lineLen:2, mult:1.0 },
             desc:'攻击力 +15，射程 2（远程）；自带技能「穿刺」：直线 2 格 100% 伤害（冷却 2 回合，消耗 20 体力）' },
@@ -1022,6 +1025,7 @@ DATA.RECIPES = [
   { id:'slingshot', cost:{ gold:20, wood:5, fabric:2 }, stamina:12 },
   /* 顶级武器四件：材料 ×1.5 向上取整（金币不变）——强力装备门槛提高 */
   { id:'bow',    cost:{ gold:43, wood:12, fabric:8 }, stamina:20 },
+  { id:'compoundbow', cost:{ gold:95, wood:12, fabric:6, metal:8 }, stamina:26 },
   { id:'club',   cost:{ gold:43, wood:6, metal:3 }, stamina:20 },
   { id:'dagger', cost:{ gold:29, metal:4 }, stamina:12 },
   { id:'cleaver',cost:{ gold:34, metal:5 }, stamina:14 },

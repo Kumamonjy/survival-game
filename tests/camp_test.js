@@ -33,7 +33,7 @@ const g = Game.g;
   const TOP = DATA.TOP_EQUIPS;
   const drops = Array.from({length:40}, ()=>Battle.rollDropEquip(camp));
   assert(drops.every(d=>d && d.id), 'T4a 40 次采样均有装备掉落（100% 必掉）');
-  assert(drops.every(d=>!TOP.includes(d.id)), 'T4b 掉落池不含高阶装备（手枪/消防斧/长矛/木弓/铁锹）');
+  assert(drops.every(d=>!TOP.includes(d.id)), 'T4b 掉落池不含高阶装备（手枪/消防斧/长矛/木弓/铁锹/复合弓）');
 
   // ===== T5 胜利结算实际掉一件入包 =====
   const bagCnt0 = (g.bagInst||[]).length;

@@ -17,7 +17,7 @@ Game.g = Game.newGame(); Game.currentSlot = 1;
   for (let i=0;i<400;i++){ const d = Battle.rollDropEquip('gas'); if (d) { drops++; ids.add(d.id); } }
   assert(drops>=12 && drops<=80, `T2a 400 次采样掉落 ${drops} 次（期望 40，10% 概率生效）`);
   assert([...ids].every(id=>DATA.EQUIPS[id].slot==='weapon'), `T2b 掉落全为武器（${[...ids].join('/')}）`);
-  assert([...ids].every(id=>!TOP.includes(id)), 'T2c 不含顶级武器（手枪/消防斧/长矛/木弓/铁锹）');
+  assert([...ids].every(id=>!TOP.includes(id)), 'T2c 不含顶级武器（手枪/消防斧/长矛/木弓/铁锹/复合弓）');
   assert([...ids].every(id=>!DATA.EQUIPS[id].special), 'T2d 不含特殊饰品（非武器自然排除）');
   assert(ids.size>=2, `T2e 采样覆盖至少 2 种武器（${ids.size} 种）`);
 
