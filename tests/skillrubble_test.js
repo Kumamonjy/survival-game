@@ -50,6 +50,28 @@ function mkB(units){
   assert(ts.some(([r,c])=>r===4&&c===6) && !ts.some(([r,c])=>r===4&&c===5) && !ts.some(([r,c])=>r===6&&c===6),
     'T4 奔袭可选普通空格，排除瓦砾格与水面格');
 
+  // ===== T5 sweepCells 统一横扫计算（泼火锅汤 3×1）=====
+  const u5 = Battle.mkAlly(a1, 5, 5);
+  Battle.b = mkB([u5]); Battle.b.selected = u5;
+  const skHuo = { name:'泼火锅汤', type:'attack', shape:'sweep2', sweepLen:3, sweepWid:1, mult:0.7, cost:0, cd:0 };
+  const cellsR = Battle.sweepCells(u5, 0, 1, skHuo);
+  assert(cellsR.length===3 && cellsR.every(([r])=>r===5) && cellsR[0][1]===6 && cellsR[2][1]===8, 'T5a 右向横扫 = 身前 3×1 直线（5,6)(5,7)(5,8)');
+  const cellsD = Battle.sweepCells(u5, 1, 0, skHuo);
+  assert(cellsD.length===3 && cellsD.every(([,c])=>c===5) && cellsD[0][0]===6, 'T5b 下向横扫 3 格');
+
+  // ===== T6 AI 评估横扫：枚举四方向取最优 =====
+  const e1 = Battle.mkZombie('walker', 5, 6, 1), e2 = Battle.mkZombie('walker', 5, 7, 1);
+  Battle.b.units.push(e1, e2);
+  const foes = [e1, e2];
+  const cast6 = Battle.aiSkillDamage(u5, skHuo, foes);
+  assert(cast6 && cast6.shape==='sweep2' && cast6.dir[0]===5 && cast6.dir[1]===6 && cast6.total>0, 'T6 AI 评估横扫取右向（覆盖 2 敌总伤害最优）');
+
+  // ===== T7 AI 执行横扫：走 execSkill 统一通道造成伤害 =====
+  const hp0 = e1.hp, hp20 = e2.hp;
+  await Battle.aiExecuteZombie(u5, { type:'skill', sk:skHuo, cast:{ shape:'sweep2', dir:[5,6] } });
+  assert(e1.hp < hp0 && e2.hp < hp20, `T7 AI 横扫命中直线两敌（${hp0-e1.hp}/${hp20-e2.hp} 伤害）`);
+  assert(u5.hasAttacked===true, 'T7b AI 施放后消耗攻击次数');
+
   console.log('--- done ---');
   process.exit(0);
 })().catch(e=>{ console.error('TEST ERROR:', e.message); process.exit(1); });

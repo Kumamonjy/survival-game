@@ -5091,18 +5091,13 @@ const Battle = {
     } else if (p.dir) {
       const dr = Math.sign(p.dir[0]-u.row), dc = Math.sign(p.dir[1]-u.col);
       if (sk.shape==='sweep2') {
-        // sangshi 横扫：沿方向 sweepLen 格 × 垂直 sweepWid 格（复刻 gameStore.processSweepAttackSkill 的对称规则），从距离1开始
-        const w0 = (sk.sweepWid||2)%2===0 ? -((sk.sweepWid||2)/2-1) : -Math.floor((sk.sweepWid||2)/2);
-        const w1 = (sk.sweepWid||2)%2===0 ?  (sk.sweepWid||2)/2     :  Math.floor((sk.sweepWid||2)/2);
-        for (let i=1; i<=(sk.sweepLen||3); i++) {
-          for (let j=w0; j<=w1; j++) {
-            const rr = u.row + dr*i + dc*j, cc = u.col + dc*i + dr*j;   // 垂直向偏移
-            if (!Battle.inMap(rr,cc)) continue;
-            hitCells.push([rr,cc]);
-            const t = Battle.unitAt(rr,cc);
-            if (t && t.side!==u.side && t.hp>0) victims.push(t);
-          }
-        }
+        // sangshi 横扫：沿方向 sweepLen 格 × 垂直 sweepWid 格（sweepCells 统一计算，从距离 1 开始）
+        const cells = Battle.sweepCells(u, dr, dc, sk);
+        cells.forEach(([rr,cc])=>{
+          hitCells.push([rr,cc]);
+          const t = Battle.unitAt(rr,cc);
+          if (t && t.side!==u.side && t.hp>0) victims.push(t);
+        });
       } else {
         hitCells = Battle.lineCells(u.row, u.col, dr, dc, sk.lineLen||3);
         victims = hitCells
@@ -5428,7 +5423,19 @@ const Battle = {
     }
     return best;
   },
-  /* 攻击技能伤害评估：按形状求「从当前位置施放」的最优总伤害（target/ring1 取最优单体；sweep 以自身为中心；aoe 枚举落点；line 枚举四方向） */
+  /* 横扫范围统一计算（唯一实现）：沿方向 sweepLen 格 × 垂直 sweepWid 格，从距离 1 开始（对称规则复刻 sangshi）——execSkill 结算与 AI 评估共用 */
+  sweepCells(u, dr, dc, sk) {
+    const len = sk.sweepLen||3, wid = sk.sweepWid||2;
+    const w0 = wid%2===0 ? -(wid/2-1) : -Math.floor(wid/2);
+    const w1 = wid%2===0 ? wid/2 : Math.floor(wid/2);
+    const cells = [];
+    for (let i=1;i<=len;i++) for (let j=w0;j<=w1;j++) {
+      const rr = u.row + dr*i + dc*j, cc = u.col + dc*i + dr*j;
+      if (Battle.inMap(rr,cc)) cells.push([rr,cc]);
+    }
+    return cells;
+  },
+  /* 攻击技能伤害评估：按形状求「从当前位置施放」的最优总伤害（target/ring1 取最优单体；sweep 以自身为中心；aoe 枚举落点；line/sweep2 枚举四方向） */
   aiSkillDamage(u, sk, foes) {
     const dmgOf = t => Battle.calcDamage(u, t, sk.mult||1).dmg;
     const foesAt = cells => cells.map(([r,c])=>Battle.unitAt(r,c)).filter(t=>t&&t.side!==u.side&&t.hp>0);
@@ -5459,6 +5466,15 @@ const Battle = {
         const vs = foesAt(Battle.lineCells(u.row,u.col,dr,dc,sk.lineLen||3));
         const total = vs.reduce((s,t)=>s+dmgOf(t),0);
         if (!best || total>best.total) best={shape:'line', dir:[u.row+dr,u.col+dc], total};
+      });
+      return best;
+    }
+    if (sk.shape==='sweep2') {
+      let best=null;
+      [[1,0],[-1,0],[0,1],[0,-1]].forEach(([dr,dc])=>{
+        const vs = foesAt(Battle.sweepCells(u,dr,dc,sk));
+        const total = vs.reduce((s,t)=>s+dmgOf(t),0);
+        if (!best || total>best.total) best={shape:'sweep2', dir:[u.row+dr,u.col+dc], total};
       });
       return best;
     }
@@ -5525,6 +5541,8 @@ const Battle = {
       await Battle.execSkill(u, { sk, cell:cast.cell });
     } else if (cast.shape==='line') {
       await Battle.execSkill(u, { sk, dir:cast.dir });
+    } else if (cast.shape==='sweep2') {
+      await Battle.execSkill(u, { sk, dir:cast.dir });   // 横扫（sangshi）：与玩家同一 execSkill 结算通道
     }
   },
   /* 追击：按距离场（实际地形距离）朝最近目标移动，绕障碍沿真实最短路；平手用曼哈顿距离；原地更近则不动。返回是否发生移动 */
