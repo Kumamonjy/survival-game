@@ -46,7 +46,7 @@ function mkB(units){
   const zone = id => DATA.ZONES.find(z=>z.id===id);
   const street = zone('street'), base = zone('base');
   const poolSum = z => Object.values(z.pool).reduce((a,b)=>a+b,0);
-  assert(street.pool.raider_drunk===8 && base.pool.raider_drunk===9, 'T4a 商业街 8% / 军事基地 9%');
+  assert(street.pool.raider_drunk===6 && base.pool.raider_drunk===7, 'T4a 商业街 6% / 军事基地 7%');
   assert(poolSum(street)===100 && poolSum(base)===100, 'T4b 两图敌人池权重各合计 100');
   assert(!zone('market').pool.raider_drunk && !zone('hospital').pool.raider_drunk, 'T4c d1/d2 地图不出现酒鬼');
 

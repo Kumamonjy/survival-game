@@ -11,9 +11,9 @@ const g = Game.g;
   assert(camp.gearDrop===true, 'T1b gearDrop：胜利必掉装备标记');
 
   // ===== T2 敌人池：全劫掠者 =====
-  const RAIDER_TYPES = ['raider_mug','raider_thug','raider_snatcher','raider_drunk'];
+  const RAIDER_TYPES = ['raider_mug','raider_thug','raider_snatcher','raider_drunk','raider_gunner'];
   const keys = Object.keys(camp.pool);
-  assert(keys.length===4 && keys.every(k=>RAIDER_TYPES.includes(k)), 'T2a 敌人池仅含劫掠者 4 种');
+  assert(keys.length===5 && keys.every(k=>RAIDER_TYPES.includes(k)), 'T2a 敌人池仅含劫掠者 5 种');
   assert(Object.values(camp.pool).reduce((a,b)=>a+b,0)===100, 'T2b 敌人池权重合计 100');
   UI.teamSelected = g.chars.slice(0,3).map(c=>c.id);   // 出战 3 人（start 需要 teamSelected）
   const enemyTypes = new Set();

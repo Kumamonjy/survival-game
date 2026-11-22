@@ -16,7 +16,7 @@ function mkB(units){
   const zombies = all.filter(Z=>Z.species==='zombie');
   assert(zombies.length>=10, `T1b 丧尸类敌人 ${zombies.length} 种`);
   const raiders = all.filter(Z=>Z.species==='raider');
-  assert(raiders.length===4 && raiders.every(Z=>['劫匪','暴徒','绑匪','酒鬼'].includes(Z.name)), 'T1c 劫掠者类 = 劫匪/暴徒/绑匪/酒鬼 4 种');
+  assert(raiders.length===5 && raiders.every(Z=>['劫匪','暴徒','绑匪','酒鬼','劫掠枪手'].includes(Z.name)), 'T1c 劫掠者类 = 劫匪/暴徒/绑匪/酒鬼/劫掠枪手 5 种');
 
   // ===== T2 劫匪定义 =====
   const mug = DATA.ZOMBIES.raider_mug;
@@ -40,8 +40,8 @@ function mkB(units){
   const zone = id => DATA.ZONES.find(z=>z.id===id);
   const poolSum = z => Object.values(z.pool).reduce((a,b)=>a+b,0);
   const street = zone('street'), base = zone('base');
-  assert(street.pool.raider_mug===10 && street.pool.raider_thug===8, 'T4a 商业街含劫匪 10/暴徒 8');
-  assert(base.pool.raider_mug===9 && base.pool.raider_thug===8, 'T4b 军事基地含劫匪 9/暴徒 8');
+  assert(street.pool.raider_mug===8 && street.pool.raider_thug===8, 'T4a 商业街含劫匪 8/暴徒 8');
+  assert(base.pool.raider_mug===7 && base.pool.raider_thug===8, 'T4b 军事基地含劫匪 7/暴徒 8');
   assert(poolSum(street)===100 && poolSum(base)===100, 'T4c 两图敌人池权重各合计 100');
   assert(!zone('market').pool.raider_mug && !zone('hospital').pool.raider_thug, 'T4d d1/d2 地图不出现劫掠者');
   assert(street.desc.includes('劫掠者') && base.desc.includes('劫掠者'), 'T4e 地图描述提及劫掠者');

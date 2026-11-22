@@ -73,7 +73,7 @@ const mkA = (name,uid,r,c) => Battle.mkAlly({ uid, name, cls:'civilian', level:1
   const zone = id => DATA.ZONES.find(z=>z.id===id);
   const street = zone('street'), base = zone('base');
   const poolSum = z => Object.values(z.pool).reduce((a,b)=>a+b,0);
-  assert(street.pool.raider_snatcher===7 && base.pool.raider_snatcher===7, 'T6a 商业街/军事基地各混入绑匪 7%');
+  assert(street.pool.raider_snatcher===6 && base.pool.raider_snatcher===6, 'T6a 商业街/军事基地各混入绑匪 6%');
   assert(poolSum(street)===100 && poolSum(base)===100, 'T6b 两图敌人池权重各合计 100');
   assert(!zone('market').pool.raider_snatcher && !zone('hospital').pool.raider_snatcher, 'T6c d1/d2 地图不出现绑匪');
 

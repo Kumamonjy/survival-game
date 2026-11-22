@@ -830,6 +830,8 @@ DATA.ZOMBIES = {
   raider_drunk:{ name:'酒鬼', icon:'🍾', species:'raider', desc:'劫掠者团伙里的疯子，整天酒瓶不离手。会朝人群「投掷燃烧瓶」——火焰不分敌我，连同伴都可能被一起烧到！',
              base:{ maxHp:250, atk:55, def:10, range:2, move:3, critRate:10, critDmg:180 }, exp:40, gold:[6,9], weight:0,
              skills:[{ name:'投掷燃烧瓶', desc:'向 2 格内任意一格投掷，对以该格为中心的十字范围（含中心共 5 格）内所有角色（敌我双方）造成 40 点伤害，并使其陷入燃烧状态 2 回合；落点地面残留火焰 2 回合。', cost:0, cd:4, type:'attack', shape:'aoe', range:2, area:1, fixedDmg:40, burn:{turns:2}, fire:{turns:2}, hitsAll:true }] },
+  raider_gunner:{ name:'劫掠枪手', icon:'🎯', species:'raider', desc:'劫掠者团伙里的神枪手，端着一杆捡来的老式步枪在远处点杀猎物。射程可达 3 格，专挑脆皮角色下手——别在开阔地带落单。',
+             base:{ maxHp:220, atk:70, def:10, range:3, move:3, critRate:10, critDmg:180 }, exp:35, gold:[5,8], weight:0 },
   behemoth:{ name:'暴君变异体', icon:'😈', desc:'区域霸主级变异体，见识过它的人类寥寥无几。毁灭重击能一下撕碎防线。',
              base:{ maxHp:510, atk:43, def:19, range:2, move:3, critRate:5, critDmg:150 }, exp:60, gold:[10,10], weight:0, boss:true,
              skills:[{ name:'毁灭重击', desc:'对 2 格内一名敌人造成 180% 攻击力的伤害。', cost:0, cd:4, type:'attack', shape:'target', mult:1.8, range:2 }] }
@@ -863,16 +865,16 @@ DATA.ZONES = [
     main:{wood:[6,10]}, sub:{food:[2,4],metal:[1,2]}, count:[5,6], pool:{walker:30, runner:25, brute:20, licker:15, bomber:10}, boss:false,
     terrain:{ water:6, rubble:16, ruin:12, crate:5, barrel:3 } },
   { id:'camp',    name:'野外营地', icon:'⛺', danger:2, desc:'盘踞在山道旁的劫掠者营地，帐篷与篝火间堆满了劫来的物资——金币丰厚，但守卫的全是穷凶极恶的人类匪徒。胜利后必定能搜出一件装备（不会出现高阶装备）。',
-    main:{gold:[22,34]}, sub:{food:[1,3],metal:[1,2],fabric:[1,2],wood:[1,2],med:[1,2]}, count:[4,6], pool:{raider_mug:34, raider_snatcher:26, raider_thug:22, raider_drunk:18}, boss:false, gearDrop:true,
+    main:{gold:[22,34]}, sub:{food:[1,3],metal:[1,2],fabric:[1,2],wood:[1,2],med:[1,2]}, count:[4,6], pool:{raider_mug:28, raider_snatcher:22, raider_thug:18, raider_drunk:16, raider_gunner:16}, boss:false, gearDrop:true,
     terrain:{ water:4, rubble:6, ruin:4, crate:4, barrel:10 } },
   { id:'factory', name:'旧钢铁工厂', icon:'🏭', danger:3, desc:'废墟中散落着大量可用的金属材料，废弃木托盘与包装箱能拆出木材。深处偶尔能听到沉重的脚步声……',
     main:{metal:[5,9]}, sub:{gold:[8,15],fabric:[1,2],wood:[1,3],med:[1,2]}, count:[5,7], pool:{walker:15, runner:15, brute:30, licker:15, bomber:15, behemoth:5, shrieker:5}, boss:false,
     terrain:{ water:4, rubble:15, ruin:8, crate:4, barrel:10, iceN:8 } },
   { id:'street',  name:'商业街废墟', icon:'🏙️', danger:3, desc:'银行的保险柜还没有被完全搬空。服装店废墟里能翻到布料，倒塌的商铺木架是木材来源——盘踞在此的劫掠者同样觊觎着这些物资。',
-    main:{gold:[35,60]}, sub:{metal:[3,6],fabric:[1,2],wood:[1,2],med:[1,2]}, count:[5,7], pool:{runner:13, brute:11, licker:11, savage:11, bomber:7, gasbag:6, shrieker:5, witch:3, raider_mug:10, raider_thug:8, raider_snatcher:7, raider_drunk:8}, boss:false,
+    main:{gold:[35,60]}, sub:{metal:[3,6],fabric:[1,2],wood:[1,2],med:[1,2]}, count:[5,7], pool:{runner:13, brute:11, licker:11, savage:11, bomber:7, gasbag:6, shrieker:5, witch:3, raider_mug:8, raider_thug:8, raider_snatcher:6, raider_drunk:6, raider_gunner:5}, boss:false,
     terrain:{ water:6, rubble:10, ruin:14, crate:6, barrel:3, iceN:2 } },
   { id:'base',    name:'军事基地', icon:'🎖️', danger:4, desc:'武装到牙齿——驻守的已不只是变异体，还有武装到牙齿的劫掠者团伙。有大变异体坐镇。',
-    main:{metal:[7,11]}, sub:{med:[2,4],gold:[28,45],fabric:[1,2]}, count:[6,8], pool:{brute:13, licker:11, runner:10, savage:12, bomber:5, gasbag:8, shrieker:5, witch:3, raider_mug:9, raider_thug:8, raider_snatcher:7, raider_drunk:9}, boss:true,
+    main:{metal:[7,11]}, sub:{med:[2,4],gold:[28,45],fabric:[1,2]}, count:[6,8], pool:{brute:13, licker:11, runner:10, savage:12, bomber:5, gasbag:8, shrieker:5, witch:3, raider_mug:7, raider_thug:8, raider_snatcher:6, raider_drunk:7, raider_gunner:5}, boss:true,
     terrain:{ water:6, rubble:14, ruin:12, crate:5, barrel:6, iceN:7 } },
 ];
 
