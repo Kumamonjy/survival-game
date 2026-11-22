@@ -43,7 +43,7 @@ const g = Game.g;
   // T5 区域卡展示战场地形行（全部区域开局即可进入）
   elems['zone-list'] = mkEl();
   UI.openZones();
-  assert(elems['zone-list'].innerHTML.includes('战场地形') && elems['zone-list'].innerHTML.includes('🛢️10'), 'T5 区域卡展示地形配方');
+  assert(elems['zone-list'].innerHTML.includes('战场地形') && elems['zone-list'].innerHTML.includes('🛢️</span>10'), 'T5 区域卡展示地形配方（油桶红化）');
 
   Battle.exit ? null : null;
   console.log('--- done ---');

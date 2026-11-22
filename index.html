@@ -281,7 +281,6 @@ button:disabled { opacity:.45; cursor:not-allowed; }
 .cell.water { background:#26404d; }
 .cell.rubble { background:#3b3222; }
 .cell.barrel { background:#4a3520; }
-.cell.barrel .terr { filter: hue-rotate(155deg) saturate(2.6) brightness(.95); }   /* 油桶图标转为红色 */
 @keyframes fxBoom { 0%{box-shadow:inset 0 0 0 0 rgba(255,150,60,.95); background:rgba(255,170,70,.6);} 60%{box-shadow:inset 0 0 18px 8px rgba(255,110,40,.7);} 100%{box-shadow:inset 0 0 0 0 rgba(255,90,40,0); background:transparent;} }
 .cell.fx-boom { animation:fxBoom .5s ease-out; z-index:7; }
 /* 油桶爆炸：白热核心 + 扩散火环 + 地图震屏（独立特效层，不会被 renderMap 冲掉） */
@@ -1084,7 +1083,7 @@ DATA.TERRAIN = {
   ruin:   { name:'废墟',  icon:'🧱', moveCost:0, walk:false, cls:'ruin walk', desc:'阻挡通行' },
   crate:  { name:'物资箱', icon:'🧰', moveCost:1, walk:true, cls:'walk', desc:'走上即拾取随机物资' },
   pcrate: { name:'精品物资箱', icon:'🎁', moveCost:1, walk:true, cls:'walk', desc:'走上即开启：90% 获得双倍物资，10% 获得特殊饰品（熊熊/兔兔）' },
-  barrel: { name:'油桶', icon:'🛢️', moveCost:0, walk:false, cls:'barrel', desc:'受任何攻击即爆炸：对周围 1 圈（8 格）所有单位造成 100 点伤害（结算防御）并附加燃烧 5 回合，可连锁引爆' },
+  barrel: { name:'油桶', icon:'🛢️', filter:'hue-rotate(155deg) saturate(2.6) brightness(.95)', moveCost:0, walk:false, cls:'barrel', desc:'受任何攻击即爆炸：对周围 1 圈（8 格）所有单位造成 100 点伤害（结算防御）并附加燃烧 5 回合，可连锁引爆' },
 };
 
 /* 残留火焰地形（覆盖层，不替换原地形）：爆炸后地面留火，踩上去会燃烧 */
@@ -1265,6 +1264,8 @@ let uidCounter = 1;
 function uid(){ return 'c' + (uidCounter++) + '_' + Date.now().toString(36); }
 function rnd(a,b){ return a + Math.floor(Math.random()*(b-a+1)); }
 function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+/* 地形图标渲染：带 filter 字段的地形（如燃烧油桶转红）套滤镜 span，其余原样输出——未来新增其他颜色桶只需增删 filter 字段 */
+function terrainIcon(T){ return T && T.filter ? `<span style="filter:${T.filter}">${T.icon}</span>` : (T ? T.icon : ''); }
 function clone(o){ return JSON.parse(JSON.stringify(o)); }
 
 const Game = {
@@ -3167,7 +3168,7 @@ const UI = {
   /* 产出区间串：{gold:[4,8]} → 「💰 4-8」 */
   lootRangeStr(tbl){ return Object.entries(tbl||{}).map(([k,v])=>`${UI.resIcon(k)} ${v[0]}-${v[1]}`).join('　'); },
   /* 地形配方串：{water:10} → 「🌊10」 */
-  terrainStr(tbl){ return Object.entries(tbl||{}).map(([k,v])=>`${(DATA.TERRAIN[k]||{}).icon||''}${v}`).join(' '); },
+  terrainStr(tbl){ return Object.entries(tbl||{}).map(([k,v])=>`${terrainIcon(DATA.TERRAIN[k]||{})}${v}`).join(' '); },
   /* 共享渲染片段：材料清单 / 弹窗关闭行 / 角色属性行（全属性 full=true 含攻击防御射程移速暴击） */
   fmtMats(mats, sep){ return Object.entries(mats||{}).map(([k,v])=>`${UI.resIcon(k)}×${v}`).join(sep||'　'); },
   closeRow(){ return '<div class="row" style="margin-top:12px"><button class="btn" style="width:100%" onclick="UI.closeModal()">关闭</button></div>'; },
@@ -3352,7 +3353,7 @@ const UI = {
       return `<tr><td colspan="11" style="text-align:left;background:rgba(255,255,255,.07)"><b>${label}</b> <span style="color:var(--txt2);font-size:11px">${tip}</span></td></tr>` + list.map(zomRow).join('');
     }).join('');
     const terRows = Object.entries(DATA.TERRAIN).filter(([k,t])=>t.desc||k==='plain').map(([k,t])=>
-      `<tr><td><b>${t.icon||'⬜'} ${t.name}</b></td><td>${t.desc||'无特殊效果'}</td></tr>`).join('');
+      `<tr><td><b>${terrainIcon(t)||'⬜'} ${t.name}</b></td><td>${t.desc||'无特殊效果'}</td></tr>`).join('');
     const talentRows = DATA.TALENTS.map(t=>
       `<tr><td><b>${t.name}</b>${t.good?'':' <span class="tag red">负面</span>'}</td><td>${t.desc}</td></tr>`).join('');
     const secGoal = `
@@ -3399,7 +3400,7 @@ const UI = {
         <table class="wiki-table"><tr><th>工事</th><th>建造 / 升级（💰）</th><th>生命 / 攻击 / 防御 / 射程 / 暴击</th><th>要点</th></tr>
         ${['arrow','ballista'].map(k=>{
           const T = DATA.TOWERS[k];
-          return `<tr><td><b>${T.icon} ${T.name}</b></td>
+          return `<tr><td><b>${terrainIcon(T)} ${T.name}</b></td>
             <td>建造 ${Game.towerCostStr(T.buildCost)}<br>升级 ${[1,2,3,4].map(l=>Game.upCost({upgradeCost:T.upgradeCost}, l)).join('/')}</td>
             <td>${T.hp} / ${T.atk} / ${T.def} / ${T.range} 格 / ${Math.round(T.critRate*100)}%（暴伤 ${Math.round(T.critDmg*100)}%）</td>
             <td>${T.skill?`技能「${T.skill.name}」：直线 ${T.skill.lineLen} 格内所有敌人受到 100% 攻击力伤害，冷却 ${T.skill.cd} 回合；`:'每回合自动攻击射程内最近的敌人；'}无体力、不可移动</td></tr>`;
@@ -4278,7 +4279,7 @@ const Battle = {
       let inner = '';
       if (T.icon) {
         const left = t==='ruin' && b.ruins[r+','+c]!==undefined ? `<i style="font-size:9px;color:#e0a080;font-style:normal">${b.ruins[r+','+c]}</i>` : '';
-        inner += `<span class="terr">${T.icon}${left}</span>`;
+        inner += `<span class="terr">${terrainIcon(T)}${left}</span>`;
       }
       if (fireT) inner += `<div class="fire-fx">🔥<b>${fireT}</b></div>`;
       if (u) {

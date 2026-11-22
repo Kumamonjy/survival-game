@@ -10,7 +10,7 @@ const g = Game.g;
   assert(BT && BT.name==='油桶' && BT.walk===false && BT.icon==='🛢️', 'T1a TERRAIN.barrel 定义（不可通行）');
   assert(DATA.ZONES.every(z=>z.terrain && z.terrain.barrel>=1) && html.includes("Object.entries(Z.terrain||{}).forEach"), 'T1b 每图按区域配方散布油桶（统一 buildTerrain）');
   assert(html.includes("@keyframes fxBoom") && html.includes('.cell.fx-boom'), 'T1c 爆炸特效 CSS');
-  assert(BT.cls==='barrel' && html.includes('inner += `<span class="terr">${T.icon}${left}</span>`'), 'T1d 渲染按地形表挂 🛢️ 图标');
+  assert(BT.cls==='barrel' && html.includes('inner += `<span class="terr">${terrainIcon(T)}${left}</span>`'), 'T1d 渲染按地形表挂 🛢️ 图标');
   assert(Battle.TILES.barrel && Battle.TILES.barrel.attackable===true
     && html.includes('return !t && Battle.tileAttackable(r,c);'), 'T1e 普攻可选油桶为目标（地形交互表）');
   assert(html.includes('await Battle.hitBarrels(hitCells, u)'), 'T1f 技能波及引爆挂点');

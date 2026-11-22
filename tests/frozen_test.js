@@ -32,10 +32,11 @@ const g = Game.g;
   await Battle.zombieAct(z);
   assert(p2.hp===hp0, 'T3 冰冻的敌人本回合不攻击');
 
-  // ===== T4 油桶图标红色化 =====
-  assert(html.includes('.cell.barrel .terr { filter: hue-rotate(155deg) saturate(2.6) brightness(.95); }'), 'T4 油桶图标 CSS 滤镜转红已生效');
+  // ===== T4 油桶图标红色化（数据驱动：filter 字段 + terrainIcon 统一渲染） =====
   const barrel = DATA.TERRAIN.barrel;
-  assert(barrel && barrel.icon==='🛢️', 'T4b 油桶图标定义保持 🛢️（由滤镜转红）');
+  assert(barrel && barrel.icon==='🛢️' && barrel.filter && barrel.filter.includes('hue-rotate'), 'T4 油桶带红色滤镜字段（燃烧油桶=红，未来蓝色桶不加 filter 即可）');
+  assert(html.includes('function terrainIcon(T)') && html.includes("terrainIcon(t)||'⬜'"), 'T4b terrainIcon 统一渲染函数存在且用于地图/百科');
+  assert(barrel.filter.includes('155') && html.includes('T.filter ? `<span style="filter:${T.filter}">${T.icon}</span>`'), 'T4c 油桶红化滤镜数据驱动，其他地形原色输出');
 
   // ===== T5 wiki 状态表收录 =====
   UI.wikiTab='status'; UI.openWiki();
