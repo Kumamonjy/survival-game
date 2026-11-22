@@ -729,7 +729,7 @@ DATA.CLASSES = {
     avatars:['👨‍🍳','🍳','🥘','🍲','🍜','🥢'],
     food:2,
     skills:[
-      { name:'泼火锅汤', desc:'消耗30体力，选择一个方向，泼出滚烫汤水，对身前 3×1 直线范围内的所有敌人造成 70% 攻击力的伤害。', cost:30, cd:3, type:'attack', shape:'sweep2', sweepLen:3, sweepWid:1, mult:0.7 },
+      { name:'泼火锅汤', desc:'消耗30体力，选择一个方向，泼出滚烫汤水，对身前 3×1 直线范围内的所有敌人造成 90% 攻击力的伤害。', cost:30, cd:3, type:'attack', shape:'sweep2', sweepLen:3, sweepWid:1, mult:0.9 },
       { name:'美味料理', desc:'消耗25体力，喂食1格内一名友方，为其恢复 15 点体力。', cost:25, cd:3, type:'regen', shape:'target', regenAmt:15, range:1 },
     ],
     base:{ maxHp:250, maxStamina:110, atk:30, def:10, range:1, move:2, critRate:5, critDmg:150 },
@@ -857,7 +857,7 @@ DATA.ZONES = [
 ];
 
 /* 顶级装备分层：危险度 ≤2 的区域探险不掉落（需深入 d3+ 区域获取或工坊打造） */
-DATA.TOP_EQUIPS = ['pistol','fireaxe','spear','bow'];
+DATA.TOP_EQUIPS = ['pistol','fireaxe','spear','bow','shovel'];
 
 /* 天赋：招募角色随机获得1~3个（最多3个，互不重复；1个60%/2个30%/3个10%；生命/攻击/防御/体力作用于基础值并随升级成长，射程/移速/暴击为固定加成）
    一览排序：正面在前、负面在后，组内按属性数值降序 */
@@ -920,6 +920,9 @@ DATA.EQUIPS = {
             desc:'攻击力 +40，暴击率 +3%，射程 3（远程）；自带技能「火力压制」：3 格内单体 160% 伤害（冷却 3 回合，消耗 25 体力）' },
   dagger: { id:'dagger', name:'匕首', slot:'weapon', icon:'🗡️', stats:{atk:12}, range:1,
             desc:'攻击力 +12，射程 1' },
+  shovel: { id:'shovel', name:'铁锹', slot:'weapon', icon:'⛏️', stats:{atk:18}, range:2,
+            skill:{ name:'挥扫', desc:'消耗25体力，选择一个方向，对身前 3×1 范围内的所有敌人造成 70% 攻击力的伤害。', cost:25, cd:3, type:'attack', shape:'sweep2', sweepLen:3, sweepWid:1, mult:0.7 },
+            desc:'攻击力 +18，射程 2（中距）；自带「挥扫」：横扫身前 3×1 范围，70% 攻击力伤害（冷却 3 回合，消耗 25 体力）' },
   cleaver:{ id:'cleaver',name:'菜刀', slot:'weapon', icon:'🔪', stats:{atk:10}, range:1,
             skill:{ name:'凶猛劈砍', desc:'消耗15体力，对 1 格内的一名敌人造成 150% 攻击力的伤害，并使其流血 2 回合。', cost:15, cd:3, type:'attack', shape:'target', mult:1.5, range:1, bleed:{turns:2} },
             desc:'攻击力 +10，射程 1；自带技能「凶猛劈砍」：1 格内单体 150% 伤害并附加流血 2 回合（冷却 3 回合，消耗 15 体力）' },
@@ -1000,6 +1003,7 @@ DATA.RECIPES = [
   { id:'fireaxe',cost:{ gold:67, wood:12, metal:9 }, stamina:25 },
   { id:'spear',  cost:{ gold:58, wood:9, metal:8 }, stamina:25 },
   { id:'pistol', cost:{ gold:88, metal:15, fabric:6 }, stamina:30 },
+  { id:'shovel', cost:{ gold:62, wood:10, metal:5 }, stamina:25 },
   { id:'sweater', cost:{ gold:72, fabric:12 }, stamina:15 },
   { id:'chood',  cost:{ gold:32, fabric:6 }, stamina:10 },
   { id:'cap',    cost:{ gold:20, fabric:4 }, stamina:8 },

@@ -14,7 +14,7 @@ const mkB=(units)=>({ units, selected:units[0], terrain:Array.from({length:Battl
   const sk2 = C.skills[1];
   assert(sk2.name==='美味料理' && sk2.type==='regen' && sk2.cost===25 && sk2.regenAmt===15 && sk2.range===1, 'T1b 美味料理参数');
   const sk1 = C.skills[0];
-  assert(sk1.name==='泼火锅汤' && sk1.shape==='sweep2' && sk1.sweepLen===3 && sk1.sweepWid===1 && sk1.mult===0.7 && sk1.cost===30, 'T1c 泼火锅汤参数');
+  assert(sk1.name==='泼火锅汤' && sk1.shape==='sweep2' && sk1.sweepLen===3 && sk1.sweepWid===1 && sk1.mult===0.9 && sk1.cost===30, 'T1c 泼火锅汤参数');
 
   // ===== T2 泼火锅汤执行 =====
   const chef = Battle.mkAlly({ uid:'c1', name:'老陈', cls:'chef', level:1, exp:0, av:'👨‍🍳',
@@ -25,7 +25,7 @@ const mkB=(units)=>({ units, selected:units[0], terrain:Array.from({length:Battl
   assert(b.mode==='skill' && b.targetMode==='sweep2', 'T2a 进入方向选择');
   b.pendingSkill = sk1;
   await Battle.execSkill(chef, { sk:sk1, dir:[5,6] });
-  const expDmg = Math.max(1, Math.round(30*0.7) - 5);
+  const expDmg = Math.max(1, Math.round(30*0.9) - 5);
   assert(z1.hp === z1.maxHp - expDmg && z2.hp === z2.maxHp - expDmg, 'T2b 直线1/3格丧尸各受 ' + expDmg + ' 伤害');
   assert(z3.hp === z3.maxHp && z4.hp === z4.maxHp, 'T2c 宽度1两侧无伤');
   assert(chef.stamina === 120-30 && chef.hasAttacked, 'T2d 消耗30体力与行动标记');
