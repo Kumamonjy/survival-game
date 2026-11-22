@@ -281,6 +281,8 @@ button:disabled { opacity:.45; cursor:not-allowed; }
 .cell.water { background:#26404d; }
 .cell.rubble { background:#3b3222; }
 .cell.barrel { background:#4a3520; }
+.cell.iceN { background:#1e3a4a; }
+.cell.ice { background:#2a4a5e; }
 @keyframes fxBoom { 0%{box-shadow:inset 0 0 0 0 rgba(255,150,60,.95); background:rgba(255,170,70,.6);} 60%{box-shadow:inset 0 0 18px 8px rgba(255,110,40,.7);} 100%{box-shadow:inset 0 0 0 0 rgba(255,90,40,0); background:transparent;} }
 .cell.fx-boom { animation:fxBoom .5s ease-out; z-index:7; }
 /* 油桶爆炸：白热核心 + 扩散火环 + 地图震屏（独立特效层，不会被 renderMap 冲掉） */
@@ -850,13 +852,13 @@ DATA.HORDE = {
 DATA.ZONES = [
   { id:'market',  name:'废弃超市', icon:'🛒', danger:1, desc:'货架上还残留着末日前的物资，衣物货架或许还保有布料。',
     main:{food:[8,14]}, sub:{gold:[4,8],fabric:[2,4]}, count:[4,5], pool:{walker:60, runner:40}, boss:false,
-    terrain:{ water:10, rubble:8, ruin:6, crate:8, barrel:1 } },
-  { id:'gas',     name:'废弃加油站', icon:'⛽', danger:1, desc:'便利店收银台里还留着零钱，拆下来的木托盘堆在后院；散落的油桶随时可能被引爆。',
+    terrain:{ water:10, rubble:8, ruin:6, crate:8, barrel:1, iceN:2 } },
+  { id:'gas',     name:'废弃加油站', icon:'⛽', danger:1, desc:'便利店收银台里还留着零钱，拆下来的木托盘堆在后院；遍地都是易爆的油桶，角落里也立着几只蓝色的液氮桶。',
     main:{gold:[12,20]}, sub:{wood:[1,3],food:[2,4]}, count:[4,5], pool:{walker:65, runner:23, bomber:12}, boss:false,
-    terrain:{ water:4, rubble:9, ruin:5, crate:7, barrel:24 } },
+    terrain:{ water:4, rubble:9, ruin:5, crate:7, barrel:24, iceN:4 } },
   { id:'hospital',name:'市中心医院', icon:'🏥', danger:2, desc:'药房或许还有没被搜刮的药品。',
     main:{med:[5,9]}, sub:{food:[3,6],fabric:[1,3]}, count:[5,6], pool:{walker:20, runner:30, licker:25, bomber:12, shrieker:8, witch:5}, boss:false,
-    terrain:{ water:12, rubble:8, ruin:7, crate:7, barrel:2 } },
+    terrain:{ water:12, rubble:8, ruin:7, crate:7, barrel:2, iceN:3 } },
   { id:'forest',  name:'林场', icon:'🌲', danger:2, desc:'伐木场堆满原木与木托盘，木材取之不尽；但林间游荡着成群的丧尸。',
     main:{wood:[6,10]}, sub:{food:[2,4],metal:[1,2]}, count:[5,6], pool:{walker:30, runner:25, brute:20, licker:15, bomber:10}, boss:false,
     terrain:{ water:6, rubble:16, ruin:12, crate:5, barrel:3 } },
@@ -865,13 +867,13 @@ DATA.ZONES = [
     terrain:{ water:4, rubble:6, ruin:4, crate:4, barrel:10 } },
   { id:'factory', name:'旧钢铁工厂', icon:'🏭', danger:3, desc:'废墟中散落着大量可用的金属材料，废弃木托盘与包装箱能拆出木材。深处偶尔能听到沉重的脚步声……',
     main:{metal:[5,9]}, sub:{gold:[8,15],fabric:[1,2],wood:[1,3],med:[1,2]}, count:[5,7], pool:{walker:15, runner:15, brute:30, licker:15, bomber:15, behemoth:5, shrieker:5}, boss:false,
-    terrain:{ water:4, rubble:15, ruin:8, crate:4, barrel:10 } },
+    terrain:{ water:4, rubble:15, ruin:8, crate:4, barrel:10, iceN:8 } },
   { id:'street',  name:'商业街废墟', icon:'🏙️', danger:3, desc:'银行的保险柜还没有被完全搬空。服装店废墟里能翻到布料，倒塌的商铺木架是木材来源——盘踞在此的劫掠者同样觊觎着这些物资。',
     main:{gold:[35,60]}, sub:{metal:[3,6],fabric:[1,2],wood:[1,2],med:[1,2]}, count:[5,7], pool:{runner:13, brute:11, licker:11, savage:11, bomber:7, gasbag:6, shrieker:5, witch:3, raider_mug:10, raider_thug:8, raider_snatcher:7, raider_drunk:8}, boss:false,
-    terrain:{ water:6, rubble:10, ruin:14, crate:6, barrel:3 } },
+    terrain:{ water:6, rubble:10, ruin:14, crate:6, barrel:3, iceN:2 } },
   { id:'base',    name:'军事基地', icon:'🎖️', danger:4, desc:'武装到牙齿——驻守的已不只是变异体，还有武装到牙齿的劫掠者团伙。有大变异体坐镇。',
     main:{metal:[7,11]}, sub:{med:[2,4],gold:[28,45],fabric:[1,2]}, count:[6,8], pool:{brute:13, licker:11, runner:10, savage:12, bomber:5, gasbag:8, shrieker:5, witch:3, raider_mug:9, raider_thug:8, raider_snatcher:7, raider_drunk:9}, boss:true,
-    terrain:{ water:6, rubble:14, ruin:12, crate:5, barrel:6 } },
+    terrain:{ water:6, rubble:14, ruin:12, crate:5, barrel:6, iceN:7 } },
 ];
 
 /* 顶级装备分层：危险度 ≤2 的区域探险不掉落（需深入 d3+ 区域获取或工坊打造） */
@@ -1083,7 +1085,8 @@ DATA.TERRAIN = {
   ruin:   { name:'废墟',  icon:'🧱', moveCost:0, walk:false, cls:'ruin walk', desc:'阻挡通行' },
   crate:  { name:'物资箱', icon:'🧰', moveCost:1, walk:true, cls:'walk', desc:'走上即拾取随机物资' },
   pcrate: { name:'精品物资箱', icon:'🎁', moveCost:1, walk:true, cls:'walk', desc:'走上即开启：90% 获得双倍物资，10% 获得特殊饰品（熊熊/兔兔）' },
-  barrel: { name:'油桶', icon:'🛢️', filter:'hue-rotate(155deg) saturate(2.6) brightness(.95)', moveCost:0, walk:false, cls:'barrel', desc:'受任何攻击即爆炸：对周围 1 圈（8 格）所有单位造成 100 点伤害（结算防御）并附加燃烧 5 回合，可连锁引爆' },
+  barrel: { name:'油桶', icon:'🛢️', filter:'hue-rotate(155deg) saturate(2.6) brightness(.95)', moveCost:0, walk:false, cls:'barrel', blast:'fire', desc:'受任何攻击即爆炸：对周围 1 圈（8 格）所有单位造成 100 点伤害（结算防御）并附加燃烧 5 回合，爆炸后在 3×3 留下地面火焰，可连锁引爆' },
+  iceN:   { name:'液氮桶', icon:'🛢️', moveCost:0, walk:false, cls:'iceN', blast:'ice', desc:'受任何攻击即炸裂：对周围 1 圈（8 格）所有单位造成 40 点低温伤害（结算防御）并冰冻 1 回合，并在 3×3 留下冰冻地形（持续 2 回合，踩上会被冻住）；冰冻与火焰互相覆盖，可连锁引爆' },
 };
 
 /* 残留火焰地形（覆盖层，不替换原地形）：爆炸后地面留火，踩上去会燃烧 */
@@ -4010,6 +4013,7 @@ const Battle = {
   /* 地形交互表：一处定义「能否被攻击指定 / 点击做什么 / 走入触发什么」，新增地形只改这里 */
   TILES: {
     barrel:  { attackable:true, attack:(u,r,c)=>Battle.attackBarrel(u,r,c) },
+    iceN:    { attackable:true, attack:(u,r,c)=>Battle.attackBarrel(u,r,c) },
     rubble:  { attackable:true, attack:(u,r,c)=>Battle.clearRubble(u,r,c) },
     ruin:    { attackable:(b,r,c)=>(b.ruins[r+','+c]||0)>0, attack:(u,r,c)=>Battle.searchRuin(u,r,c) },
     crate:   { enter:(u,r,c)=>Battle.pickCrate(u,r,c,1,false) },
@@ -4267,8 +4271,10 @@ const Battle = {
       const t = b.terrain[r][c], T = DATA.TERRAIN[t] || DATA.TERRAIN.plain;
       const u = Battle.unitAt(r,c);
       const fireT = (b.fire && b.fire[r+','+c]) || 0;
+      const iceT = (b.ice && b.ice[r+','+c]) || 0;
       let cls = 'cell ' + (T.cls || 'walk');
       if (fireT) cls += ' fire';
+      if (iceT) cls += ' ice';
       const mk = b.moveSet && b.moveSet[r+','+c]!==undefined && !(u && u.side==='ally' && u===b.selected);
       const mkSelf = b.moveSet && b.moveSet[r+','+c]!==undefined && b.selected && u===b.selected;
       const atk = b.targetSet && b.targetSet.some(([tr,tc])=>tr===r&&tc===c);
@@ -4277,6 +4283,7 @@ const Battle = {
       if (atk) cls += (b.mode==='skill'&&b.targetMode==='heal') ? ' healable' : (b.mode==='pickcrate' ? ' pickable' : ' attackable');
       if (picked) cls+=' picked';
       let inner = '';
+      if (iceT) inner += `<span class="terr">❄️</span>`;
       if (T.icon) {
         const left = t==='ruin' && b.ruins[r+','+c]!==undefined ? `<i style="font-size:9px;color:#e0a080;font-style:normal">${b.ruins[r+','+c]}</i>` : '';
         inner += `<span class="terr">${terrainIcon(T)}${left}</span>`;
@@ -4678,6 +4685,8 @@ const Battle = {
     // 走入可交互地形（物资箱/精品箱/石头箱）：统一走交互表
     const tile = Battle.TILES[b.terrain[r][c]];
     if (tile && tile.enter) tile.enter(u, r, c);
+    // 走入冰冻地形：立即冰冻 1 回合（无法行动）
+    if (Battle.iceAt(r,c)) Battle.freezeHit(u);
     if (Battle.fireAt(r,c)) Battle.fireBurn(u);   // 踏入残留火焰 → 燃烧
     b.mode=null; b.moveSet=null;
     Battle.renderMap(); Battle.renderPanels();
@@ -4716,7 +4725,10 @@ const Battle = {
   },
   /* ---------- 残留火焰地形 ---------- */
   fireAt(r, c) { const b=Battle.b; return !!(b && b.fire && b.fire[r+','+c] > 0); },
-  /* 点燃一格地面：仅可通行地形生效；同一格重复点燃取较长时长；格上的单位立即被点燃 */
+  iceAt(r, c) { const b=Battle.b; return !!(b && b.ice && b.ice[r+','+c] > 0); },
+  /* 桶类地形统一判断（红色油桶 / 蓝色液氮桶），引爆与连锁共用 */
+  isBarrelLike(t) { return t==='barrel' || t==='iceN'; },
+  /* 点燃一格地面：仅可通行地形生效；同一格重复点燃取较长时长；格上的单位立即被点燃；火焰覆盖冰冻（后者覆盖前者） */
   ignite(r, c, turns) {
     const b = Battle.b;
     if (!b || !Battle.inMap(r,c)) return false;
@@ -4725,9 +4737,31 @@ const Battle = {
     b.fire = b.fire || {};
     const k = r+','+c;
     b.fire[k] = Math.max(b.fire[k]||0, turns || DATA.FIRE.turns);
+    if (b.ice) delete b.ice[k];                           // 火焰覆盖冰冻
     const v = Battle.unitAt(r,c);
     if (v && v.hp>0) Battle.fireBurn(v);
     return true;
+  },
+  /* 冻结一格地面（液氮桶爆炸）：仅可通行地形生效；冰冻覆盖火焰；格上的单位立即被冻 */
+  freezeFloor(r, c, turns) {
+    const b = Battle.b;
+    if (!b || !Battle.inMap(r,c)) return false;
+    const T = DATA.TERRAIN[b.terrain[r][c]];
+    if (!T || !T.walk) return false;                      // 水面/石头/废墟/桶上不结冰
+    b.ice = b.ice || {};
+    const k = r+','+c;
+    b.ice[k] = Math.max(b.ice[k]||0, turns || 2);
+    if (b.fire) delete b.fire[k];                         // 冰冻覆盖火焰
+    const v = Battle.unitAt(r,c);
+    if (v && v.hp>0) Battle.freezeHit(v);
+    return true;
+  },
+  /* 踩冰：冰冻 1 回合（已有冰冻不重刷） */
+  freezeHit(u) {
+    if (!u || u.hp<=0 || u.isTower) return;
+    if (u.sts && u.sts.frozen) return;
+    Battle.applyStatus(u, 'frozen', 1, null);
+    Battle.log(`❄️ ${u.name} 被寒霜冻住了（1 回合）`, 'bad');
   },
   /* 踩火 / 火中停留：进入燃烧固定 2 回合；已有更长的燃烧不被缩短 */
   fireBurn(u) {
@@ -4741,6 +4775,17 @@ const Battle = {
     } else {
       Battle.applyStatus(u, 'burn', dur, null);
     }
+  },
+  /* 回合结束：冰面 -1 回合，融化时移除（不在此处冻人：踩冰在 doMove 进入瞬间触发，避免站冰死锁） */
+  tickIce() {
+    const b = Battle.b;
+    if (!b || !b.ice) return;
+    let changed = false;
+    Object.keys(b.ice).forEach(k=>{
+      b.ice[k]--;
+      if (b.ice[k] <= 0) { delete b.ice[k]; changed = true; }
+    });
+    if (changed) { Battle.log('☀️ 冰面融化了', ''); Battle.renderMap(); }
   },
   /* 回合结束：火焰 -1 回合，熄灭时移除；仍站在火中的单位持续被点燃 */
   tickFire() {
@@ -4784,13 +4829,13 @@ const Battle = {
     Battle.fxBlast(u.row, u.col);
     Battle.log(`💥 ${u.name} 发生了剧烈自爆！`, 'crit');
     Battle.subtitle(`💥 ${u.name} 自爆！`);
-    // 自爆波及相邻油桶 → 依次连锁引爆
+    // 自爆波及相邻桶（油桶/液氮桶）→ 依次连锁引爆
     Battle._barrelSeq = 0;
     for (const [dr,dc] of [[1,0],[-1,0],[0,1],[0,-1]]) {
       const rr=u.row+dr, cc=u.col+dc;
-      if (Battle.inMap(rr,cc) && Battle.b.terrain[rr][cc]==='barrel') {
+      if (Battle.inMap(rr,cc) && Battle.isBarrelLike(Battle.b.terrain[rr][cc])) {
         await Battle.sleep(200);
-        if (Battle.b.terrain[rr][cc]==='barrel') await Battle.explodeBarrel(rr, cc, u);
+        if (Battle.isBarrelLike(Battle.b.terrain[rr][cc])) await Battle.explodeBarrel(rr, cc, u);
       }
     }
     Battle.b.units.filter(x=>x.hp>0 && x.side==='ally' && Battle.manhattan(x,u)<=1).forEach(v=>{
@@ -4808,18 +4853,47 @@ const Battle = {
     Battle.checkBattleEnd();
   },
   /* 油桶：受任何攻击即爆炸（可连锁）。8 格无差别 100 伤害（结算防御）+ 燃烧 5 回合，击杀/经验走 applyDamage 统一结算
-     连锁改为「依次引爆」：每只油桶爆发后停顿 220ms（随倍速缩短），一桶接一桶炸开 */
+     连锁改为「依次引爆」：每只桶爆发后停顿 220ms（随倍速缩短），一桶接一桶炸开。
+     通用化分派：barrel=烈焰爆炸（100伤+燃烧5+地面火焰），iceN=液氮炸裂（40低温伤+冰冻1+冰冻地形2回合） */
   async explodeBarrel(r, c, src) {
     const b = Battle.b;
-    if (!b || !b.terrain[r] || b.terrain[r][c] !== 'barrel') return;
-    src = src || { name:'油桶', icon:'🛢️', side:'neutral', uid:null, row:r, col:c };   // 无归属（如自爆连锁丢参）时防崩溃
+    if (!b || !b.terrain[r] || !Battle.isBarrelLike(b.terrain[r][c])) return;
+    const kind = b.terrain[r][c];
+    src = src || { name: kind==='iceN' ? '液氮桶' : '油桶', icon:'🛢️', side:'neutral', uid:null, row:r, col:c };   // 无归属（如自爆连锁丢参）时防崩溃
     b.terrain[r][c] = 'plain';
     Battle.renderMap(); Battle.renderPanels();
+    const seq = (Battle._barrelSeq = (Battle._barrelSeq||0) + 1);
+    if (kind === 'iceN') {
+      // 液氮炸裂：3×3 留下冰冻地形（覆盖火焰），8 格单位 40 点低温伤害 + 冰冻 1 回合
+      for (let dr=-1; dr<=1; dr++) for (let dc=-1; dc<=1; dc++) Battle.freezeFloor(r+dr, c+dc, 2);
+      Battle.fxBlast(r, c);
+      Battle.floatDmg(r, c, '❄️', '#7ecbff', true);
+      Battle.log(seq===1 ? '🧊 液氮桶炸裂！寒霜冻结周围 8 格' : `🧊 连锁炸裂！第 ${seq} 只液氮桶炸开`, 'crit');
+      Battle.subtitle(seq===1 ? '🧊 液氮炸裂！' : `🧊 连锁炸裂 ×${seq}！`);
+      await Battle.sleep(150);
+      const srcUid = src ? src.uid : null;
+      for (let dr=-1; dr<=1; dr++) for (let dc=-1; dc<=1; dc++) {
+        if (!dr && !dc) continue;
+        const rr=r+dr, cc=c+dc;
+        if (!Battle.inMap(rr,cc)) continue;
+        const v = Battle.unitAt(rr,cc);
+        if (v && v.hp>0) {
+          const dmg = Math.max(1, 40 - (v.def||0));
+          await Battle.applyDamage(src, v, dmg, false, 1, '液氮炸裂');
+          if (v.hp>0 && !(v.sts && v.sts.frozen)) Battle.applyStatus(v, 'frozen', 1, srcUid);
+        } else if (Battle.isBarrelLike(b.terrain[rr][cc])) {
+          await Battle.sleep(220);   // 依次引爆：等上一波寒霜过去再接下一桶
+          if (Battle.isBarrelLike(b.terrain[rr][cc])) await Battle.explodeBarrel(rr, cc, src);
+        }
+      }
+      Battle.renderMap(); Battle.renderPanels();
+      Battle.checkBattleEnd();
+      return;
+    }
     // 爆炸在地面留下火焰（3×3 内可通行格），持续 2 回合
     for (let dr=-1; dr<=1; dr++) for (let dc=-1; dc<=1; dc++) Battle.ignite(r+dr, c+dc, DATA.FIRE.turns);
     Battle.fxBlast(r, c);
     Battle.floatDmg(r, c, '💥', '#ffb347', true);
-    const seq = (Battle._barrelSeq = (Battle._barrelSeq||0) + 1);
     Battle.log(seq===1 ? '🛢️ 油桶被引爆！烈焰吞噬周围 8 格' : `🛢️ 连锁引爆！第 ${seq} 只油桶炸开`, 'crit');
     Battle.subtitle(seq===1 ? '🛢️ 油桶爆炸！' : `🛢️ 连锁爆炸 ×${seq}！`);
     await Battle.sleep(150);      // 火光爆开后再结算伤害
@@ -4833,19 +4907,19 @@ const Battle = {
         const dmg = Math.max(1, 100 - (v.def||0));
         await Battle.applyDamage(src, v, dmg, false, 1, '油桶爆炸');
         if (v.hp>0) Battle.applyStatus(v, 'burn', 5, srcUid);
-      } else if (b.terrain[rr][cc]==='barrel') {
+      } else if (Battle.isBarrelLike(b.terrain[rr][cc])) {
         await Battle.sleep(220);   // 依次引爆：等上一团火过去再接下一桶
-        if (b.terrain[rr][cc]==='barrel') await Battle.explodeBarrel(rr, cc, src);
+        if (Battle.isBarrelLike(b.terrain[rr][cc])) await Battle.explodeBarrel(rr, cc, src);
       }
     }
     Battle.renderMap(); Battle.renderPanels();
     Battle.checkBattleEnd();
   },
-  /* 技能波及引爆：cells 覆盖格中有油桶则连锁（直线/AOE/横扫共用） */
+  /* 技能波及引爆：cells 覆盖格中有桶（油桶/液氮桶）则连锁（直线/AOE/横扫共用） */
   async hitBarrels(cells, src) {
     Battle._barrelSeq = 0;
     for (const [r,c] of (cells||[])) {
-      if (Battle.b.terrain[r] && Battle.b.terrain[r][c]==='barrel') await Battle.explodeBarrel(r, c, src);
+      if (Battle.b.terrain[r] && Battle.isBarrelLike(Battle.b.terrain[r][c])) await Battle.explodeBarrel(r, c, src);
     }
   },
   /* 流血：每次行动（移动/攻击/技能/休息）后结算 6% 生命 */
@@ -5386,6 +5460,7 @@ const Battle = {
     /* 回合状态结算：毒/燃/治愈/调息 + 全部状态计时递减 */
     await Battle.sleep(200);
     Battle.tickStatuses();
+    Battle.tickIce();           // 冰冻地形 -1 回合（融化了就移除）
     Battle.tickFire();          // 火焰地形 -1 回合；仍在火中的单位持续点燃
     Battle.checkBattleEnd();
     if (b.over) return;
