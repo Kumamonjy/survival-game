@@ -42,27 +42,27 @@ const zone = id => DATA.ZONES.find(z=>z.id===id);
   // ===== T3 掉落池分层：rollDropEquip 统一入口 =====
   const TOP = DATA.TOP_EQUIPS;
   assert(TOP.length===4 && ['pistol','fireaxe','spear','bow'].every(id=>TOP.includes(id)), 'T3a 顶级装备集合 = 手枪/消防斧/长矛/木弓');
-  // 低危区（d1 超市 / d2 医院）：大量采样不掉顶级武器、不掉特殊饰品
+  // 低危区（d1 超市 / d2 医院）：大量采样不掉顶级武器、但特殊饰品任何区域均可掉落
   let lowIds = new Set();
   for (let i=0;i<600;i++){ const d = Battle.rollDropEquip('market'); if (d) lowIds.add(d.id); }
   for (let i=0;i<400;i++){ const d = Battle.rollDropEquip('hospital'); if (d) lowIds.add(d.id); }
   assert(lowIds.size>0 && ![...lowIds].some(id=>TOP.includes(id)), 'T3b d≤2 区域采样 1000 次无顶级武器掉落');
-  assert([...lowIds].every(id=>!DATA.EQUIPS[id].special), 'T3c 任何区域都不掉特殊饰品（熊熊/兔兔）');
-  // 高危区（d3 工厂 / d4 基地）：可掉顶级武器
-  let hiHasTop = false, hiClean = true;
+  assert([...lowIds].some(id=>DATA.EQUIPS[id].special), 'T3c 特殊饰品（熊熊/兔兔）低危区也可掉落');
+  // 高危区（d3 工厂 / d4 基地）：可掉顶级武器，也可掉特殊饰品
+  let hiHasTop = false, hiHasSpecial = false;
   for (let i=0;i<600;i++){
     const d = Battle.rollDropEquip('base'); if (!d) continue;
     if (TOP.includes(d.id)) hiHasTop = true;
-    if (DATA.EQUIPS[d.id].special) hiClean = false;
+    if (DATA.EQUIPS[d.id].special) hiHasSpecial = true;
   }
   for (let i=0;i<600;i++){
     const d = Battle.rollDropEquip('factory'); if (d && TOP.includes(d.id)) hiHasTop = true;
   }
   assert(hiHasTop, 'T3d d3+ 区域采样 1200 次出过顶级武器（手枪/消防斧/长矛/木弓）');
-  assert(hiClean, 'T3e 高危区掉落同样排除特殊饰品');
-  // 池大小核对：全池 = 非特殊装备（含消耗品道具，随装备数自动扩展）；d≤2 再排除 4 件顶级
-  const fullPool = Object.keys(DATA.EQUIPS).filter(id=>!DATA.EQUIPS[id].special).length;
-  assert(fullPool===Object.keys(DATA.EQUIPS).length-2, `T3f 非特殊装备共 ${fullPool} 件（特殊饰品 2 件被排除）`);
+  assert(hiHasSpecial, 'T3e 高危区同样可掉特殊饰品');
+  // 池大小核对：全池含特殊饰品（所有区域可掉），d≤2 排除 4 件顶级
+  const fullPool = Object.keys(DATA.EQUIPS).length;
+  assert(fullPool>0 && !DATA.TOP_EQUIPS.some(id=>!DATA.EQUIPS[id]), 'T3f 掉落池 = 全部装备（含特殊饰品），TOP_EQUIPS 均有效');
 
   console.log('--- done ---');
   process.exit(0);

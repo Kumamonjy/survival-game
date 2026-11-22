@@ -3493,7 +3493,7 @@ const UI = {
         · 编队最多 <b>6 人</b>，每人出发消耗 <b>15⚡</b> 体力；探险<b>不消耗天数</b><br>
         · 胜利可获得该区域的<b>主要 + 次要产出</b>；主动撤离保留已拾取物资但无通关奖励；全员倒下则物资减半<br>
         · 每局固定 1 个<b>精品物资箱</b>（地图最上方三行）：90% 双倍物资 / 10% 特殊饰品<br>
-        · 装备掉落分层：胜利 20% 概率掉一件装备；<b>危险度 ≤2 的区域不会掉落顶级武器</b>（手枪/消防斧/长矛/木弓）——需深入 d3+ 区域获取或工坊打造<br>
+        · 装备掉落分层：胜利 20% 概率掉一件装备；<b>危险度 ≤2 的区域不会掉落顶级武器</b>（手枪/消防斧/长矛/木弓）——需深入 d3+ 区域获取或工坊打造；特殊饰品（熊熊/兔兔）<b>任何区域</b>都有概率掉落<br>
         · 地形互动：废墟可翻找 1 次、瓦砾可攻击清除并留下石头箱、油桶被攻击会爆炸且可连锁引爆<br>
         · 油桶爆炸/燃烧瓶会在<b>地面残留火焰 2 回合</b>：踩上或停留在火焰中会<b>燃烧 2 回合</b>（每回合掉生命与体力）<br>
         · 丧尸等级 = <b>出战平均等级 − 1</b>（最低 1），每级生命/攻击/防御按基础值 +10%；「丧尸潮」额外 +2 只且奖励翻倍</div>
@@ -3860,12 +3860,12 @@ const Battle = {
     const r = (Z && Z.gold) || [1,1];
     return rnd(r[0], r[1]);
   },
-  /* 装备掉落统一入口：20% 概率随机一件（特殊饰品不可掉落）；危险度 ≤2 的区域排除顶级武器；zone 可传区域对象或 id 字符串 */
+  /* 装备掉落统一入口：20% 概率随机一件（全池含特殊饰品，任何区域均可掉落）；危险度 ≤2 的区域排除顶级武器；zone 可传区域对象或 id 字符串 */
   rollDropEquip(zone) {
     if (Math.random() >= 0.2) return null;
     const Z = Battle.zoneDef(typeof zone==='string' ? {id:zone} : zone);
     const top = DATA.TOP_EQUIPS || [];
-    let pool = Object.keys(DATA.EQUIPS).filter(id=>!DATA.EQUIPS[id].special);
+    let pool = Object.keys(DATA.EQUIPS);
     if (Z && Z.danger <= 2) pool = pool.filter(id=>!top.includes(id));
     return DATA.EQUIPS[pick(pool)] || null;
   },
@@ -4544,7 +4544,7 @@ const Battle = {
     } else if (sk.shape==='aoe') {
       // 选择落点（默认空地或敌人均可；sk.emptyCell 时仅限空格），对落点周围 area 格内所有敌人造成伤害
       b.mode='skill'; b.targetMode='aoe';
-      b.targetSet = Battle.attackCells(u, skRange).filter(([r,c])=>!sk.emptyCell || !Battle.unitAt(r,c));
+      b.targetSet = Battle.attackCells(u, skRange).filter(([r,c])=>!sk.emptyCell || (!Battle.unitAt(r,c) && DATA.TERRAIN[b.terrain[r][c]] && DATA.TERRAIN[b.terrain[r][c]].walk));
       if (!b.targetSet.length) { UI.toast('射程内没有可用的落点空格'); b.mode=null; b.targetMode=null; return; }
     } else if (sk.shape==='sweep2') {
       // sangshi 横扫：点击身前四邻格之一选择方向
@@ -5166,6 +5166,13 @@ const Battle = {
       }
     }
     if (hitCells.length) await Battle.hitBarrels(hitCells, u);   // 技能波及油桶 → 引爆
+    if (hitCells.length && sk.type==='attack') {   // 攻击类技能波及瓦砾 → 清除开路（与普攻一致，留下石头物资箱）
+      let cleared = 0;
+      hitCells.forEach(([r,c])=>{
+        if (b.terrain[r][c]==='rubble'){ b.terrain[r][c]='stonebox'; cleared++; Battle.floatDmg(r, c, '💥', '#d0c090'); }
+      });
+      if (cleared) Battle.log(`🪨 ${u.name} 的「${sk.name}」清除了 ${cleared} 处瓦砾，原地留下📦石头物资箱`, 'good');
+    }
     if (sk.fire && hitCells.length) {
       let lit = 0;
       hitCells.forEach(([r,c])=>{ if (Battle.ignite(r,c,sk.fire.turns)) lit++; });
