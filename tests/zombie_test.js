@@ -51,13 +51,13 @@ const Z = id => DATA.ZONES.find(z=>z.id===id);
   const types = new Set(Battle.b.units.filter(u=>u.side==='enemy').map(u=>u.zombieType));
   assert([...types].every(t=>['brute','licker','runner','savage','bomber','gasbag','behemoth','shrieker','witch','raider_mug','raider_thug','raider_snatcher','raider_drunk','raider_gunner'].includes(t)), 'T4b 类型均在基地池内');
 
-  // ===== T5 丧尸潮预警 +2 =====
+  // ===== T5 丧尸潮预警 A/B 已删除（V223）：hordeWarning 不再影响数量 =====
   g.hordeWarning = true;
   UI.teamSelected = [a.id, b0.id, c2.id];
   a.stamina = b0.stamina = c2.stamina = 100;
   Battle.start(Z('market'));
   const foes5 = Battle.b.units.filter(u=>u.side==='enemy').length;
-  assert(foes5 >= 4+2 && foes5 <= 5+2, 'T5 丧尸潮数量 6~7（实际 ' + foes5 + '）');
+  assert(foes5 >= 4 && foes5 <= 5, 'T5 hordeWarning 已废弃：丧尸数量 4~5（V223 删除预警选项）');
 
   // ===== T6 市场只有 walker/runner =====
   let marketOK = true;

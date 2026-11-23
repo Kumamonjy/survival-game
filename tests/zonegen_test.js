@@ -75,7 +75,7 @@ const flatCnt = (b, t) => b.terrain.flat().filter(x=>x===t).length;
 
   // ===== T8 代码统一：地图流程只有一套公共实现 =====
   assert(!html.includes('scatter(') && html.includes('Battle.buildTerrain(b, Z)')
-    && html.includes('Battle.spawnEnemies(b, Z, zLevel, extra)')
+    && html.includes('Battle.spawnEnemies(b, Z, zLevel, 0)')
     && html.includes('Battle.zoneRewards(Battle.zoneDef(b.zone))'), 'T8a 生成与结算统一调用公共函数');
   assert(!html.includes("zone.id==='") && html.includes('Battle.crateLoot('), 'T8b 无按地图 id 的特判分支');
 

@@ -1159,9 +1159,8 @@ DATA.MILESTONES = [
   { t:'军方空投', d:'远处传来运输机的轰鸣，一只补给箱的降落伞缓缓落在附近。',
     a:{t:'前去搜寻（获得 4 金属 + 3 食物）', f:g=>{ g.res.metal+=4; g.res.food+=3; UI.toast('找到了完好的补给箱！'); }},
     b:{t:'不去冒险（获得 10 金币捡漏）', f:g=>{ g.res.gold+=10; UI.toast('你把消息卖给了其他幸存者'); }} },
-  { t:'丧尸潮预警', d:'无线电传来断续的警告：一大群丧尸正在向这片城区移动！',
-    a:{t:'加固营地（消耗 5 金属，全员最大生命 +10）', f:g=>{ if(g.res.metal<5){UI.toast('金属不足，只能听天由命');Game.hordeWarning=true;return;} g.res.metal-=5; g.chars.forEach(c=>{ if(!c.dead) c.baseMaxHp+=10; }); Game.recalcAll(); UI.toast('营地加固完成，士气大振'); }},
-    b:{t:'被动防御（下一场探险丧尸 +2，但奖励翻倍）', f:g=>{ Game.hordeWarning=true; UI.toast('你做好了苦战的准备…'); }} },
+  /* 丧尸潮预警：纯通知事件（无选项，V223 删除 A/B），尸潮夜照常在第 10 天触发 */
+  { t:'丧尸潮预警', d:'无线电传来断续的警告：一大群丧尸正在向这片城区移动！全员整装待发，今夜固守营地。' },
   { t:'迷路的孩童', d:'哨兵发现一个在废墟中迷路的孩子，他已经几天没吃东西了。',
     a:{t:'收留（消耗 2 食物，第二天随机一名成员经验 +80）', f:g=>{ if(g.res.food<2){UI.toast('食物太少，只能给他指了指安全区的方向');return;} g.res.food-=2; const alive=g.chars.filter(c=>!c.dead); if(alive.length){const c=alive[Math.floor(Math.random()*alive.length)]; c.exp+=80; UI.toast(c.name+' 带 孩子 熟悉了营地，获得经验');} }},
     b:{t:'给点食物送走（消耗 1 食物，获得 15 金币感谢）', f:g=>{ if(g.res.food<1){UI.toast('你连自己都喂不饱…孩子失望地离开了');return;} g.res.food-=1; g.res.gold+=15; UI.toast('孩子的家人用金币感谢了你'); }} },
@@ -1340,7 +1339,7 @@ const Game = {
       res: { gold: 500, med: 3, metal: 3, food: 12, fabric: 3, wood: 3 },
       chars: [],
       seenMilestones: [],
-      hordeWarning: false,
+      hordeWarning: false,   // 已废弃（V223 删除尸潮预警 A/B 选项），保留字段兼容老存档
       hordeDone: 0,          // 最近一次已守住的尸潮天数（当天不再重复触发）
       kitchenLv: 0,
       kitchenChef: null,
@@ -3750,8 +3749,9 @@ const UI = {
     UI.modal(`<h3>📅 第 ${g.day} 天 · 里程碑事件</h3>
       <div class="wiki-p" style="margin-bottom:6px"><b style="color:var(--yellow)">${ev.t}</b></div>
       <div class="wiki-p">${ev.d}</div>
-      <button class="milestone-choice" onclick="UI.pickMilestone(0)"><div class="mc-t">A. ${ev.a.t}</div></button>
-      <button class="milestone-choice" onclick="UI.pickMilestone(1)"><div class="mc-t">B. ${ev.b.t}</div></button>`);
+      ${ev.a ? `<button class="milestone-choice" onclick="UI.pickMilestone(0)"><div class="mc-t">A. ${ev.a.t}</div></button>
+      <button class="milestone-choice" onclick="UI.pickMilestone(1)"><div class="mc-t">B. ${ev.b.t}</div></button>`
+      : `<button class="milestone-choice" onclick="UI.pickMilestone(0)"><div class="mc-t">收到</div></button>`}`);
     UI._milestone = ev;
     if (!g.seenMilestones.includes(ev.t)) g.seenMilestones.push(ev.t);
     Game.saveToSlot(Game.currentSlot, true);
@@ -3759,7 +3759,8 @@ const UI = {
   pickMilestone(which) {
     const ev = UI._milestone;
     if (!ev) return;
-    (which===0 ? ev.a : ev.b).f(Game.g);
+    const opt = which===0 ? ev.a : ev.b;
+    if (opt) opt.f(Game.g);   // 纯通知事件无选项，直接关闭
     UI._milestone = null;
     UI.closeModal();
     Game.renderHome();
@@ -4012,8 +4013,6 @@ const Battle = {
 
     // 丧尸等级 = 出战角色平均等级 - 1（向下取整，最低 1）
     const zLevel = Math.max(1, Math.floor(team.reduce((s,c)=>s+c.level,0) / Math.max(1,team.length)) - 1);
-    const extra = g.hordeWarning ? 2 : 0;
-    g.hordeWarning = false;   // 丧尸潮为一次性效果，应用后消费
 
     const b = Battle.b = {
       zone, zoneCfg:Z, zLevel, speed:1, turn:1, phase:'player',
@@ -4021,20 +4020,19 @@ const Battle = {
       stats: {},   // 战报统计：uid -> {name,icon,side,dmg,heal,kill}
       lootBase: null, mode: null, moveSet: null, targetSet: null, targetMode: null,
       selected: null, log: [], over: false,
-      doubledReward: extra > 0,
+      doubledReward: false,
     };
 
     Battle.buildTerrain(b, Z);
     Battle.spawnTeam(b, team);
     Battle.spawnTowers(b);
-    Battle.spawnEnemies(b, Z, zLevel, extra);
+    Battle.spawnEnemies(b, Z, zLevel, 0);
     const flood = Game.g.weather==='rain' ? Battle.rainRiver(b) : 0;
 
     UI.showScreen('scr-battle');
     document.querySelector('#scr-battle .b-top .flee').style.display = '';
     document.getElementById('btn-speed').textContent = '加速 x1';
     Battle.log(`── 进入 ${zone.name}（丧尸等级 Lv.${zLevel}）──`);
-    if (extra) Battle.log('⚠️ 丧尸潮来袭！本次区域丧尸增多，奖励翻倍', 'bad');
     if (flood) Battle.log(`🌧️ 暴雨积水，${flood} 格化为河水（不可通行）`, 'bad');
     Battle.renderMap(); Battle.cellSize(); Battle.renderPanels(); Battle.renderInfo(null);
     UI.toast(`🧭 抵达 ${zone.name}，击溃所有丧尸或撤离即可结束探险`);
