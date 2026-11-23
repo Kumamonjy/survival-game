@@ -4437,7 +4437,7 @@ const Battle = {
       return;
     }
     skillBtn.disabled = !(u.side==='ally' && Battle.unitSkills(u).length);
-    const acted = u.hasAttacked ? (u.hasMoved ? ' <span class="tag">行动完毕</span>' : ' <span class="tag yellow">已攻击 · 还可移动</span>') : '';
+    const acted = u.side==='ally' ? (u.hasAttacked ? (u.hasMoved ? ' <span class="tag">行动完毕</span>' : ' <span class="tag yellow">已攻击 · 还可移动</span>') : '') : '';   // 敌方不显示行动标签（丧尸无此概念，残留标记会误导）
     el.innerHTML = `<div class="u-name">${u.icon} <b>${u.name}</b> <span class="tag ${u.side==='enemy'?'red':''}">${u.clsTag} Lv.${u.level}</span>${u.isDefending?'<span class="tag yellow">💤 休息中</span>':''}${acted}</div>
       <div class="u-stats">
         <span>❤️<b>${u.hp}/${u.maxHp}</b></span>
@@ -5283,7 +5283,7 @@ const Battle = {
     if (u.hasAttacked) { UI.toast('本回合已攻击过'); return; }
     Battle.fxAt(u.row, u.col, 'cast-glow', 400);   // sangshi 风格：技能施放金光
     Battle.paySkillCost(u, sk);            // 体力与 CD（与治疗/续航共用）
-    u.hasAttacked = true;
+    if (u.side==='ally') u.hasAttacked = true;   // 行动标记仅我方需要（V224：丧尸标记会跨回合残留，误导玩家以为它已行动）
     Battle.consumeEquipSkill(u, sk);       // 道具技能（消耗品）：使用即消耗 1 个，用尽后移除
     Battle.subtitle(`✨ ${sk.name}！`);
     Battle.log(`${u.name} 使用技能「${sk.name}」`, u.side==='ally'?'good':'bad');

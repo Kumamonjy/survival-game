@@ -38,7 +38,7 @@ function mkB(units){
   assert(p1.hp===hp0-expDmg, `T3a 撕咬伤害 = 120% 攻 - 防（-${expDmg}）`);
   assert(p1.sts && p1.sts.bleed && p1.sts.bleed.t===2, 'T3b 玩家陷入流血 2 回合');
   assert(z.cds['凶猛撕咬']===3, 'T3c 施放后进入 CD 3');
-  assert(z.hasAttacked===true, 'T3d 已消耗本回合行动');
+  assert(!z.hasAttacked, 'T3d 行动标记不再标到丧尸身上（V224：残留会误导玩家，丧尸无此概念）');
 
   // ===== T4 玩家端无感知：技能不出现在玩家技能列表 =====
   const ally = Battle.mkAlly({ uid:'a1', name:'甲', cls:'civilian', level:1, exp:0, av:'🧍',
