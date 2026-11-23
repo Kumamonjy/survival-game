@@ -1118,10 +1118,11 @@ DATA.PRODUCE = {
 };
 
 /* 天气 */
+/* prob：出现概率（百科展示用）。掷点逻辑在 Game.nextDay 过夜结算（wroll<0.5 晴朗 / <0.75 下雨 / 其余浓雾），两处需保持一致 */
 DATA.WEATHERS = [
-  { id:'sunny', name:'☀️ 晴朗', desc:'视野良好，无额外影响。' },
-  { id:'rain',  name:'🌧️ 下雨', desc:'暴雨在战场积水，随机出现 6-8 格分散的河水（不可通行）。' },
-  { id:'fog',   name:'🌫️ 浓雾', desc:'能见度极低，战斗中所有单位攻击范围 -1（最低为1）。' },
+  { id:'sunny', name:'☀️ 晴朗', desc:'视野良好，无额外影响。', prob:'50%' },
+  { id:'rain',  name:'🌧️ 下雨', desc:'暴雨在战场积水，随机出现 6-8 格分散的河水（不可通行）。', prob:'25%' },
+  { id:'fog',   name:'🌫️ 浓雾', desc:'能见度极低，战斗中所有单位攻击范围 -1（最低为1）。', prob:'25%' },
 ];
 
 /* 地形 */
@@ -3495,8 +3496,8 @@ const UI = {
       </div>`;
     const secWeather = `
       <div class="wiki-sec panel"><h4>🌤️ 天气</h4>
-        <table class="wiki-table"><tr><th>天气</th><th>效果</th></tr>${DATA.WEATHERS.map(w=>`<tr><td>${w.name}</td><td>${w.desc}</td></tr>`).join('')}</table>
-        <div class="wiki-p" style="margin-top:6px">天气每天刷新一次（进入下一天时），当天所有战斗共享同一天气；出行前可在主页顶栏查看当天天气，雾天远程角色慎行。</div>
+        <table class="wiki-table"><tr><th>天气</th><th>出现概率</th><th>效果</th></tr>${DATA.WEATHERS.map(w=>`<tr><td>${w.name}</td><td>${w.prob}</td><td>${w.desc}</td></tr>`).join('')}</table>
+        <div class="wiki-p" style="margin-top:6px">天气每天刷新一次（每天过夜结算时随机掷点决定，概率见上表），当天所有战斗共享同一天气；出行前可在主页顶栏查看当天天气，雾天远程角色慎行。</div>
       </div>`;
     const secTerrain = `
       <div class="wiki-sec panel"><h4>🗺️ 地形说明</h4>

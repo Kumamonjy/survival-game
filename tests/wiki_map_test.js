@@ -62,6 +62,8 @@ UI.wikiTab='fight'; UI.openWiki();
 const fightBody = elems['wiki-content'].innerHTML;
 assert(fightBody.includes('🌤️ 天气') && fightBody.includes('☀️ 晴朗') && fightBody.includes('🌧️ 下雨') && fightBody.includes('🌫️ 浓雾'), 'T10a 天气表收录三种天气');
 assert(fightBody.includes('攻击范围 -1') && fightBody.includes('天气每天刷新'), 'T10b 浓雾效果与刷新规则');
+assert(DATA.WEATHERS.find(w=>w.id==='sunny').prob==='50%' && DATA.WEATHERS.find(w=>w.id==='rain').prob==='25%' && DATA.WEATHERS.find(w=>w.id==='fog').prob==='25%', 'T10c 天气概率数据（晴朗50 / 下雨25 / 浓雾25）');
+assert(fightBody.includes('出现概率') && fightBody.includes('<td>50%</td>') && fightBody.includes('<td>25%</td>'), 'T10d 天气表显示概率列');
 
 console.log('--- done ---');
 process.exit(0);
