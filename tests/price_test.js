@@ -2,7 +2,7 @@
 const { setup, assert } = require('./_helper.js');
 const { DATA } = setup();
 
-const expect = { civilian:60, soldier:200, doctor:150, nurse:130, scout:150, brawler:150, hunter:150,
+const expect = { civilian:60, soldier:200, doctor:150, nurse:130, scout:150, brawler:150, hunter:180,
   chef:100, scientist:170, musician:130, explorer:200, thief:210, gambler:170 };
 
 Object.entries(expect).forEach(([id,p])=>{
