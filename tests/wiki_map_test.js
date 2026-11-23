@@ -57,5 +57,11 @@ const enemyBody = elems['wiki-content'].innerHTML;
 assert(enemyBody.includes('各区域的敌人构成、数量与 Boss 见「🗺️ 地图」页') && !enemyBody.includes('1★ 第 1 天'),
   'T9 敌人页去重并指向地图页');
 
+// T10 战斗页收录天气表（V216：三种天气 + 效果，数据驱动自 DATA.WEATHERS）
+UI.wikiTab='fight'; UI.openWiki();
+const fightBody = elems['wiki-content'].innerHTML;
+assert(fightBody.includes('🌤️ 天气') && fightBody.includes('☀️ 晴朗') && fightBody.includes('🌧️ 下雨') && fightBody.includes('🌫️ 浓雾'), 'T10a 天气表收录三种天气');
+assert(fightBody.includes('攻击范围 -1') && fightBody.includes('天气每天刷新'), 'T10b 浓雾效果与刷新规则');
+
 console.log('--- done ---');
 process.exit(0);

@@ -3493,6 +3493,11 @@ const UI = {
         · 全队重伤 = 探险失败，已拾取物资损失一半
         </div>
       </div>`;
+    const secWeather = `
+      <div class="wiki-sec panel"><h4>🌤️ 天气</h4>
+        <table class="wiki-table"><tr><th>天气</th><th>效果</th></tr>${DATA.WEATHERS.map(w=>`<tr><td>${w.name}</td><td>${w.desc}</td></tr>`).join('')}</table>
+        <div class="wiki-p" style="margin-top:6px">天气每天刷新一次（进入下一天时），当天所有战斗共享同一天气；出行前可在主页顶栏查看当天天气，雾天远程角色慎行。</div>
+      </div>`;
     const secTerrain = `
       <div class="wiki-sec panel"><h4>🗺️ 地形说明</h4>
         <table class="wiki-table"><tr><th>地形</th><th>效果</th></tr>${terRows}</table>
@@ -3625,7 +3630,7 @@ const UI = {
       cls:    secCls + secSkill,
       talent: secTalent,
       equip:  secEquip,
-      fight:  secFight + secTerrain,
+      fight:  secFight + secWeather + secTerrain,
       status: secStatus,
       enemy:  secZombie,
     };
