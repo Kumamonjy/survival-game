@@ -5502,10 +5502,10 @@ const Battle = {
   async endPlayerTurn() {
     const b = Battle.b;
     if (b.over || b.phase!=='player') return;
-    /* 未行动的己方角色自动行动（主动追击 AI，不使用技能；打完置灰；工事由 towerPhase 统一处理） */
+    /* 未行动的己方角色自动行动（原地攻击或休息，不移动、不使用技能；打完置灰；工事由 towerPhase 统一处理） */
     const idle = b.units.filter(u=>u.side==='ally'&&!u.isTower&&u.hp>0&&!u.hasAttacked);
     if (idle.length) {
-      UI.toast(`🤖 ${idle.length} 名角色未行动，自动追击中…`);
+      UI.toast(`🤖 ${idle.length} 名角色未行动，原地攻击/休息中…`);
       b.phase = 'auto';
       Battle.renderPanels();
       for (const a of idle) {
@@ -5554,8 +5554,9 @@ const Battle = {
   },
 
   /* 通用 AI 行动（丧尸与「自动行动」的我方角色共用）：
-     1) 射程内选伤害期望最高的目标；2) 没有 → 按距离场（实际地形距离）朝最近目标移动，复检射程；
-     3) 移动格评分：距离场值最小（绕障碍沿真实最短路），平手用曼哈顿距离；原地比所有可达格更近则不动 */
+     射程内选伤害期望最高的目标普攻（不用技能）；
+     丧尸打不着 → 按距离场（实际地形距离）朝最近目标移动，复检射程（每回合一次）；
+     我方自动行动不移动，打不着 → 原地休息（恢复 4 体力 + 减伤，与手动休息按钮一致） */
   async aiAct(u, foes) {
     const b = Battle.b;
     if (!foes.length) return;
@@ -5809,8 +5810,9 @@ const Battle = {
       return t;
     };
     let atk = pickMax();
-    if (!atk && !chased && (u.side==='enemy' || !u.hasMoved)) {
-      // 射程内没有目标：按「实际距离（地形距离场）」朝最近目标追击（丧尸每回合只追击移动一次；我方自动行动限一次）
+    if (!atk && !chased && u.side==='enemy') {
+      // 射程内没有目标：丧尸按「实际距离（地形距离场）」朝最近目标追击移动（每回合一次）+ 到位复检；
+      // 我方自动行动不追击（原地行动），直接落到下方休息兜底
       chased = true;
       await Battle.aiChase(u, foes);
       atk = pickMax();
@@ -5837,10 +5839,12 @@ const Battle = {
       if (u.side==='ally') { u.hasAttacked = true; Battle.checkExp(u); }
       Battle.checkBattleEnd();
     } else if (u.side==='ally') {
-      // 我方自动行动/代打：无普攻目标（无论是否走过位，含围死）→ 休息回体力兜底
+      // 我方自动行动：不移动（原地攻击或休息）；无普攻目标 → 与手动休息按钮一致：恢复 4 体力 + 减伤（isDefending）+ 流血结算
       u.isDefending = true; u.hasAttacked = true; u.hasMoved = true;
       u.stamina = Math.min(u.maxStamina, u.stamina+4);
       Battle.log(`💤 ${u.name} 原地休息，恢复 4 点体力`, '');
+      if (u.sts && u.sts.bleed) await Battle.bleedTick(u);   // 休息也是一次行动（补齐手动休息的流血结算）
+      Battle.checkBattleEnd();
       Battle.renderMap(); Battle.renderPanels();
     }
   },

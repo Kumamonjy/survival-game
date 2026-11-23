@@ -46,7 +46,7 @@ function mkBattle(units, terrain) {
   assert(lowDef.hp<lowDef.maxHp || lowDef.hp===0, 'T3a 攻击低防目标');
   assert(highDef.hp===highDef.maxHp, 'T3b 不打高防目标');
 
-  // ===== T4 endPlayerTurn 自动行动 =====
+  // ===== T4 endPlayerTurn 自动行动（V219：原地攻击/休息，不移动） =====
   const toastHist = [];
   const origToast = UI.toast.bind(UI);
   UI.toast = m => { toastHist.push(String(m)); origToast(m); };
@@ -54,10 +54,10 @@ function mkBattle(units, terrain) {
   const z3 = Battle.mkZombie('walker', 8, 9, 1); z3.hp = z3.maxHp;
   mkBattle([u1, z3]);
   await Battle.endPlayerTurn();
-  const allLog = Battle.b.log.map(e=>e.msgs.map(m=>m.m).join('|')).join('|');
-  assert(toastHist.some(m=>m.includes('自动追击')), 'T4a 提示自动追击');
-  assert(u1.stamina===108 || z3.hp<z3.maxHp || u1.row!==8 || u1.col!==3, 'T4b 自动角色完成行动（防御回体/攻击/移动必有其一）');
-  assert(u1.row!==8 || u1.col!==3 || z3.hp<z3.maxHp, 'T4c 自动角色移动接近或攻击');
+  assert(toastHist.some(m=>m.includes('原地攻击/休息')), 'T4a 提示原地行动');
+  assert(u1.row===8 && u1.col===3, 'T4b 不追击，位置不变');
+  const log4 = Battle.b.log.map(e=>e.msgs.map(m=>m.m).join('|')).join('|');
+  assert(log4.includes('原地休息，恢复 4 点体力'), 'T4c 够不着 → 原地休息（日志）');
   assert(Battle.b.turn===2 && Battle.b.phase==='player', 'T4d 完整回合流转（丧尸回合后回到玩家回合）');
   assert(u1.hasAttacked===false && u1.hasMoved===false, 'T4e 新回合标记重置');
 
@@ -67,7 +67,7 @@ function mkBattle(units, terrain) {
   const z4 = Battle.mkZombie('walker', 3, 8, 1); z4.hp = z4.maxHp;
   mkBattle([u2, z4]);
   await Battle.endPlayerTurn();
-  assert(!toastHist.slice(histLen).some(m=>m.includes('自动追击')), 'T5a 全员已行动不提示自动');
+  assert(!toastHist.slice(histLen).some(m=>m.includes('原地攻击/休息')), 'T5a 全员已行动不提示自动');
   assert(u2.row===3 && u2.col===3, 'T5b 已行动角色未被移动');
 
   // ===== T6 围死兜底：自动防御 =====

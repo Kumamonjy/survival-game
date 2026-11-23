@@ -87,16 +87,16 @@ function mkB(units){
   Battle.subtitle('一二三四五六七八九十甲乙丙丁戊己庚辛壬子丑寅卯');
   assert([...elems['battle-subtitle'].innerHTML.split('<br>')[0]].length===20, 'T9 首行 20 字');
 
-  // ===== T10 代打：移动后仍无普攻目标 → 休息 =====
+  // ===== T10 自动行动：射程内无目标 → 零移动，原地休息（V219 不再追击） =====
   const a3 = Game.createChar('explorer', '游侠', false);   // move 3 / range 1
   const u7 = Battle.mkAlly(a3, 5, 5);
-  const far = Battle.mkZombie('walker', 5, 10, 1);         // 距离 5，走 3 格后仍差 2 格打不到
+  const far = Battle.mkZombie('walker', 5, 10, 1);         // 距离 5，够不着
   Battle.b = mkB([u7, far]);
   u7.stamina = 100;
   await Battle.aiAct(u7, Battle.b.units.filter(x=>x.side==='enemy'&&x.hp>0));
-  assert(u7.isDefending===true && u7.stamina===104, `T10a 走位后无目标 → 休息 +4⚡（剩 ${u7.stamina}）`);
+  assert(u7.isDefending===true && u7.stamina===104, `T10a 无目标 → 原地休息 +4⚡（剩 ${u7.stamina}）`);
   assert(u7.hasMoved && u7.hasAttacked, 'T10b 休息后本回合行动结束');
-  assert((u7.row!==5 || u7.col!==5) && Battle.manhattan(u7, far)===2, 'T10c 已朝敌人走位 3 格（距离 5→2）');
+  assert(u7.row===5 && u7.col===5 && Battle.manhattan(u7, far)===5, 'T10c 不追击，位置不变（距离 5）');
 
   console.log('--- done ---');
   process.exit(0);
