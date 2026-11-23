@@ -1,4 +1,4 @@
-/* V191 液氮桶：蓝色油桶（无 filter 原色），引爆 = 8 格 40 低温伤(-防御) + 冰冻 1 回合 + 3×3 冰冻地形 2 回合；
+/* V191 液氮桶：蓝色油桶（无 filter 原色），引爆 = 8 格 60 低温伤(-防御) + 冰冻 1 回合 + 3×3 冰冻地形 2 回合；
    冰冻与火焰地形互相覆盖（后一个覆盖前一个）；可连锁 */
 const { setup, assert } = require('./_helper.js');
 const { Game, Battle, UI, DATA, elems, html } = setup();
@@ -28,7 +28,7 @@ const g = Game.g;
   const hps = es.map(z=>z.hp);
   await Battle.explodeBarrel(5, 5, null);
   assert(Battle.b.terrain[5][5]==='plain', 'T2a 液氮桶爆后消失');
-  assert(es.every((z,i)=>z.hp===hps[i]-30), 'T2b 8 格各受 30 = 40-防御10（低温伤害结算防御）');
+  assert(es.every((z,i)=>z.hp===hps[i]-50), 'T2b 8 格各受 50 = 60-防御10（低温伤害结算防御，V221 上调）');
   assert(es.every(z=>z.sts && z.sts.frozen && z.sts.frozen.t===1), 'T2c 8 格全部冰冻 1 回合');
   assert(es.every(z=>!(z.sts && z.sts.burn)), 'T2d 液氮爆炸不产生燃烧');
   const iceKeys = Object.keys(Battle.b.ice);
@@ -54,7 +54,7 @@ const g = Game.g;
   Battle._barrelSeq = 0;
   await Battle.explodeBarrel(8, 8, null);
   assert(Battle.b.terrain[8][8]==='plain' && Battle.b.terrain[8][9]==='plain', 'T4a 油桶引爆后液氮桶连锁炸开');
-  assert(e9.hp===e9hp-140, `T4b 相邻敌人先受油桶 100 再受液氮 40（-140，实际 -${e9hp-e9.hp}）`);
+  assert(e9.hp===e9hp-160, `T4b 相邻敌人先受油桶 100 再受液氮 60（-160，实际 -${e9hp-e9.hp}）`);
   assert(e9.sts && e9.sts.frozen && e9.sts.frozen.t===1, 'T4c 连锁液氮将敌人冻住');
   assert(Battle.b.ice['8,8']===2 && !Battle.b.fire['8,8'], 'T4d 冰冻地形覆盖本格火焰');
   assert(Battle.b.ice['7,8']===2 && !Battle.b.fire['7,8'], 'T4e 冰冻地形覆盖邻格火焰');
@@ -82,14 +82,14 @@ const g = Game.g;
   // ===== T7 地图配比：加油站无液氮（纯油桶图），工厂/医院液氮多，林场/营地不放 =====
   const T = id => DATA.ZONES.find(z=>z.id===id).terrain;
   assert(!T('gas').iceN && T('gas').barrel===24, 'T7a 加油站无液氮桶（纯红油桶 24，液氮直接移除）');
-  assert(T('factory').iceN===10 && T('hospital').iceN===5 && T('factory').iceN>T('hospital').iceN, 'T7b 工厂液氮 10 / 医院 5（资源图液氮多）');
-  assert(T('market').iceN===2 && T('base').iceN===7 && T('street').iceN===2, 'T7c 超市 2 / 军事基地 7 / 商业街 2（不变）');
+  assert(T('factory').iceN===12 && T('hospital').iceN===7 && T('factory').iceN>T('hospital').iceN, 'T7b 工厂液氮 12 / 医院 7（V221 上调；资源图液氮多）');
+  assert(T('market').iceN===2 && T('base').iceN===9 && T('street').iceN===2, 'T7c 超市 2 / 军事基地 9（V221 上调）/ 商业街 2');
   assert(!T('forest').iceN && !T('camp').iceN, 'T7d 林场/野外营地不放液氮桶');
   const c = Game.createChar('soldier','兵',false); g.chars.push(c);
   UI.teamSelected = [c.id];
   await Battle.start(DATA.ZONES.find(z=>z.id==='factory'));
   const cnt = t => Battle.b.terrain.flat().filter(x=>x===t).length;
-  assert(cnt('iceN')===10 && cnt('barrel')===10, `T7e 工厂实际散布液氮 10 / 油桶 10（${cnt('iceN')}/${cnt('barrel')}）`);
+  assert(cnt('iceN')===12 && cnt('barrel')===10, `T7e 工厂实际散布液氮 12 / 油桶 10（${cnt('iceN')}/${cnt('barrel')}）`);
 
   // ===== T8 渲染：iceN 格原色蓝桶、冰面 ❄️、区域卡蓝桶计数 =====
   const b2 = { terrain:[], ruins:{}, units:[], moveSet:null, targetSet:null, selected:null, targetMode:null, mode:null };
@@ -102,7 +102,7 @@ const g = Game.g;
   assert(m.includes('cell ice') && m.includes('❄️'), 'T8b 冰冻地形渲染 ❄️ + ice 底色');
   const gasStr = UI.terrainStr(T('gas')), facStr = UI.terrainStr(T('factory'));
   assert(gasStr.includes('🛢️</span>24') && !gasStr.includes('🛢️4'), 'T8c 区域卡：加油站仅红桶计数、无蓝桶');
-  assert(facStr.includes('🛢️</span>10') && facStr.includes('🛢️10'), 'T8c 工厂区域卡：红桶带滤镜 span、蓝桶原色');
+  assert(facStr.includes('🛢️</span>10') && facStr.includes('🛢️12'), 'T8c 工厂区域卡：红桶带滤镜 span、蓝桶原色（V221 液氮 12）');
 
   // ===== T9 百科收录（地形表自动遍历 TERRAIN） =====
   UI.wikiTab='fight'; UI.openWiki();
