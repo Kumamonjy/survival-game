@@ -15,8 +15,8 @@ g.res.gold = 500; g.res.fabric = 30; g.res.metal = 30;
 
   // ===== T2 配方与工坊打造 =====
   const rr = DATA.RECIPES.find(r=>r.id==='rainboots'), cr = DATA.RECIPES.find(r=>r.id==='cottonshoes');
-  assert(rr && rr.cost.gold===58 && rr.cost.fabric===6 && rr.cost.metal===2 && rr.stamina===12, 'T2a 雨靴配方 58💰+6🧵+2⚙️ / 12⚡');
-  assert(cr && cr.cost.gold===55 && cr.cost.fabric===8 && cr.stamina===12, 'T2b 棉鞋配方 55💰+8🧵 / 12⚡');
+  assert(rr && rr.cost.gold===39 && rr.cost.fabric===9 && rr.cost.metal===4 && rr.stamina===12, 'T2a 雨靴配方 39💰+9🧵+4⚙️ / 12⚡（V226 金币下调材料大增）');
+  assert(cr && cr.cost.gold===37 && cr.cost.fabric===12 && cr.stamina===12, 'T2b 棉鞋配方 37💰+12🧵 / 12⚡（V226 金币下调材料大增）');
   Game.craft('rainboots'); Game.craft('cottonshoes');
   const rbInst = (g.bagInst||[]).find(e=>e.id==='rainboots');
   const csInst = (g.bagInst||[]).find(e=>e.id==='cottonshoes');

@@ -64,7 +64,7 @@ assert(/wiki-subtab active[^>]*>💰 金币↓/.test(h), 'T7e 选中按钮高亮
 
 // T8 获取途径逐资源换行（工坊制造：首行标签+金币，其余资源各占一行）
 UI.wikiEquipSlot = 'weapon'; h = body();
-assert(h.includes('工坊制造 💰×19<br>🪵×8<br>10⚡'), 'T8a 木棍配方逐行显示');
+assert(h.includes('工坊制造 💰×13<br>🪵×11<br>10⚡'), 'T8a 木棍配方逐行显示（V226 金币下调材料大增）');
 assert(!h.includes('工坊制造 💰×19 + '), 'T8b 不再使用 + 连接');
 UI.wikiEquipSlot = 'all'; UI.equipSort = null;
 

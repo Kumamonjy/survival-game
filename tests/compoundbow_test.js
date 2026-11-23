@@ -19,9 +19,9 @@ g.res.gold = 500; g.res.wood = 40; g.res.metal = 30; g.res.fabric = 30;
 
   // ===== T2 配方与工坊打造（高消耗档）=====
   const rc = DATA.RECIPES.find(r=>r.id==='compoundbow');
-  assert(rc && rc.cost.gold===115 && rc.cost.wood===14 && rc.cost.fabric===8 && rc.cost.metal===10 && rc.stamina===26, 'T2a 配方 115💰+14🪵+8🧵+10⚙️ / 26⚡（V225 上调）');
+  assert(rc && rc.cost.gold===77 && rc.cost.wood===19 && rc.cost.fabric===11 && rc.cost.metal===14 && rc.stamina===26, 'T2a 配方 77💰+19🪵+11🧵+14⚙️ / 26⚡（V226 金币下调材料大增）');
   const rcPistol = DATA.RECIPES.find(r=>r.id==='pistol');
-  assert(rcPistol.cost.gold>rc.cost.gold, 'T2b 金币消耗低于手枪（手枪 135💰 全场最贵）');
+  assert(rcPistol.cost.gold>rc.cost.gold, 'T2b 金币消耗低于手枪（手枪 90💰 全场最贵）');
   Game.craft('compoundbow');
   const inst = (g.bagInst||[]).find(e=>e.id==='compoundbow');
   assert(inst && inst.lv===0, 'T2b 打造入包');

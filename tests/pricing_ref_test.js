@@ -12,14 +12,14 @@ const g = Game.g;
 
   // ===== T2 价格锚点未被破坏 =====
   const R = id => { const r = DATA.RECIPES.find(x=>x.id===id); return r && r.cost.gold; };
-  assert(R('stick')===19 && R('slingshot')===20 && R('whip')===28 && R('dagger')===29 && R('cleaver')===34 && R('nunchaku')===36, 'T2a 武器锚点 19/20/28/29/34/36（V210 加鞭子）');
-  assert(R('throwknife')===22, 'T2h 消耗品锚点 飞刀22（3格100%攻，强于石块10💰/50%）');
-  assert(R('club')===43 && R('spear')===66 && R('shovel')===70 && R('fireaxe')===75, 'T2b 武器锚点 43/66/70/75（V225 上调）');
-  assert(R('woodshield')===68 && R('hammer')===70 && R('compoundbow')===115 && R('pistol')===135, 'T2c 武器锚点 木盾68/大铁锤70/复合弓115/手枪135（V225 上调）');
-  assert(R('cap')===20 && R('chood')===32 && R('helmet')===53, 'T2d 头部锚点 20/32/53');
-  assert(R('cloth')===46 && R('sweater')===72 && R('cshoes')===30, 'T2e 护甲/鞋子锚点 46/72/30');
-  assert(R('cottonshoes')===55 && R('rainboots')===58, 'T2g 鞋子升级线锚点 棉鞋55/雨靴58（def 溢价 > hp 溢价）');
-  assert(R('bracer')===16 && R('bottle')===16 && R('thermos')===28, 'T2f 饰品锚点 16/16/28');
+  assert(R('stick')===13 && R('slingshot')===13 && R('whip')===19 && R('dagger')===19 && R('cleaver')===23 && R('nunchaku')===25, 'T2a 武器锚点 13/13/19/19/23/25（V226 金币下调材料大增）');
+  assert(R('throwknife')===22, 'T2h 消耗品锚点 飞刀22（3格100%攻，强于石块10💰/50%；V226 消耗品不动）');
+  assert(R('club')===29 && R('spear')===44 && R('shovel')===47 && R('fireaxe')===50, 'T2b 武器锚点 29/44/47/50（V226 金币下调材料大增）');
+  assert(R('woodshield')===45 && R('hammer')===47 && R('compoundbow')===77 && R('pistol')===90, 'T2c 武器锚点 木盾45/大铁锤47/复合弓77/手枪90（V226 金币下调材料大增）');
+  assert(R('cap')===13 && R('chood')===21 && R('helmet')===35, 'T2d 头部锚点 13/21/35（V226）');
+  assert(R('cloth')===31 && R('sweater')===48 && R('cshoes')===20, 'T2e 护甲/鞋子锚点 31/48/20（V226）');
+  assert(R('cottonshoes')===37 && R('rainboots')===39, 'T2g 鞋子升级线锚点 棉鞋37/雨靴39（def 溢价 > hp 溢价）');
+  assert(R('bracer')===10 && R('bottle')===10 && R('thermos')===18, 'T2f 饰品锚点 10/10/18（V226）');
 
   // ===== T3 权重体系一致性抽查：射程3 卖得比同级近战贵 =====
   assert(R('compoundbow') > R('hammer'), 'T3a 复合弓(射程3,95) > 大铁锤(攻高,70)：射程溢价成立');

@@ -17,7 +17,7 @@ g.res.gold = 500; g.res.wood = 30; g.res.metal = 30; g.res.fabric = 30;
 
   // ===== T2 配方与工坊打造 =====
   const rc = DATA.RECIPES.find(r=>r.id==='nunchaku');
-  assert(rc && rc.cost.gold===36 && rc.cost.wood===5 && rc.cost.metal===6 && rc.stamina===18, 'T2a 配方 36💰+5🪵+6⚙️ / 18⚡（性价比回正）');
+  assert(rc && rc.cost.gold===25 && rc.cost.wood===7 && rc.cost.metal===8 && rc.stamina===18, 'T2a 配方 25💰+7🪵+8⚙️ / 18⚡（V226 金币下调材料大增）');
   Game.craft('nunchaku');
   const inst = (g.bagInst||[]).find(e=>e.id==='nunchaku');
   assert(inst && inst.lv===0, 'T2b 打造入包');

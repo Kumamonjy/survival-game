@@ -17,7 +17,7 @@ g.res.gold = 500; g.res.wood = 30; g.res.metal = 40; g.res.fabric = 30;
 
   // ===== T2 配方与工坊打造（普通档）=====
   const rc = DATA.RECIPES.find(r=>r.id==='hammer');
-  assert(rc && rc.cost.gold===70 && rc.cost.wood===4 && rc.cost.metal===12 && rc.stamina===28, 'T2a 配方 70💰+4🪵+12⚙️ / 28⚡');
+  assert(rc && rc.cost.gold===47 && rc.cost.wood===6 && rc.cost.metal===17 && rc.stamina===28, 'T2a 配方 47💰+6🪵+17⚙️ / 28⚡（V226 金币下调材料大增）');
   assert(!DATA.TOP_EQUIPS.includes('hammer'), 'T2b 普通档：不进 TOP_EQUIPS（d≤2 区域可掉）');
   Game.craft('hammer');
   const inst = (g.bagInst||[]).find(e=>e.id==='hammer');

@@ -16,7 +16,7 @@ g.res.gold = 500; g.res.wood = 30; g.res.fabric = 30;
 
   // ===== T2 配方与工坊打造 =====
   const rc = DATA.RECIPES.find(r=>r.id==='woodshield');
-  assert(rc && rc.cost.gold===68 && rc.cost.wood===8 && rc.cost.fabric===3 && rc.stamina===18, 'T2a 配方 68💰+8🪵+3🧵 / 18⚡');
+  assert(rc && rc.cost.gold===45 && rc.cost.wood===13 && rc.cost.fabric===5 && rc.stamina===18, 'T2a 配方 45💰+13🪵+5🧵 / 18⚡（V226 金币下调材料大增）');
   Game.craft('woodshield');
   const inst = (g.bagInst||[]).find(e=>e.id==='woodshield');
   assert(inst && inst.lv===0, 'T2b 打造入包');

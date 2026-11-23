@@ -10,7 +10,7 @@ const [s1, s2] = g.chars;
   const wp = DATA.EQUIPS.whip;
   assert(wp && wp.slot==='weapon' && wp.stats.atk===8 && wp.range===2 && !wp.skill, 'T1a 鞭子：攻+8 / 射程2 / 无技能');
   const wr = DATA.RECIPES.find(r=>r.id==='whip');
-  assert(wr && wr.cost.gold===28 && wr.cost.fabric===3 && wr.cost.metal===1 && wr.stamina===10, 'T1b 鞭子配方 28💰+3🧵+1⚙️ / 10⚡');
+  assert(wr && wr.cost.gold===19 && wr.cost.fabric===5 && wr.cost.metal===2 && wr.stamina===10, 'T1b 鞭子配方 19💰+5🧵+2⚙️ / 10⚡（V226 金币下调材料大增）');
 
   // ===== T2 飞刀定义与技能参数 =====
   const tk = DATA.EQUIPS.throwknife;

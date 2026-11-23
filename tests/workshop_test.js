@@ -38,14 +38,14 @@ const g = Game.g;
   assert(g.bag.cloth===clothCnt, 'T4b 布料不足不能造布衣（数量不增）');
 
   // ===== T5 制造布系装备（布料）=====
-  g.res.gold = 500; g.res.fabric = 20;
+  g.res.gold = 500; g.res.fabric = 40;   // V226 材料加压后布帽9+布鞋9+布衣12=30🧵，备量放大
   const cCh = CC('chood'), cCs = CC('cshoes'), cCl = CC('cloth');
   Game.craft('chood');
-  assert(g.bag.chood===1 && g.res.fabric===20-cCh.fabric && g.res.gold===500-cCh.gold, 'T5a 制造布帽：实扣 = craftCost 派生值');
+  assert(g.bag.chood===1 && g.res.fabric===40-cCh.fabric && g.res.gold===500-cCh.gold, 'T5a 制造布帽：实扣 = craftCost 派生值');
   Game.craft('cshoes');
-  assert(g.bag.cshoes===3 && g.res.fabric===20-cCh.fabric-cCs.fabric && g.res.gold===500-cCh.gold-cCs.gold, 'T5b 制造布鞋：实扣累计 = craftCost 派生值（初始2+造1=3）');
+  assert(g.bag.cshoes===3 && g.res.fabric===40-cCh.fabric-cCs.fabric && g.res.gold===500-cCh.gold-cCs.gold, 'T5b 制造布鞋：实扣累计 = craftCost 派生值（初始2+造1=3）');
   Game.craft('cloth');
-  assert(g.bag.cloth===3 && g.res.fabric===20-cCh.fabric-cCs.fabric-cCl.fabric && g.res.gold===500-cCh.gold-cCs.gold-cCl.gold, 'T5c 制造布衣：实扣累计 = craftCost 派生值（初始2+造1=3）');
+  assert(g.bag.cloth===3 && g.res.fabric===40-cCh.fabric-cCs.fabric-cCl.fabric && g.res.gold===500-cCh.gold-cCs.gold-cCl.gold, 'T5c 制造布衣：实扣累计 = craftCost 派生值（初始2+造1=3）');
 
   // ===== T6 未建工坊不能造（新档） =====
   const g2 = Game.newGame();
