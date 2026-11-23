@@ -553,7 +553,7 @@ button:disabled { opacity:.45; cursor:not-allowed; }
 
   <!-- ============ 广播站 ============ -->
   <div class="screen" id="scr-recruit">
-    <div class="topbar"><button class="back" onclick="UI.backHome()">←</button><h2>广播站</h2><div class="spacer"></div><button class="btn small" onclick="Recruit.refreshCandidates()">📡 播报（免费）</button></div>
+    <div class="topbar"><button class="back" onclick="UI.backHome()">←</button><h2>广播站</h2><div class="spacer"></div><button class="btn small" onclick="Recruit.refreshCandidates()">📡 播报 (20💰)</button></div>
     <div class="page">
       <div class="panel"><h3>📻 广播站</h3><div class="wiki-p">营地与外界的唯一联络渠道。目前开放<b>幸存者招募</b>，后续会解锁更多用途。</div></div>
       <div class="panel"><h3>👥 幸存者招募</h3><div class="wiki-p">向无线电频道发出招募信号，回应者职业与能力各异。选中候选者后花费金币将其招募入队，每次播报刷新 3 名候选者。</div><div id="recruit-list"></div></div>
@@ -3421,7 +3421,7 @@ const UI = {
           <tr><td><b>⏳ 时间</b></td><td>探险不过夜；「进入下一天」过夜才结算晚餐、恢复、建筑产出，并刷新天气与家园访客；同一天可多次探索</td></tr>
           <tr><td><b>❤️ 生命</b></td><td>吃到晚饭每天 +50（重伤者回满自动解除重伤）；急救丸可立即回 60 并解重伤</td></tr>
           <tr><td><b>🍞 食物</b></td><td>每名成员按职业日耗（见「🧍 职业」页表格；贪吃 +1 / 节俭 −1）；不够全营吃时弹晚餐分配勾选谁吃——吃到 +50⚡+50❤️，没吃到当天不恢复（不会饿死）</td></tr>
-          <tr><td><b>📻 广播站</b></td><td>营地与外界的联络渠道。目前开放「幸存者招募」：首次免费看 3 名候选者，此后唯一刷新方式是播报（免费，名单持久保存，不随天数自动刷新）；招募无人数上限；后续将解锁求援、空投、情报等用途</td></tr>
+          <tr><td><b>📻 广播站</b></td><td>营地与外界的联络渠道。目前开放「幸存者招募」：首次免费看 3 名候选者，此后唯一刷新方式是 20💰 播报（名单持久保存，不随天数自动刷新）；招募无人数上限；后续将解锁求援、空投、情报等用途</td></tr>
           <tr><td><b>🚶 家园访客</b></td><td>每天一位流动商人（回收 2 种物资换金币、出售 1 种物资，各限成交一次）+ 一位流浪者（100💰+20🍞 招募）；随过夜刷新，无法付费重刷</td></tr>
           <tr><td><b>🌊 尸潮来袭</b></td><td>每 10 天（第 10/20/30… 天）点「进入下一天」时强制守城一场：<b>全员自动出战</b>（存活且未重伤，每人消耗 15⚡；工事操作员操控工事），丧尸等级 = 出战平均等级 −1，数量 = 基地总人数 +3，难度约 2 星；<b>防御工事部署在阵地中间一行</b>，不可撤离。胜利获得金币 + 随机物资（约 2 星产出 ×1.5）并正常结算经验与击杀赏金；失守则金币与全部资源 <b>-30%</b>、存活角色全员重伤（不死亡）。</td></tr>
           <tr><td><b>💀 击杀赏金</b></td><td>每次探险结算时，按击败敌人的难度额外获得金币：越强的敌人赏金越高（图鉴 gold 列，单只 1~10💰，霸主 10💰）；撤离与失败同样照计，不吃区域奖励的减半规则</td></tr>
@@ -3760,7 +3760,7 @@ const UI = {
  * ===================================================== */
 const Recruit = {
   /* 候选名单存于 g.recruitCandidates（随存档持久化）：
-     仅新档/旧档迁移首次进入时免费生成一批；此后刷新唯一途径 = 免费点「播报」，不随天数自动刷新 */
+     仅新档/旧档迁移首次进入时免费生成一批；此后刷新唯一途径 = 花费 20 金币「播报」，不随天数自动刷新 */
   list() { return Game.g.recruitCandidates || []; },
   ensureCandidates() {
     if (!Game.g.recruitCandidates) Recruit.rollCandidates();
@@ -3778,6 +3778,8 @@ const Recruit = {
   },
   refreshCandidates() {
     const g = Game.g;
+    if (g.res.gold < 20) { UI.toast('金币不足（需要 20 金币发布广播）'); return; }
+    g.res.gold -= 20;
     Recruit.rollCandidates();
     UI.renderRecruit(); Game.renderHome();
     UI.toast('📡 广播已发布，收到了新的回应…');
@@ -3791,7 +3793,7 @@ const Recruit = {
     g.res.gold -= price;
     c.stamina = Math.max(c.stamina, 50);
     g.chars.push(c);
-    g.recruitCandidates.splice(i,1);   // 招完不自动补充：空列表保留，需点「播报」免费刷新
+    g.recruitCandidates.splice(i,1);   // 招完不自动补充：空列表保留，需 20💰 播报刷新
     UI.renderRecruit(); Game.renderHome();
     UI.toast(`🎉 ${c.name}（${DATA.CLASSES[c.cls].name}）加入了队伍！`);
     Game.saveToSlot(Game.currentSlot, true);

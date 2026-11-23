@@ -23,10 +23,10 @@ while (g.chars.filter(c=>!c.dead).length < 8) g.chars.push(Game.createChar('civi
   if (g.visitors) { g.res.gold = 999; g.res.food = 99; Game.recruitWanderer(); }
   assert(g.chars.filter(c=>!c.dead).length === alive0+1, 'T3 满编后流浪者招募成功');
 
-  // T4 满编刷新广播免费（V213：播报不再扣金）
+  // T4 满编刷新广播正常扣 20 金
   const gold1 = g.res.gold;
   Recruit.refreshCandidates();
-  assert(g.res.gold === gold1 && g.recruitCandidates.length === 3, 'T4 满编可刷广播（免费换 3 候选）');
+  assert(g.res.gold === gold1-20 && g.recruitCandidates.length === 3, 'T4 满编可刷广播（扣 20 金换 3 候选）');
 
   // T5 招募页：显示当前人数行，不再出现「队伍已满」面板
   UI.renderRecruit();
