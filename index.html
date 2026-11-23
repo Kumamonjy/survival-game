@@ -253,6 +253,11 @@ button:disabled { opacity:.45; cursor:not-allowed; }
 .b-top .phase.player { background:rgba(92,184,92,.2); border:1px solid var(--ally); color:#a8e0a8; }
 .b-top .phase.enemy  { background:rgba(217,83,79,.2); border:1px solid var(--enemy); color:#f0a8a5; }
 .b-top .flee { padding:5px 12px; border-radius:8px; background:var(--panel2); border:1px solid var(--line2); font-size:13px; }
+/* 顶栏物资箱按钮：点击查看战利品；拾取新物资时闪烁提醒（V220） */
+.b-top .loot-btn { width:34px; height:30px; border-radius:8px; background:var(--panel2); border:1px solid var(--line2); font-size:15px; padding:0; line-height:1; flex-shrink:0; }
+.b-top .loot-btn:active { transform:scale(.92); }
+@keyframes lootFlash { 0%,100% { box-shadow:none; transform:scale(1); } 40% { box-shadow:0 0 12px 3px rgba(212,167,44,.8); transform:scale(1.2); } }
+.loot-btn.loot-flash { animation:lootFlash .55s ease-out 2; border-color:var(--yellow); }
 
 .side-panels { flex-shrink:0; display:flex; gap:6px; padding:6px 10px; background:rgba(18,22,14,.85); }
 .side-panel {
@@ -609,6 +614,7 @@ button:disabled { opacity:.45; cursor:not-allowed; }
     <div class="b-top">
       <div class="turn-num">回合 <span id="b-turn">1</span></div>
       <div class="b-weather" id="b-weather">☀️ 晴朗</div>
+      <button class="loot-btn" id="btn-loot" onclick="Battle.showLoot()">🧰</button>
       <div class="phase player" id="b-phase">玩家回合</div>
       <button class="flee" onclick="Battle.confirmFlee()">撤离</button>
     </div>
@@ -4400,8 +4406,11 @@ const Battle = {
        <div class="stat-line"><span>总血量</span><div class="mini-bar"><div style="width:${eMax?Math.round(ehp/eMax*100):0}%"></div></div><span>${ehp}</span></div>`;
     document.getElementById('panel-ally').innerHTML =
       `<div class="pt"><span>🧍 我方</span><span>${as.length} 人${twCount?` · 🏰${twCount}`:''}</span></div>
-       <div class="stat-line"><span>总血量</span><div class="mini-bar"><div style="width:${aMax?Math.round(ahp/aMax*100):0}%"></div></div><span>${ahp}</span></div>
-       <div class="stat-line"><span>🧰 已拾取</span><span style="color:var(--yellow)">${UI.resIcon('gold')}${b.loot.gold} ${UI.resIcon('med')}${b.loot.med} ${UI.resIcon('metal')}${b.loot.metal} ${UI.resIcon('food')}${b.loot.food} ${UI.resIcon('fabric')}${b.loot.fabric||0} ${UI.resIcon('wood')}${b.loot.wood||0}</span></div>`;
+       <div class="stat-line"><span>总血量</span><div class="mini-bar"><div style="width:${aMax?Math.round(ahp/aMax*100):0}%"></div></div><span>${ahp}</span></div>`;
+    // 物资总量变化 → 顶栏物资箱按钮闪烁（覆盖物资箱/石头箱/妙手神偷等所有拾取路径；loot 只增不减，跨场残留值不会误闪）
+    const lsum = (b.loot.gold||0)+(b.loot.med||0)+(b.loot.metal||0)+(b.loot.food||0)+(b.loot.fabric||0)+(b.loot.wood||0);
+    if (Battle._lootSum !== undefined && lsum > Battle._lootSum) Battle.flashLootBtn();
+    Battle._lootSum = lsum;
     document.getElementById('b-turn').textContent = b.turn;
     const ph = document.getElementById('b-phase');
     ph.textContent = b.phase==='player' ? '玩家回合' : (b.phase==='auto' ? '自动行动' : '丧尸回合');
@@ -4453,6 +4462,23 @@ const Battle = {
     const html = b.log.map(e=>`<div class="log-entry"><div class="log-turn">回合 ${e.turn}</div>${e.msgs.map(x=>`<div class="log-msg ${x.c}">· ${x.m}</div>`).join('')}</div>`).join('')
       || '<div class="wiki-p">暂无战斗记录</div>';
     UI.modal(`<h3>📜 战斗记录</h3>${html}${UI.closeRow()}`);
+  },
+  /* 顶栏物资箱：弹窗查看本场战利品（V220 从我方面板迁出） */
+  showLoot() {
+    const b = Battle.b, L = b.loot;
+    const rows = [['gold','金币'],['med','药物'],['metal','金属'],['food','食物'],['fabric','布料'],['wood','木材']];
+    const body = rows.every(([k])=>!(L[k]||0))
+      ? '<div class="wiki-p">还没有拾取物资。走上地图上的 🧰 物资箱即可拾取，🎁 精品物资箱有双倍物资。</div>'
+      : rows.map(([k,n])=>`<div class="loot-line"><span>${UI.resIcon(k)} ${n}</span><b>×${L[k]||0}</b></div>`).join('');
+    UI.modal(`<h3>🧰 已拾取物资</h3>${body}
+      <div class="wiki-p" style="margin-top:8px;color:var(--txt2)">胜利全取 · 主动撤离保留已拾取 · 全员倒下物资减半</div>${UI.closeRow()}`);
+  },
+  flashLootBtn() {
+    const el = document.getElementById('btn-loot');
+    if (!el) return;
+    el.classList.remove('loot-flash');
+    void el.offsetWidth;   // 强制重排：连续拾取也能重启动画
+    el.classList.add('loot-flash');
   },
   subtitle(text) {
     const el = document.getElementById('battle-subtitle');

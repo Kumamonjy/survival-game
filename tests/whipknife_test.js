@@ -32,6 +32,7 @@ const [s1, s2] = g.chars;
   assert(wInst && Game.bagCount('throwknife')===1, 'T3a 鞭子入包 + 飞刀背包 1 把');
 
   // ===== T4 鞭子穿戴生效 =====
+  s1.range = 1; s1.critRate = 0;   // 固定近战基础值（newGame 初始职业随机，远程职业会让 effRange=max(自身,2)≠2 偶发失败）
   Game.equipChar(s1.id,'weapon',wInst.uid);
   assert(Game.effAtk(s1)===s1.atk+8 && Game.effRange(s1)===2, 'T4a 鞭子：攻击+8 / 射程 2 生效');
 
@@ -46,7 +47,7 @@ const [s1, s2] = g.chars;
   // ===== T6 小李飞刀结算：3 格内单体 100% 攻击力 =====
   const foe = Battle.mkZombie('walker', 5, 8, 1);   // 曼哈顿距离 3，射程边缘
   me.hp = me.maxHp = 300; foe.hp = foe.maxHp = 300;
-  foe.def = 0; me.atk = 40;
+  foe.def = 0; me.atk = 40; me.critRate = 0;   // 屏蔽暴击（否则偶发 1.8× 暴伤污染断言）
   Battle.b = { units:[me, foe], selected:me,
     terrain:Array.from({length:Battle.ROWS},()=>Array.from({length:Battle.COLS},()=>'plain')),
     mode:null, turn:1, phase:'player', weather:'sunny', stats:{}, log:[], logEl:null, loot:{}, ruins:{},
