@@ -8,7 +8,7 @@ const [s1] = g.chars;
 (async () => {
   // ===== T1 职业定义 =====
   const SC = DATA.CLASSES.scientist;
-  assert(SC && SC.name==='科学家' && SC.icon==='🔬' && SC.price===180 && SC.food===1, 'T1a 定义（招募 180 金 + 1 食物）');
+  assert(SC && SC.name==='科学家' && SC.icon==='🔬' && SC.price===170 && SC.food===1, 'T1a 定义（招募 170 金 + 1 食物）');
   const b0 = SC.base;
   assert(b0.maxHp===160 && b0.maxStamina===100 && b0.atk===25 && b0.def===5 && b0.range===1 && b0.move===2 && b0.critRate===5 && b0.critDmg===150, 'T1b 基础值逐项');
   const sk = SC.skills[0];

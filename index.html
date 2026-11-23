@@ -670,7 +670,7 @@ DATA.CLASSES = {
       { name:'近身格斗', desc:'消耗40体力，对1格内一名敌人造成 150% 攻击力的伤害，自身进入「强力」状态持续 2 回合（攻击力 +20%）。', cost:40, cd:3, type:'attack', shape:'target', mult:1.5, range:1, selfStrong:2 },
     ],
     base:{ maxHp:300, maxStamina:150, atk:50, def:10, range:1, move:3, critRate:10, critDmg:180 },
-    price:210
+    price:200
   },
   doctor: {
     name:'医生', icon:'⚕️', color:'doc', desc:'战地医疗专家，既能 2 格远程急救，也能贴身护理；可担任医院医务员，生产绷带/止痛药/急救丸等医疗道具。拥有两个职业技能。',
@@ -681,7 +681,7 @@ DATA.CLASSES = {
       MED_CARE,
     ],
     base:{ maxHp:250, maxStamina:110, atk:30, def:10, range:1, move:3, critRate:5, critDmg:150 },
-    price:160
+    price:150
   },
   nurse: {
     name:'护士', icon:'💉', color:'nrs', desc:'白衣天使也是暗夜毒师——一手护理救人，一手注射让丧尸毒发身亡。拥有两个职业技能，是队伍里的多面手。',
@@ -692,7 +692,7 @@ DATA.CLASSES = {
       { name:'注射毒药', desc:'消耗20体力，对1格内一名敌人造成固定 10 点伤害（无视防御与暴击），并使其中毒 5 回合：每回合毒发损失 10% 生命值。再次命中会刷新持续时间。', cost:20, cd:3, type:'attack', shape:'target', fixedDmg:10, range:1, poison:{ turns:5 } },
     ],
     base:{ maxHp:200, maxStamina:120, atk:30, def:10, range:1, move:3, critRate:5, critDmg:150 },
-    price:140
+    price:130
   },
   scout: {
     name:'运动员', icon:'🏃', color:'sct', desc:'体格强健的运动员，移速 4。「近身格斗」贴身重创敌人并激发自身强力状态，「奔袭」飞身扑向远处空地、震荡周围丧尸。拥有两个职业技能。',
@@ -703,7 +703,7 @@ DATA.CLASSES = {
       { name:'奔袭', desc:'消耗40体力，选择2格范围内一个空格飞扑过去（落点即新站位，不消耗移动步数），对以该格为中心的十字范围（含中心共5格）内所有敌人造成 80% 攻击力的伤害。', cost:40, cd:4, type:'attack', shape:'aoe', range:2, area:1, mult:0.8, emptyCell:true },
     ],
     base:{ maxHp:230, maxStamina:120, atk:40, def:5, range:1, move:4, critRate:5, critDmg:150 },
-    price:160
+    price:150
   },
   brawler: {
     name:'格斗家', icon:'🥊', color:'brw', desc:'赤手空拳的近战好手，暴击出色、攻击凶悍；就算被丧尸围住，一记「横扫千军」也能同时重创周围 1 格内（曼哈顿距离）的所有敌人。拥有两个职业技能。',
@@ -714,7 +714,7 @@ DATA.CLASSES = {
       { name:'近身格斗', desc:'消耗40体力，对1格内一名敌人造成 150% 攻击力的伤害，自身进入「强力」状态持续 2 回合（攻击力 +20%）。', cost:40, cd:3, type:'attack', shape:'target', mult:1.5, range:1, selfStrong:2 },
     ],
     base:{ maxHp:260, maxStamina:120, atk:50, def:10, range:1, move:3, critRate:10, critDmg:180 },
-    price:160
+    price:150
   },
   hunter: {
     name:'猎人', icon:'🏹', color:'hnt', desc:'百步穿杨的老猎人，射程全队最远；既能贯穿直线上的成排丧尸，也能精准狙杀单个目标。拥有两个职业技能。',
@@ -725,7 +725,7 @@ DATA.CLASSES = {
       { name:'精准射击', desc:'消耗25体力，对4格内一名敌人造成 150% 攻击力的伤害（可越障远程狙击）。', cost:25, cd:3, type:'attack', shape:'target', mult:1.5, range:4 },
     ],
     base:{ maxHp:250, maxStamina:110, atk:50, def:5, range:3, move:3, critRate:5, critDmg:150 },
-    price:160
+    price:150
   },
   chef: {
     name:'厨师', icon:'🍳', color:'chf', desc:'末日里最稀缺的手艺人：一手热汤让丧尸领教「滚烫」的滋味，一手美味料理为队友补充体力。拥有两个职业技能。',
@@ -736,7 +736,7 @@ DATA.CLASSES = {
       { name:'美味料理', desc:'消耗25体力，喂食1格内一名友方，为其恢复 15 点体力。', cost:25, cd:3, type:'regen', shape:'target', regenAmt:15, range:1 },
     ],
     base:{ maxHp:250, maxStamina:110, atk:30, def:10, range:1, move:2, critRate:5, critDmg:150 },
-    price:110
+    price:100
   },
   scientist: {
     name:'科学家', icon:'🔬', color:'sci', desc:'末日的知识就是生命：一针「特种医疗」既能救治队友、净化所有负面状态，一支「麻醉飞镖」还能让敌人昏睡两回合。拥有两个职业技能。',
@@ -747,7 +747,7 @@ DATA.CLASSES = {
       { name:'麻醉飞镖', desc:'消耗35体力，对2格内一名敌人造成 110% 攻击力的伤害，并使其陷入眩晕状态 2 回合（无法行动）。', cost:35, cd:3, type:'attack', shape:'target', mult:1.1, range:2, stun:{ turns:2 } },
     ],
     base:{ maxHp:160, maxStamina:100, atk:25, def:5, range:1, move:2, critRate:5, critDmg:150 },
-    price:180
+    price:170
   },
   musician: {
     name:'音乐家', icon:'🎵', color:'mus', desc:'用旋律鼓舞人心的演奏者：「演奏音乐」为 2 格内所有友方（含自己）恢复体力——人越多越划算，是队伍的续航引擎。',
@@ -757,7 +757,7 @@ DATA.CLASSES = {
       { name:'演奏音乐', desc:'消耗40体力，奏响乐曲，为 2 格内（曼哈顿距离）所有友方（含自己）各恢复 10 点体力。', cost:40, cd:3, type:'regen', shape:'regenAoe', regenAmt:10, range:2 },
     ],
     base:{ maxHp:150, maxStamina:100, atk:25, def:5, range:2, move:2, critRate:5, critDmg:150 },
-    price:140
+    price:130
   },
   explorer: {
     name:'探险家', icon:'🧭', color:'exp', desc:'走遍废土的探险行家：生命、攻击、体力的全面好手，移速 3 让他总是第一个抵达物资点与废墟。「野外生存」让他无需外部补给，也能就地恢复。',
@@ -767,7 +767,7 @@ DATA.CLASSES = {
       { name:'野外生存', desc:'消耗10体力，就地休整，恢复自身 50% 攻击力的生命值。', cost:10, cd:3, type:'heal', shape:'target', flatHeal:0, mult:0.5, range:1, includeSelf:true, selfOnly:true },
     ],
     base:{ maxHp:250, maxStamina:150, atk:40, def:10, range:1, move:3, critRate:5, critDmg:150 },
-    price:210
+    price:200
   },
   thief: {
     name:'小偷', icon:'🥷', color:'thf', desc:'阴影里的行家，移速 4。「暗中偷袭」从暗处重创敌人，「妙手神偷」伤敌之余顺手劫走财货——边打边赚。拥有两个职业技能。',
@@ -778,7 +778,7 @@ DATA.CLASSES = {
       { name:'妙手神偷', desc:'消耗25体力，对周围 1 格内（含斜角）一名敌人造成 110% 攻击力的伤害，并窃取其总生命值 2% 的金币。', cost:25, cd:2, type:'attack', shape:'ring1', mult:1.1, stealPct:0.02 },
     ],
     base:{ maxHp:150, maxStamina:130, atk:45, def:5, range:1, move:4, critRate:5, critDmg:150 },
-    price:220
+    price:210
   },
   gambler: {
     name:'赌徒', icon:'🎲', color:'gam', desc:'把命运交给骰子的亡命徒，暴伤 170% 冠绝全队。「孤注一掷」听天由命，「一掷千金」豪掷金币双发齐射——输赢全在一念之间。拥有两个职业技能。',
@@ -789,7 +789,7 @@ DATA.CLASSES = {
       { name:'一掷千金', desc:'消耗10金币 + 35体力，选择2格内 2 个目标（点同一目标两次可单独施放），每个目标各受到 50%~200% 攻击力的随机伤害。', cost:35, goldCost:10, cd:2, type:'attack', shape:'target2', range:2, randMult:[0.5,2] },
     ],
     base:{ maxHp:200, maxStamina:100, atk:40, def:5, range:1, move:3, critRate:5, critDmg:170 },
-    price:180
+    price:170
   }
 };
 
