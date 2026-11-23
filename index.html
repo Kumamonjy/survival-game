@@ -1039,9 +1039,9 @@ DATA.TOWERS = {
    暴击率 +1% ≈ 3~5💰（数值 <8% 无实战意义；当前仅手枪+3%、熊熊+5%）
    生命 +5    ≈ 4💰        体力 +5 ≈ 3💰
    ── 价格锚点（自带技能/特殊能力另计 15~25💰 溢价）──
-   武器：木棍19 → 弹弓20 → 鞭子28 → 匕首29 → 菜刀34(流血) → 双截棍36 → 棍棒43 → 木弓43(TOP) →
-        长矛58 → 铁锹62 → 消防斧67 → 木盾68(纯防御·HP50/防15·移-1/体-10) → 大铁锤70(-1移速/-10体力) → 复合弓95(TOP) →
-        手枪110(TOP 全场最贵)
+   武器：木棍19 → 弹弓20 → 鞭子28 → 匕首29 → 菜刀34(流血) → 双截棍36 → 棍棒43 → 木弓55(TOP) →
+        长矛66 → 木盾68(纯防御·HP50/防15·移-1/体-10) → 铁锹70 → 大铁锤70(-1移速/-10体力) → 消防斧75 → 复合弓115(TOP) →
+        手枪135(TOP 全场最贵，V225 上调)
    头部：棒球帽20 → 布帽32 → 安全帽53      护甲：布衣46 → 毛衣72
    鞋子：布鞋30 → 棉鞋55 → 雨靴58（V208 补齐鞋子升级线）  饰品：护腕16 → 水瓶16 → 保温杯28
    ── 规则 ──
@@ -1064,17 +1064,19 @@ DATA.RECIPES = [
   { id:'stick',  cost:{ gold:19, wood:8 }, stamina:10 },
   { id:'slingshot', cost:{ gold:20, wood:5, fabric:2 }, stamina:12 },
   { id:'whip',   cost:{ gold:28, fabric:3, metal:1 }, stamina:10 },
-  /* 顶级武器四件：材料 ×1.5 向上取整（金币不变）——强力装备门槛提高 */
-  { id:'bow',    cost:{ gold:43, wood:12, fabric:8 }, stamina:20 },
-  { id:'compoundbow', cost:{ gold:95, wood:12, fabric:6, metal:8 }, stamina:26 },
+  /* 顶级武器六件（TOP_EQUIPS）：V174 材料 ×1.5，V225 金币与材料再上调——高射程装备涨幅最大 */
+  /* V225 顶级/高级装备造价上调：射程 3 涨幅最大（手枪 +25 / 复合弓 +20 / 木弓 +12），射程 2 与消防斧 +8；
+     梯度保持：手枪 > 复合弓 > 木弓 > 消防斧/铁锹/长矛，手枪仍全场最高价；TOP_EQUIPS 成员不变 */
+  { id:'bow',    cost:{ gold:55, wood:14, fabric:10 }, stamina:20 },
+  { id:'compoundbow', cost:{ gold:115, wood:14, fabric:8, metal:10 }, stamina:26 },
   { id:'club',   cost:{ gold:43, wood:6, metal:3 }, stamina:20 },
   { id:'dagger', cost:{ gold:29, metal:4 }, stamina:12 },
   { id:'cleaver',cost:{ gold:34, metal:5 }, stamina:14 },
-  { id:'fireaxe',cost:{ gold:67, wood:12, metal:9 }, stamina:25 },
+  { id:'fireaxe',cost:{ gold:75, wood:12, metal:11 }, stamina:25 },
   { id:'nunchaku', cost:{ gold:36, wood:5, metal:6 }, stamina:18 },
-  { id:'spear',  cost:{ gold:58, wood:9, metal:8 }, stamina:25 },
-  { id:'pistol', cost:{ gold:110, metal:15, fabric:6 }, stamina:30 },
-  { id:'shovel', cost:{ gold:62, wood:10, metal:5 }, stamina:25 },
+  { id:'spear',  cost:{ gold:66, wood:10, metal:10 }, stamina:25 },
+  { id:'pistol', cost:{ gold:135, metal:18, fabric:8 }, stamina:30 },
+  { id:'shovel', cost:{ gold:70, wood:10, metal:6 }, stamina:25 },
   { id:'hammer', cost:{ gold:70, wood:4, metal:12 }, stamina:28 },
   { id:'woodshield', cost:{ gold:68, wood:8, fabric:3 }, stamina:18 },
   { id:'sweater', cost:{ gold:72, fabric:12 }, stamina:15 },
@@ -4091,6 +4093,7 @@ const Battle = {
     Battle.b = null;
     g.hordeDone = g.day;
     Game.saveToSlot(Game.currentSlot, true);
+    Game.renderHome(); UI.showScreen('scr-home');   // V225 修复：尸潮结算后从未切回主界面（普通战斗走 backHome 有切，这里漏了）
     Game.advanceDay();
   },
 

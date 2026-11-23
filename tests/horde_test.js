@@ -63,12 +63,17 @@ const g = Game.g;
   assert(g.chars.filter(c=>!c.dead).every(c=>c.injured), 'T5c 存活角色全员重伤');
   assert(g.chars.every(c=>!c.dead), 'T5d 不会死亡');
 
-  // ===== T6 守城结束：继续过夜进入次日 =====
+  // ===== T6 守城结束：继续过夜进入次日 + 切回主界面（V225 修复） =====
   g.day = 10; g.hordeDone = 0;
+  const shown = [];
+  const origShow = UI.showScreen;
+  UI.showScreen = s => { shown.push(s); origShow(s); };
   Battle.b = { horde:true, units:[], terrain:[], loot:{}, log:[], stats:{}, over:true, zone:{id:'horde'} };
   Battle.endHorde();
+  UI.showScreen = origShow;
   assert(g.day === 11, 'T6a 过夜后进入第11天');
   assert(g.hordeDone === 10, 'T6b 记录第10天尸潮已守');
+  assert(shown.includes('scr-home'), 'T6c 尸潮结算后切回主界面（V225：弹窗关闭不再停留在战斗界面）');
 
   console.log('--- done ---');
   process.exit(0);
