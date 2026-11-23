@@ -41,7 +41,9 @@ Game.g = Game.newGame(); Game.currentSlot = 1;
 
   // ===== T5 丧尸经验表 =====
   const Z = DATA.ZOMBIES;
-  assert(Z.walker.exp===10 && Z.runner.exp===10 && Z.brute.exp===14 && Z.licker.exp===14 && Z.savage.exp===18 && Z.behemoth.exp===60, 'T5 经验表 10/10/14/14/18/60（V213 低阶敌人经验下调）');
+  assert(Z.walker.exp===10 && Z.runner.exp===10 && Z.brute.exp===14 && Z.licker.exp===14, 'T5a 基础经验 10/10/14/14（V213 低阶敌人经验下调）');
+  assert(Z.gasbag.exp===16 && Z.savage.exp===20 && Z.witch.exp===22, 'T5b V215 分层：毒气16（移1低威胁）/ 凶猛20（攻55移4高威胁）/ 腐医22（优先击杀目标）');
+  assert(Z.behemoth.exp===90, 'T5c Boss 经验 90（V215 里程碑感）');
 
   // ===== T6 胜利结算：全员全额 + 重伤减半 =====
   const mkU = (ref, side, hp, zt) => ({ uid:'x'+Math.random(), side, ref, hp, maxHp:200, atk:30, def:5, row:1, col:1,
@@ -69,7 +71,7 @@ Game.g = Game.newGame(); Game.currentSlot = 1;
             mkU(null,'enemy',0,'walker'), mkU(null,'enemy',0,'savage') ] };
   Battle.b = b2;
   await Battle.finish('lose');
-  assert(cC.exp===Math.ceil(Math.ceil(28/2)*0.5) && cC.injured, 'T7a 失败减半14再重伤减半=7');
+  assert(cC.exp===Math.ceil(Math.ceil(30/2)*0.5) && cC.injured, 'T7a 失败减半15再重伤减半=8（游荡10+凶猛20，V215）');
   const cD = Game.createChar('civilian', '平民丁');
   Game.g.chars.push(cD); cD.exp = 0;
   const b3 = { zone: DATA.ZONES[0], turn:1, phase:'player', over:false, doubledReward:false,

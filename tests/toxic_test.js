@@ -13,7 +13,7 @@ const mkB=(units)=>({ units, selected:units[0], terrain:Array.from({length:Battl
   // ===== T1 配置层 =====
   const B = DATA.ZOMBIES.bomber, G = DATA.ZOMBIES.gasbag;
   assert(B.base.move===2 && B.explodeDmg===80 && B.exp===14 && B.base.maxHp===160, 'T1a 自爆丧尸配置');
-  assert(G.base.move===1 && G.gasMult===1.1 && G.exp===18 && G.base.maxHp===200, 'T1b 毒气丧尸配置');
+  assert(G.base.move===1 && G.gasMult===1.1 && G.exp===16 && G.base.maxHp===200, 'T1b 毒气丧尸配置（V215 经验 16）');
   assert(Object.keys(DATA.ZOMBIES).length===15, 'T1c 敌人种类共 15 种（10 丧尸 + 5 劫掠者）');
   const zc = id => DATA.ZONES.find(z=>z.id===id);
   assert(zc('factory').pool.bomber===15 && zc('street').pool.gasbag===6 && zc('base').pool.gasbag===8, 'T1d 区域池已加入新丧尸');
