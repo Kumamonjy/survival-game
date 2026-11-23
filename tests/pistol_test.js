@@ -11,7 +11,7 @@ g.res.gold = 1000; g.res.wood = 50; g.res.metal = 50; g.res.fabric = 50;
   // T1 定义：攻+40 / 暴击+3% / 射程3
   const P = DATA.EQUIPS.pistol;
   assert(P && P.name==='手枪' && P.slot==='weapon' && P.icon==='🔫', 'T1a 手枪定义（武器槽）');
-  assert(P.stats.atk===40 && P.stats.critRate===3 && P.range===3, 'T1b 攻+40 / 暴击率+3% / 射程3');
+  assert(P.stats.atk===35 && P.stats.critRate===3 && P.range===3, 'T1b 攻+35 / 暴击率+3% / 射程3');
 
   // T2 技能：火力压制为手枪独立技能对象（V173 军人一技能已换为擒拿，互不影响）
   const sk = P.skill, grap = DATA.CLASSES.soldier.skills[0];
@@ -23,7 +23,7 @@ g.res.gold = 1000; g.res.wood = 50; g.res.metal = 50; g.res.fabric = 50;
   // T3 配方：110💰+8⚙️+3🧵 / 30⚡，全场最贵
   const rc = REC('pistol');
   assert(rc && rc.stamina===30 && CC('pistol').gold===rc.cost.gold && CC('pistol').metal===rc.cost.metal && CC('pistol').fabric===rc.cost.fabric, 'T3a 配方与 craftCost 派生一致 / 30⚡');
-  assert(DATA.RECIPES.every(r=>r.cost.gold<=REC('pistol').cost.gold), 'T3b 金币造价全场最高（110💰，高于复合弓 95💰）');
+  assert(DATA.RECIPES.every(r=>r.cost.gold<=REC('pistol').cost.gold), 'T3b 金币造价全场最高（90💰，高于复合弓 77💰）');
 
   // T4 打造 + 装备：effAtk +40 / 射程 3 / 暴击 +3
   Game.craft('pistol');
@@ -32,7 +32,7 @@ g.res.gold = 1000; g.res.wood = 50; g.res.metal = 50; g.res.fabric = 50;
   const c1 = Game.createChar('civilian','枪手'); c1.stamina = 9999; c1.talents = []; Game.applyTalents(c1); Game.recalc(c1); g.chars.push(c1);
   const baseCrit = c1.critRate;
   Game.equipChar(c1.id, 'weapon', inst.uid);
-  assert(Game.effAtk(c1)===c1.atk+40, 'T4b 装备手枪 effAtk +40');
+  assert(Game.effAtk(c1)===c1.atk+35, 'T4b 装备手枪 effAtk +35');
   assert(Game.effRange(c1)===3, 'T4c 射程 3');
   assert(Game.effCrit(c1)===baseCrit+3, `T4d 暴击率 +3（${baseCrit}→${Game.effCrit(c1)}）`);
 
