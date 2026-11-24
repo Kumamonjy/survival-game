@@ -84,7 +84,7 @@ const g = Game.g;
   assert(!T('gas').iceN && T('gas').barrel===24, 'T7a 加油站无液氮桶（纯红油桶 24，液氮直接移除）');
   assert(T('factory').iceN===12 && T('hospital').iceN===7 && T('factory').iceN>T('hospital').iceN, 'T7b 工厂液氮 12 / 医院 7（V221 上调；资源图液氮多）');
   assert(T('market').iceN===2 && T('base').iceN===9 && T('street').iceN===2, 'T7c 超市 2 / 军事基地 9（V221 上调）/ 商业街 2');
-  assert(!T('forest').iceN && !T('camp').iceN, 'T7d 林场/野外营地不放液氮桶');
+  assert(!T('camp').iceN && T('forest').iceN===5, 'T7d 野外营地不放液氮桶；林场 V233 起放 5 个（替换原 3 油桶）');
   const c = Game.createChar('soldier','兵',false); g.chars.push(c);
   UI.teamSelected = [c.id];
   await Battle.start(DATA.ZONES.find(z=>z.id==='factory'));

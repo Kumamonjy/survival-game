@@ -9,7 +9,7 @@ const g = Game.g;
   const EXP = { market:{water:10,rubble:8,ruin:6,crate:8,barrel:1,iceN:2},
     gas:{water:4,rubble:9,ruin:5,crate:7,barrel:24},
     hospital:{water:6,rubble:8,ruin:10,crate:7,barrel:2,iceN:7},
-    forest:{water:6,rubble:20,ruin:8,crate:5,barrel:3},
+    forest:{water:6,rubble:20,ruin:8,crate:5,iceN:5},
     camp:{water:7,rubble:6,ruin:4,crate:4,barrel:10},
     factory:{water:4,rubble:15,ruin:8,crate:4,barrel:10,iceN:12}, street:{water:6,rubble:10,ruin:14,crate:6,barrel:3,iceN:2},
     base:{water:6,rubble:14,ruin:12,crate:5,barrel:6,iceN:9} };
