@@ -839,6 +839,9 @@ DATA.ZOMBIES = {
              skills:[{ name:'投掷燃烧瓶', desc:'向 2 格内任意一格投掷，对以该格为中心的十字范围（含中心共 5 格）内所有角色（敌我双方）造成 40 点伤害，并使其陷入燃烧状态 2 回合；落点地面残留火焰 2 回合。', cost:0, cd:4, type:'attack', shape:'aoe', range:2, area:1, fixedDmg:40, burn:{turns:2}, fire:{turns:2}, hitsAll:true }] },
   raider_gunner:{ name:'劫掠枪手', icon:'🎯', species:'raider', desc:'劫掠者团伙里的神枪手，端着一杆捡来的老式步枪在远处点杀猎物。射程可达 3 格，专挑脆皮角色下手——别在开阔地带落单。',
              base:{ maxHp:220, atk:70, def:10, range:3, move:3, critRate:10, critDmg:180 }, exp:25, gold:[5,8], weight:0 },
+  raider_axe:{ name:'斧王', icon:'🪓', species:'raider', desc:'劫掠者团伙中最令人闻风丧胆的悍将，一柄巨斧重逾百斤，攻高皮厚但行动迟缓。会使用「横扫千军」——巨斧横挥 3×2 范围，多人站位时伤害成倍叠加，切勿扎堆！',
+             base:{ maxHp:300, atk:100, def:15, range:2, move:2, critRate:15, critDmg:200 }, exp:30, gold:[7,10], weight:0,
+             skills:[{ name:'横扫千军', desc:'选择一个方向，对身前 3×2 范围内的所有敌人造成 70% 攻击力的伤害。', cost:0, cd:4, type:'attack', shape:'sweep2', sweepLen:3, sweepWid:2, mult:0.7 }] },
   behemoth:{ name:'暴君变异体', icon:'😈', desc:'区域霸主级变异体，见识过它的人类寥寥无几。毁灭重击能一下撕碎防线。',
              base:{ maxHp:510, atk:43, def:19, range:2, move:3, critRate:5, critDmg:150 }, exp:90, gold:[10,10], weight:0, boss:true,
              skills:[{ name:'毁灭重击', desc:'对 2 格内一名敌人造成 180% 攻击力的伤害。', cost:0, cd:4, type:'attack', shape:'target', mult:1.8, range:2 }] }
@@ -878,10 +881,10 @@ DATA.ZONES = [
     main:{metal:[5,9]}, sub:{gold:[8,15],fabric:[1,2],wood:[1,3],med:[1,2]}, count:[5,7], pool:{walker:15, runner:15, brute:30, licker:15, bomber:15, behemoth:5, shrieker:5}, boss:false, dropRate:0.25,
     terrain:{ water:4, rubble:15, ruin:8, crate:4, barrel:10, iceN:12 } },
   { id:'street',  name:'商业街废墟', icon:'🏙️', danger:3, desc:'银行的保险柜还没有被完全搬空。服装店废墟里能翻到布料，倒塌的商铺木架是木材来源——盘踞在此的劫掠者同样觊觎着这些物资。',
-    main:{gold:[35,60]}, sub:{metal:[3,6],fabric:[1,2],wood:[1,2],med:[1,2]}, count:[5,7], pool:{runner:13, brute:11, licker:11, savage:11, bomber:7, gasbag:6, shrieker:5, witch:3, raider_mug:8, raider_thug:8, raider_snatcher:6, raider_drunk:6, raider_gunner:5}, boss:false, dropRate:0.25,
+    main:{gold:[35,60]}, sub:{metal:[3,6],fabric:[1,2],wood:[1,2],med:[1,2]}, count:[5,7], pool:{runner:10, brute:11, licker:11, savage:10, bomber:7, gasbag:6, shrieker:5, witch:3, raider_mug:8, raider_thug:8, raider_snatcher:6, raider_drunk:6, raider_gunner:5, raider_axe:4}, boss:false, dropRate:0.25,
     terrain:{ water:6, rubble:10, ruin:14, crate:6, barrel:3, iceN:2 } },
   { id:'base',    name:'军事基地', icon:'🎖️', danger:4, desc:'武装到牙齿——驻守的已不只是变异体，还有武装到牙齿的劫掠者团伙。有大变异体坐镇。',
-    main:{metal:[7,11]}, sub:{med:[2,4],gold:[28,45],fabric:[1,2]}, count:[6,8], pool:{brute:13, licker:11, runner:10, savage:12, bomber:5, gasbag:8, shrieker:5, witch:3, raider_mug:7, raider_thug:8, raider_snatcher:6, raider_drunk:7, raider_gunner:5}, boss:true, dropRate:0.3,
+    main:{metal:[7,11]}, sub:{med:[2,4],gold:[28,45],fabric:[1,2]}, count:[6,8], pool:{brute:11, licker:11, runner:10, savage:11, bomber:5, gasbag:8, shrieker:5, witch:3, raider_mug:7, raider_thug:8, raider_snatcher:6, raider_drunk:7, raider_gunner:5, raider_axe:3}, boss:true, dropRate:0.3,
     terrain:{ water:6, rubble:14, ruin:12, crate:5, barrel:6, iceN:9 } },
 ];
 

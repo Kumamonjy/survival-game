@@ -16,7 +16,7 @@ function mkB(units){
   const zombies = all.filter(Z=>Z.species==='zombie');
   assert(zombies.length>=10, `T1b 丧尸类敌人 ${zombies.length} 种`);
   const raiders = all.filter(Z=>Z.species==='raider');
-  assert(raiders.length===5 && raiders.every(Z=>['劫匪','暴徒','绑匪','酒鬼','劫掠枪手'].includes(Z.name)), 'T1c 劫掠者类 = 劫匪/暴徒/绑匪/酒鬼/劫掠枪手 5 种');
+  assert(raiders.length===6 && raiders.every(Z=>['劫匪','暴徒','绑匪','酒鬼','劫掠枪手','斧王'].includes(Z.name)), 'T1c 劫掠者类 = 劫匪/暴徒/绑匪/酒鬼/劫掠枪手/斧王 6 种（V230 新增斧王）');
 
   // ===== T2 劫匪定义 =====
   const mug = DATA.ZOMBIES.raider_mug;
