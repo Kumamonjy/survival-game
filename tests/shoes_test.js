@@ -12,9 +12,9 @@ const g = Game.g;
 
   // ===== T2 配方 =====
   const rh = DATA.RECIPES.find(r=>r.id==='heels'), rs = DATA.RECIPES.find(r=>r.id==='sneakers');
-  assert(rh && rh.cost.gold===40 && rh.cost.fabric===11 && rh.stamina===10, 'T2a 高跟鞋 40💰+11🧵 / 10⚡');
+  assert(rh && rh.cost.gold===55 && rh.cost.fabric===5 && rh.stamina===6, 'T2a 高跟鞋 55💰+5🧵 / 6⚡（V238 金币↑料↓）');
   assert(rs && rs.cost.gold===85 && rs.cost.fabric===16 && rs.cost.metal===6 && rs.stamina===15, 'T2b 运动鞋 85💰+16🧵+6⚙️ / 15⚡');
-  assert(Game.craftCost('heels').gold===40 && Game.craftCost('sneakers').fabric===16, 'T2c craftCost 派生一致');
+  assert(Game.craftCost('heels').gold===55 && Game.craftCost('sneakers').fabric===16, 'T2c craftCost 派生一致');
 
   // ===== T3 打造入包（工坊）=====
   g.workshopLv = 1;
@@ -58,7 +58,7 @@ const g = Game.g;
   UI.wikiTab = 'equip'; UI.openWiki();
   const w = elems['wiki-content'].innerHTML;
   assert(w.includes('高跟鞋') && w.includes('运动鞋'), 'T8a 百科收录两件新鞋');
-  assert(w.includes('💰×40') && w.includes('💰×85'), 'T8b 获取途径显示新配方');
+  assert(w.includes('💰×55') && w.includes('💰×85'), 'T8b 获取途径显示新配方');
 
   console.log('--- done ---');
   process.exit(0);
