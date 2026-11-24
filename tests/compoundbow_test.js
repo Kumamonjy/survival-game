@@ -1,4 +1,4 @@
-/* V202/V231 新顶级武器「复合弓」🎯：攻+30 射程3，自带技能「精准射箭」（3格单体 150%，20⚡ CD3），配方 89💰+19🪵+11🧵+14⚙️/26⚡，纳入 TOP_EQUIPS 分层 */
+/* V202/V231 新顶级武器「复合弓」🎯：攻+30 射程3，自带技能「精准射箭」（3格单体 150%，20⚡ CD3），配方 89💰+21🪵+13🧵+16⚙️/26⚡，纳入 TOP_EQUIPS 分层 */
 const { setup, assert } = require('./_helper.js');
 const { Game, Battle, UI, DATA, elems, html } = setup();
 Game.g = Game.newGame(); Game.currentSlot = 1;
@@ -19,7 +19,7 @@ g.res.gold = 500; g.res.wood = 40; g.res.metal = 30; g.res.fabric = 30;
 
   // ===== T2 配方与工坊打造（高消耗档）=====
   const rc = DATA.RECIPES.find(r=>r.id==='compoundbow');
-  assert(rc && rc.cost.gold===89 && rc.cost.wood===19 && rc.cost.fabric===11 && rc.cost.metal===14 && rc.stamina===26, 'T2a 配方 89💰+19🪵+11🧵+14⚙️ / 26⚡（V229 高级装备金币 ×1.15）');
+  assert(rc && rc.cost.gold===89 && rc.cost.wood===21 && rc.cost.fabric===13 && rc.cost.metal===16 && rc.stamina===26, 'T2a 配方 89💰+21🪵+13🧵+16⚙️ / 26⚡（V232 材料小幅上调）');
   const rcPistol = DATA.RECIPES.find(r=>r.id==='pistol');
   assert(rcPistol.cost.gold>rc.cost.gold, 'T2b 金币消耗低于手枪（手枪 104💰 全场最贵）');
   Game.craft('compoundbow');
