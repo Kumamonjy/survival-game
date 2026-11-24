@@ -889,8 +889,8 @@ DATA.ZONES = [
 ];
 
 /* 顶级装备分层：危险度 ≤2 的区域探险不掉落（需深入 d3+ 区域获取或工坊打造）；
-   电击警棍（V234）为警用制式装备，不可打造，仅 d3+ 区域掉落 */
-DATA.TOP_EQUIPS = ['pistol','fireaxe','spear','bow','shovel','compoundbow','stunbaton'];
+   电击警棍（V234）为警用制式装备，不可打造，仅 d3+ 区域掉落；运动鞋（V237）为首件移速+1 装备 */
+DATA.TOP_EQUIPS = ['pistol','fireaxe','spear','bow','shovel','compoundbow','stunbaton','sneakers'];
 
 /* 天赋：招募角色随机获得1~3个（最多3个，互不重复；1个60%/2个30%/3个10%；生命/攻击/防御/体力作用于基础值并随升级成长，射程/移速/暴击为固定加成）
    一览排序：正面在前、负面在后，组内按属性数值降序 */
@@ -939,6 +939,8 @@ DATA.EQUIPS = {
   cshoes: { id:'cshoes', name:'布鞋', slot:'shoes',  icon:'👟', stats:{hp:10, stamina:10, def:3},     desc:'生命值 +10，体力值 +10，防御力 +3' },
   rainboots: { id:'rainboots', name:'雨靴', slot:'shoes', icon:'👢', stats:{hp:15, def:10},            desc:'生命值 +15，防御力 +10' },
   cottonshoes: { id:'cottonshoes', name:'棉鞋', slot:'shoes', icon:'🧦', stats:{hp:25, def:8},        desc:'生命值 +25，防御力 +8' },
+  heels: { id:'heels', name:'高跟鞋', slot:'shoes', icon:'👠', stats:{critRate:5, critDmg:10},        desc:'暴击率 +5%，暴击伤害 +10%；牺牲防护换取致命一击的暴击流鞋履' },
+  sneakers: { id:'sneakers', name:'运动鞋', slot:'shoes', icon:'🥾', stats:{hp:20, def:5, move:1, stamina:20}, desc:'生命值 +20，防御力 +5，移动力 +1，体力值 +20；轻量高帮，末日铁律：跑得快才活得久' },
   chood:  { id:'chood',  name:'布帽', slot:'head',   icon:'👒', stats:{hp:20, def:5},                 desc:'生命值 +20，防御力 +5' },
   cap:    { id:'cap',    name:'棒球帽', slot:'head', icon:'🧢', stats:{hp:10, stamina:10},            desc:'生命值 +10，体力值 +10' },
   helmet: { id:'helmet', name:'安全帽', slot:'head', icon:'🪖', stats:{hp:25, def:10},               desc:'生命值 +25，防御力 +10' },
@@ -1053,7 +1055,7 @@ DATA.TOWERS = {
         长矛51 → 木盾45(纯防御·HP50/防15·移-1/体-10) → 铁锹54 → 大铁锤47(-1移速/-10体力) → 消防斧58 → 复合弓100(TOP·射程4) →
         手枪104(TOP 全场最贵；V229 高级装备金币 ×1.15，材料不变)；电击警棍：不可打造，仅 d3+ 掉落（攻20/射1/电击眩晕）
    头部：棒球帽13 → 布帽21 → 安全帽35      护甲：布衣31 → 运动背心42 → 比基尼45(暴击流·零防) → 毛衣48 → 棉袄88
-   鞋子：布鞋20 → 棉鞋37 → 雨靴39（V208 补齐鞋子升级线）  饰品：护腕10 → 水瓶10 → 保温杯18
+   鞋子：布鞋20 → 棉鞋37 → 雨靴39 → 高跟鞋40(暴击流·零防) → 运动鞋85(TOP·移+1)（V208 升级线 + V237 扩充）  饰品：护腕10 → 水瓶10 → 保温杯18
    ── 规则 ──
    ① 新装备总价 = Σ(属性×单价) + 技能溢价 + 射程档位修正
    ② 破表定价 = 设计溢价，必须注明理由（如手枪可跨地形射击）
@@ -1094,6 +1096,9 @@ DATA.RECIPES = [
   { id:'cshoes', cost:{ gold:20, fabric:9 }, stamina:10 },
   { id:'rainboots', cost:{ gold:39, fabric:9, metal:4 }, stamina:12 },
   { id:'cottonshoes', cost:{ gold:37, fabric:12 }, stamina:12 },
+  /* V237 鞋线扩充：高跟鞋=暴击流（同比基尼定价逻辑，鞋槽基础略低）；运动鞋=首件移速+1 装备（HP20×0.8+防5×4.5+移1×35+体20×0.6≈85💰），纳入 TOP 高级装备 */
+  { id:'heels', cost:{ gold:40, fabric:11 }, stamina:10 },
+  { id:'sneakers', cost:{ gold:85, fabric:16, metal:6 }, stamina:15 },
   { id:'cloth',  cost:{ gold:31, fabric:12 }, stamina:15 },
   /* V236 护甲线扩充：布衣31 → 运动背心42（均衡轻甲）→ 比基尼45（暴击流·零防）→ 毛衣48 → 棉袄88（重甲·体-15）；
      暴伤定价 1%≈0.5💰，比基尼按「暴击率5%×4 + 暴伤10%×0.5 + 零防补偿」定价 */

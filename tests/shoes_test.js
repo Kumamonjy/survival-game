@@ -1,48 +1,65 @@
-/* V208 新鞋子「雨靴」👢（HP+15/防+10，58💰+6🧵+2⚙️/12⚡）与「棉鞋」🧦（HP+25/防+8，55💰+8🧵/12⚡）：补齐鞋子升级线，普通掉落池可掉 */
+/* V237 鞋线扩充：高跟鞋（暴击率+5%/暴伤+10%）/ 运动鞋（HP20/防5/移+1/体20，TOP 高级装备） */
 const { setup, assert } = require('./_helper.js');
-const { Game, Battle, UI, DATA, elems, html } = setup();
+const { Game, Battle, UI, DATA, elems } = setup();
 Game.g = Game.newGame(); Game.currentSlot = 1;
 const g = Game.g;
-{ const sm = Game.createChar('civilian','工匠甲'); sm.stamina = 9999; sm.injured = false;
-  g.chars.push(sm); g.workshopLv = 1; Game.assignWorkshop(sm.id); }
-g.res.gold = 500; g.res.fabric = 30; g.res.metal = 30;
 
 (async () => {
   // ===== T1 定义 =====
-  const rb = DATA.EQUIPS.rainboots, cs = DATA.EQUIPS.cottonshoes;
-  assert(rb && rb.slot==='shoes' && rb.stats.hp===15 && rb.stats.def===10, 'T1a 雨靴：鞋子槽 HP+15 / 防+10');
-  assert(cs && cs.slot==='shoes' && cs.stats.hp===25 && cs.stats.def===8, 'T1b 棉鞋：鞋子槽 HP+25 / 防+8');
+  const H = DATA.EQUIPS.heels, S = DATA.EQUIPS.sneakers;
+  assert(H && H.name==='高跟鞋' && H.slot==='shoes' && H.icon==='👠' && H.stats.critRate===5 && H.stats.critDmg===10 && !H.stats.def, 'T1a 高跟鞋：暴击率+5%/暴伤+10%/零防');
+  assert(S && S.name==='运动鞋' && S.slot==='shoes' && S.icon==='🥾' && S.stats.hp===20 && S.stats.def===5 && S.stats.move===1 && S.stats.stamina===20, 'T1b 运动鞋：HP20/防5/移+1/体20');
 
-  // ===== T2 配方与工坊打造 =====
-  const rr = DATA.RECIPES.find(r=>r.id==='rainboots'), cr = DATA.RECIPES.find(r=>r.id==='cottonshoes');
-  assert(rr && rr.cost.gold===39 && rr.cost.fabric===9 && rr.cost.metal===4 && rr.stamina===12, 'T2a 雨靴配方 39💰+9🧵+4⚙️ / 12⚡（V226 金币下调材料大增）');
-  assert(cr && cr.cost.gold===37 && cr.cost.fabric===12 && cr.stamina===12, 'T2b 棉鞋配方 37💰+12🧵 / 12⚡（V226 金币下调材料大增）');
-  Game.craft('rainboots'); Game.craft('cottonshoes');
-  const rbInst = (g.bagInst||[]).find(e=>e.id==='rainboots');
-  const csInst = (g.bagInst||[]).find(e=>e.id==='cottonshoes');
-  assert(rbInst && csInst, 'T2c 两双鞋均打造入包');
+  // ===== T2 配方 =====
+  const rh = DATA.RECIPES.find(r=>r.id==='heels'), rs = DATA.RECIPES.find(r=>r.id==='sneakers');
+  assert(rh && rh.cost.gold===40 && rh.cost.fabric===11 && rh.stamina===10, 'T2a 高跟鞋 40💰+11🧵 / 10⚡');
+  assert(rs && rs.cost.gold===85 && rs.cost.fabric===16 && rs.cost.metal===6 && rs.stamina===15, 'T2b 运动鞋 85💰+16🧵+6⚙️ / 15⚡');
+  assert(Game.craftCost('heels').gold===40 && Game.craftCost('sneakers').fabric===16, 'T2c craftCost 派生一致');
 
-  // ===== T3 穿戴属性生效 =====
-  const sm = g.chars[0];
-  const d0 = Game.effDef(sm), h0 = Game.effHp(sm);
-  Game.equipChar(sm.id,'shoes',rbInst.uid);
-  assert(Game.effDef(sm)===d0+10 && Game.effHp(sm)===h0+15, 'T3a 穿雨靴：防御 +10 / 生命 +15 生效');
-  Game.equipChar(sm.id,'shoes',csInst.uid);
-  assert(Game.effDef(sm)===d0+8 && Game.effHp(sm)===h0+25, 'T3b 换穿棉鞋：防御 +8 / 生命 +25 生效（雨靴回包）');
+  // ===== T3 打造入包（工坊）=====
+  g.workshopLv = 1;
+  const wc = Game.createChar('civilian','鞋匠'); wc.stamina = 9999; wc.injured = false; g.chars.push(wc);
+  Game.assignWorkshop(wc.id);
+  g.res.gold = 500; g.res.fabric = 60; g.res.metal = 20;
+  Game.craft('heels'); Game.craft('sneakers');
+  assert((g.bagInst||[]).some(e=>e.id==='heels') && (g.bagInst||[]).some(e=>e.id==='sneakers'), 'T3 两件打造入包');
 
-  // ===== T4 掉落分层（确定性池构建验证，避免采样波动） =====
-  assert(!DATA.TOP_EQUIPS.includes('rainboots') && !DATA.TOP_EQUIPS.includes('cottonshoes'), 'T4a 非顶级装备');
-  const ZH = Battle.zoneDef({id:'hospital'});
-  let hpool = Object.keys(DATA.EQUIPS);
-  if (ZH && ZH.dropSlot) hpool = hpool.filter(id=>DATA.EQUIPS[id].slot===ZH.dropSlot);
-  if (ZH && ZH.danger<=2) hpool = hpool.filter(id=>!DATA.TOP_EQUIPS.includes(id));
-  assert(hpool.includes('rainboots') && hpool.includes('cottonshoes'), 'T4b 医院（20% 全类型池）掉落池含新鞋');
-  const gasIds=new Set(); for(let i=0;i<400;i++){ const d=Battle.rollDropEquip('gas'); if(d) gasIds.add(d.id); }
-  assert(!gasIds.has('rainboots') && !gasIds.has('cottonshoes'), 'T4c 加油站仅武器池不含鞋子');
+  // ===== T4 属性链 =====
+  const t = Game.createChar('civilian','模特乙'); t.stamina = 9999; t.talents = []; Game.applyTalents(t); Game.recalc(t); g.chars.push(t);
+  const baseCrit = Game.effCrit(t), baseDmg = Game.effCritDmg(t), baseHp = Game.effHp(t), baseDef = Game.effDef(t), baseSt = Game.effSt(t), baseMove = Game.effMove(t);
+  const ih = (g.bagInst||[]).find(e=>e.id==='heels'), is = (g.bagInst||[]).find(e=>e.id==='sneakers');
+  Game.equipChar(t.id, 'shoes', ih.uid);
+  assert(Game.effCrit(t)===baseCrit+5 && Game.effCritDmg(t)===baseDmg+10, 'T4a 高跟鞋：effCrit +5 / effCritDmg +10');
+  Game.equipChar(t.id, 'shoes', is.uid);
+  assert(Game.effHp(t)===baseHp+20 && Game.effDef(t)===baseDef+5 && Game.effSt(t)===baseSt+20, 'T4b 运动鞋：HP+20/防+5/体+20');
+  assert(Game.effMove(t)===baseMove+1, `T4c 运动鞋：移速 +1（${baseMove}→${Game.effMove(t)}）`);
 
-  // ===== T5 百科与工坊页收录 =====
-  assert(html.includes('雨靴') && html.includes('棉鞋'), 'T5 装备图鉴含雨靴/棉鞋');
+  // ===== T5 战斗聚合（mkAlly 读取 effMove）=====
+  UI.teamSelected = [t.id];
+  await Battle.start(DATA.ZONES.find(z=>z.id==='market'));
+  const u = Battle.b.units[0];
+  assert(u.move===Game.effMove(t) && u.move===baseMove+1, `T5 战斗单位移速 ${u.move} = 面板 ${Game.effMove(t)}（+1 生效）`);
+  Battle.b.over = true;
+
+  // ===== T6 TOP 分层 =====
+  assert(DATA.TOP_EQUIPS.includes('sneakers') && !DATA.TOP_EQUIPS.includes('heels'), 'T6a 运动鞋纳入 TOP 高级装备，高跟鞋为普通装备');
+  // d3+ 区域可掉、d1-2 不掉（rollDropEquip 分层）
+  const d1 = DATA.ZONES.find(z=>z.danger===1), d3 = DATA.ZONES.find(z=>z.danger===3);
+  let low = 0, high = 0;
+  for (let i=0;i<600;i++){ const e1 = Battle.rollDropEquip(d1.id); if (e1 && e1.id==='sneakers') low++; }
+  for (let i=0;i<600;i++){ const e3 = Battle.rollDropEquip(d3.id); if (e3 && e3.id==='sneakers') high++; }
+  assert(low===0 && high>0, `T6b 掉落分层：d1 ${low} 次 / d3 ${high} 次（600 采样）`);
+
+  // ===== T7 摘要渲染 =====
+  assert(UI.eqStatsStr(H,0)==='暴击+5%　暴伤+10%', 'T7a 高跟鞋摘要');
+  assert(UI.eqStatsStr(S,0)==='血+20　防+5　移+1　体+20', 'T7b 运动鞋摘要（移+1 正常显示）');
+
+  // ===== T8 百科收录 =====
+  UI.wikiTab = 'equip'; UI.openWiki();
+  const w = elems['wiki-content'].innerHTML;
+  assert(w.includes('高跟鞋') && w.includes('运动鞋'), 'T8a 百科收录两件新鞋');
+  assert(w.includes('💰×40') && w.includes('💰×85'), 'T8b 获取途径显示新配方');
 
   console.log('--- done ---');
   process.exit(0);
-})().catch(e=>{ console.error('TEST ERROR:', e.message); process.exit(1); });
+})().catch(e=>{ console.error('TEST ERROR:', e.stack||e.message); process.exit(1); });
