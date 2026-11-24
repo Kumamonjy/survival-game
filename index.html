@@ -933,6 +933,9 @@ DATA.SLOTS = [
 ];
 DATA.EQUIPS = {
   cloth:  { id:'cloth',  name:'布衣', slot:'armor',  icon:'👕', stats:{hp:25, def:5},                 desc:'生命值 +25，防御力 +5' },
+  bikini: { id:'bikini', name:'比基尼', slot:'armor', icon:'🩱', stats:{critRate:5, critDmg:10},       desc:'暴击率 +5%，暴击伤害 +10%；零防御的极限输出流护甲，赌一把暴击的 daring 之选' },
+  sportvest: { id:'sportvest', name:'运动背心', slot:'armor', icon:'🦺', stats:{hp:20, def:5, stamina:10}, desc:'生命值 +20，防御力 +5，体力值 +10；轻量透气，适合长线拉扯的战斗风格' },
+  paddedcoat: { id:'paddedcoat', name:'棉袄', slot:'armor', icon:'🧥', stats:{hp:60, def:15, stamina:-15}, desc:'生命值 +60，防御力 +15，体力值 -15；末日寒冬的重装之选，臃肿但保命' },
   cshoes: { id:'cshoes', name:'布鞋', slot:'shoes',  icon:'👟', stats:{hp:10, stamina:10, def:3},     desc:'生命值 +10，体力值 +10，防御力 +3' },
   rainboots: { id:'rainboots', name:'雨靴', slot:'shoes', icon:'👢', stats:{hp:15, def:10},            desc:'生命值 +15，防御力 +10' },
   cottonshoes: { id:'cottonshoes', name:'棉鞋', slot:'shoes', icon:'🧦', stats:{hp:25, def:8},        desc:'生命值 +25，防御力 +8' },
@@ -1049,7 +1052,7 @@ DATA.TOWERS = {
    武器：木棍13 → 弹弓13 → 鞭子19 → 匕首19 → 菜刀23(流血) → 双截棍25 → 棍棒29 → 木弓43(TOP) →
         长矛51 → 木盾45(纯防御·HP50/防15·移-1/体-10) → 铁锹54 → 大铁锤47(-1移速/-10体力) → 消防斧58 → 复合弓100(TOP·射程4) →
         手枪104(TOP 全场最贵；V229 高级装备金币 ×1.15，材料不变)；电击警棍：不可打造，仅 d3+ 掉落（攻20/射1/电击眩晕）
-   头部：棒球帽13 → 布帽21 → 安全帽35      护甲：布衣31 → 毛衣48
+   头部：棒球帽13 → 布帽21 → 安全帽35      护甲：布衣31 → 运动背心42 → 比基尼45(暴击流·零防) → 毛衣48 → 棉袄88
    鞋子：布鞋20 → 棉鞋37 → 雨靴39（V208 补齐鞋子升级线）  饰品：护腕10 → 水瓶10 → 保温杯18
    ── 规则 ──
    ① 新装备总价 = Σ(属性×单价) + 技能溢价 + 射程档位修正
@@ -1092,6 +1095,11 @@ DATA.RECIPES = [
   { id:'rainboots', cost:{ gold:39, fabric:9, metal:4 }, stamina:12 },
   { id:'cottonshoes', cost:{ gold:37, fabric:12 }, stamina:12 },
   { id:'cloth',  cost:{ gold:31, fabric:12 }, stamina:15 },
+  /* V236 护甲线扩充：布衣31 → 运动背心42（均衡轻甲）→ 比基尼45（暴击流·零防）→ 毛衣48 → 棉袄88（重甲·体-15）；
+     暴伤定价 1%≈0.5💰，比基尼按「暴击率5%×4 + 暴伤10%×0.5 + 零防补偿」定价 */
+  { id:'bikini', cost:{ gold:45, fabric:12 }, stamina:8 },
+  { id:'sportvest', cost:{ gold:42, fabric:12 }, stamina:12 },
+  { id:'paddedcoat', cost:{ gold:88, fabric:20, metal:8 }, stamina:15 },
   { id:'bottle', cost:{ gold:10, metal:3, fabric:3 }, stamina:8 },
   { id:'thermos', cost:{ gold:18, metal:5, fabric:4 }, stamina:12 },
 ];
