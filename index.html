@@ -874,8 +874,8 @@ DATA.ZONES = [
   { id:'forest',  name:'林场', icon:'🌲', danger:2, desc:'伐木场堆满原木与木托盘，木材取之不尽；但林间游荡着成群的丧尸。',
     main:{wood:[6,10]}, sub:{food:[2,4],metal:[1,2]}, count:[5,6], pool:{walker:30, runner:25, brute:20, licker:15, bomber:10}, boss:false,
     terrain:{ water:6, rubble:20, ruin:8, crate:5, iceN:5 } },
-  { id:'camp',    name:'野外营地', icon:'⛺', danger:2, desc:'盘踞在山道旁的劫掠者营地，帐篷与篝火间堆满了劫来的物资——金币丰厚，但守卫的全是穷凶极恶的人类匪徒。胜利后必定能搜出一件装备（不会出现高阶装备）。',
-    main:{gold:[22,34]}, sub:{food:[1,3],metal:[1,2],fabric:[1,2],wood:[1,2],med:[1,2]}, count:[4,6], pool:{raider_mug:28, raider_snatcher:22, raider_thug:18, raider_drunk:16, raider_gunner:16}, boss:false, gearDrop:true,
+  { id:'camp',    name:'野外营地', icon:'⛺', danger:2, desc:'盘踞在山道旁的劫掠者营地，帐篷与篝火间堆满了劫来的物资——金币丰厚，但守卫的全是穷凶极恶的人类匪徒。胜利后必定能搜出一件装备（约三成为匪首珍藏的电击警棍）。',
+    main:{gold:[22,34]}, sub:{food:[1,3],metal:[1,2],fabric:[1,2],wood:[1,2],med:[1,2]}, count:[4,6], pool:{raider_mug:28, raider_snatcher:22, raider_thug:18, raider_drunk:16, raider_gunner:16}, boss:false, gearDrop:true, exclusiveEquip:['stunbaton',0.3],
     terrain:{ water:7, rubble:6, ruin:4, crate:4, barrel:10 } },
   { id:'factory', name:'旧钢铁工厂', icon:'🏭', danger:3, desc:'废墟中散落着大量可用的金属材料，废弃木托盘与包装箱能拆出木材。深处偶尔能听到沉重的脚步声……',
     main:{metal:[5,9]}, sub:{gold:[8,15],fabric:[1,2],wood:[1,3],med:[1,2]}, count:[5,7], pool:{walker:15, runner:15, brute:30, licker:15, bomber:15, behemoth:5, shrieker:5}, boss:false, dropRate:0.25,
@@ -884,13 +884,15 @@ DATA.ZONES = [
     main:{gold:[35,60]}, sub:{metal:[3,6],fabric:[1,2],wood:[1,2],med:[1,2]}, count:[5,7], pool:{runner:10, brute:11, licker:11, savage:10, bomber:7, gasbag:6, shrieker:5, witch:3, raider_mug:8, raider_thug:8, raider_snatcher:6, raider_drunk:6, raider_gunner:5, raider_axe:4}, boss:false, dropRate:0.25, exclusiveEquip:'crystalshoes',
     terrain:{ water:6, rubble:10, ruin:14, crate:6, barrel:3, iceN:2 } },
   { id:'base',    name:'军事基地', icon:'🎖️', danger:4, desc:'武装到牙齿——驻守的已不只是变异体，还有武装到牙齿的劫掠者团伙。有大变异体坐镇。',
-    main:{metal:[7,11]}, sub:{med:[2,4],gold:[28,45],fabric:[1,2]}, count:[6,8], pool:{brute:11, licker:11, runner:10, savage:11, bomber:5, gasbag:8, shrieker:5, witch:3, raider_mug:7, raider_thug:8, raider_snatcher:6, raider_drunk:7, raider_gunner:5, raider_axe:3}, boss:true, dropRate:0.3,
+    main:{metal:[7,11]}, sub:{med:[2,4],gold:[28,45],fabric:[1,2]}, count:[6,8], pool:{brute:11, licker:11, runner:10, savage:11, bomber:5, gasbag:8, shrieker:5, witch:3, raider_mug:7, raider_thug:8, raider_snatcher:6, raider_drunk:7, raider_gunner:5, raider_axe:3}, boss:true, dropRate:0.3, exclusiveEquip:['stunbaton',0.5],
     terrain:{ water:6, rubble:14, ruin:12, crate:5, barrel:6, iceN:9 } },
 ];
 
-/* 顶级装备分层：危险度 ≤2 的区域探险不掉落（需深入 d3+ 区域获取或工坊打造）；
-   电击警棍（V234）不可打造仅 d3+ 掉落；运动鞋（V237）首件移速+1；水晶鞋（V240）不可打造，商业街 exclusiveEquip 50% 加权掉落 */
+/* 顶级装备分层：危险度 ≤2 的区域探险不掉落（需深入 d3+ 区域获取或工坊打造）；运动鞋（V237）首件移速+1；
+   V241 区域专属掉落（DROP_ONLY）：不进任何通用掉落池，仅由 exclusiveEquip 区域产出——
+   水晶鞋（V240）仅商业街（掉装备时约半数）；电击警棍（V234）仅军事基地（掉装备时约半数）与野外营地（必掉装备中约三成） */
 DATA.TOP_EQUIPS = ['pistol','fireaxe','spear','bow','shovel','compoundbow','stunbaton','sneakers','crystalshoes'];
+DATA.DROP_ONLY = ['stunbaton','crystalshoes'];
 
 /* 天赋：招募角色随机获得1~3个（最多3个，互不重复；1个60%/2个30%/3个10%；生命/攻击/防御/体力作用于基础值并随升级成长，射程/移速/暴击为固定加成）
    一览排序：正面在前、负面在后，组内按属性数值降序 */
@@ -1054,7 +1056,7 @@ DATA.TOWERS = {
    ── 价格锚点（自带技能/特殊能力另计 15~25💰 溢价）──
    武器：木棍13 → 弹弓13 → 鞭子19 → 匕首19 → 菜刀23(流血) → 双截棍25 → 棍棒29 → 木弓43(TOP) →
         长矛51 → 木盾45(纯防御·HP50/防15·移-1/体-10) → 铁锹54 → 大铁锤47(-1移速/-10体力) → 消防斧58 → 复合弓100(TOP·射程4) →
-        手枪104(TOP 全场最贵；V229 高级装备金币 ×1.15，材料不变)；电击警棍：不可打造，仅 d3+ 掉落（攻20/射1/电击眩晕）
+        手枪104(TOP 全场最贵；V229 高级装备金币 ×1.15，材料不变)；电击警棍：不可打造，仅军事基地/野外营地掉落（V241·攻20/射1/电击眩晕）
    头部：棒球帽13 → 布帽21 → 安全帽35      护甲：布衣31 → 运动背心42 → 比基尼72(暴击流·零防·V239 金币×1.2) → 毛衣48 → 棉袄88
    鞋子：布鞋20 → 棉鞋37 → 雨靴39 → 高跟鞋66(暴击流·零防·V239) → 运动鞋85(TOP·移+1)；水晶鞋：不可打造，商业街专属掉落（TOP·暴击8/16+防5/HP20·V240）  饰品：护腕10 → 水瓶10 → 保温杯18
    ── 规则 ──
@@ -3467,7 +3469,7 @@ const UI = {
     const secBuild = `
       <div class="wiki-sec panel"><h4>🧰 装备与工坊</h4>
         <div class="wiki-p">
-        · 每名角色 <b>5 个装备位</b>（武器/头盔/衣服/鞋子/饰品）+ <b>1 个道具位</b>；初始无装备，工坊制造后到人物信息点击格位穿卸，探险胜利掉落装备（普通区域 20%、超市 15%、工厂/商业街 25%、军事基地 30%、加油站 10% 只掉武器、野外营地必掉一件；商业街掉装备时约半数为水晶鞋）；新档背包自带 2 布衣、2 布鞋、2 石块<br>
+        · 每名角色 <b>5 个装备位</b>（武器/头盔/衣服/鞋子/饰品）+ <b>1 个道具位</b>；初始无装备，工坊制造后到人物信息点击格位穿卸，探险胜利掉落装备（普通区域 20%、超市 15%、工厂/商业街 25%、军事基地 30%、加油站 10% 只掉武器、野外营地必掉一件；水晶鞋仅商业街——掉装备时约半数，电击警棍仅军事基地（约半数）与野外营地（约三成））；新档背包自带 2 布衣、2 布鞋、2 石块<br>
         · 全部配方成本、升级（+20%/级，最高 +5）与分解（返 50%）规则见「🧰 装备」页表格<br>
         · 材料来源：金属——工厂/基地/商业街；木材——林场类区域；布料——超市/商业街与物资箱；药物——医院/商业街
         </div>
@@ -4014,16 +4016,21 @@ const Battle = {
     return rnd(r[0], r[1]);
   },
   /* 装备掉落统一入口：普通区域默认 20% 概率随机一件（区域可配 dropRate）；gearDrop 区域（野外营地）必掉一件（全池含特殊饰品）；
-     区域可配 dropSlot 限定装备槽位（加油站=weapon 只掉武器）；危险度 ≤2 的区域排除顶级武器；zone 可传区域对象或 id 字符串 */
+     区域可配 dropSlot 限定装备槽位（加油站=weapon 只掉武器）；危险度 ≤2 的区域排除顶级武器；
+     V241 DROP_ONLY 装备（水晶鞋/电击警棍）不进通用池，仅由 exclusiveEquip 区域产出；zone 可传区域对象或 id 字符串 */
   rollDropEquip(zone) {
     const Z = Battle.zoneDef(typeof zone==='string' ? {id:zone} : zone);
     if (!(Z && Z.gearDrop) && Math.random() >= (Z && Z.dropRate!=null ? Z.dropRate : 0.2)) return null;
-    const top = DATA.TOP_EQUIPS || [];
+    const top = DATA.TOP_EQUIPS || [], only = DATA.DROP_ONLY || [];
     let pool = Object.keys(DATA.EQUIPS);
     if (Z && Z.dropSlot) pool = pool.filter(id=>DATA.EQUIPS[id].slot===Z.dropSlot);
     if (Z && Z.danger <= 2) pool = pool.filter(id=>!top.includes(id));
-    /* V240 区域专属掉落：exclusiveEquip 区域掉装备时 50% 加权出该装备（商业街=水晶鞋） */
-    if (Z && Z.exclusiveEquip && Math.random() < 0.5) return DATA.EQUIPS[Z.exclusiveEquip] || null;
+    pool = pool.filter(id=>!only.includes(id));
+    /* V240/V241 区域专属掉落：exclusiveEquip 支持 'id'（默认 50% 加权）或 ['id',权重]（掉装备时按权重产出专属装备） */
+    if (Z && Z.exclusiveEquip) {
+      const ex = Array.isArray(Z.exclusiveEquip) ? Z.exclusiveEquip : [Z.exclusiveEquip, 0.5];
+      if (DATA.EQUIPS[ex[0]] && Math.random() < ex[1]) return DATA.EQUIPS[ex[0]];
+    }
     return DATA.EQUIPS[pick(pool)] || null;
   },
   /* 物资箱统一掉落：金币 2-7 / 食物 1-3 / 药物·金属·布料·木材 1-2；mult 为倍率（精品箱 ×2） */

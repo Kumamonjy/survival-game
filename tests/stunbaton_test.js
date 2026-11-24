@@ -49,14 +49,23 @@ const g = Game.g;
   await Battle.zombieAct(foe);   // 眩晕中的丧尸：直接 return，不行动
   assert(stunU.hp===hp0b && Battle.b.log.some(e=>e.msgs.some(m=>m.m && m.m.includes('眩晕'))), 'T5 眩晕中的目标本回合无法行动（log 提示）');
 
-  // ===== T6 掉落分层采样：d2 不掉 / d4 可掉 =====
+  // ===== T6 掉落地图严格限定（V241）：仅军事基地/野外营地可掉 =====
+  assert((DATA.DROP_ONLY||[]).includes('stunbaton') && (DATA.DROP_ONLY||[]).includes('crystalshoes'), 'T6-0 DROP_ONLY 清单含电击警棍与水晶鞋');
   const HOSP = DATA.ZONES.find(z=>z.id==='hospital'), BASE = DATA.ZONES.find(z=>z.id==='base');
+  const CAMP = DATA.ZONES.find(z=>z.id==='camp'), FACT = DATA.ZONES.find(z=>z.id==='factory');
+  const STREET = DATA.ZONES.find(z=>z.id==='street'), MKT = DATA.ZONES.find(z=>z.id==='market');
   let hits = 0;
   for (let i=0;i<600;i++) { const e = Battle.rollDropEquip(HOSP); if (e && e.id==='stunbaton') hits++; }
   assert(hits===0, `T6a 医院（d2）采样 600 次不掉电击警棍（实际 ${hits}）`);
   hits = 0;
+  for (const Z of [FACT, STREET, MKT]) for (let i=0;i<800;i++) { const e = Battle.rollDropEquip(Z); if (e && e.id==='stunbaton') hits++; }
+  assert(hits===0, `T6a2 工厂/商业街/超市采样 2400 次不掉电击警棍（实际 ${hits}）`);
+  hits = 0;
   for (let i=0;i<1200;i++) { const e = Battle.rollDropEquip(BASE); if (e && e.id==='stunbaton') hits++; }
-  assert(hits>0, `T6b 军事基地（d4）采样可掉电击警棍（1200 次命中 ${hits}）`);
+  assert(hits>=90 && hits<=300, `T6b 军事基地专属加权（30%×50%≈15%/战）1200 次命中 ${hits}（期望≈180）`);
+  hits = 0;
+  for (let i=0;i<1000;i++) { const e = Battle.rollDropEquip(CAMP); if (e && e.id==='stunbaton') hits++; }
+  assert(hits>=180 && hits<=450, `T6c 野外营地必掉装备中 30% 为警棍，1000 次命中 ${hits}（期望≈300）`);
 
   // ===== T7 百科收录：获取途径显示「探险掉落」 =====
   UI.wikiTab = 'equip'; UI.openWiki();

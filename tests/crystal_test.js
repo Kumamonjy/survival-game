@@ -20,10 +20,14 @@ const g = Game.g;
   let cs=0, other=0;
   for (let i=0;i<2000;i++){ const d = Battle.rollDropEquip('street'); if (d){ if (d.id==='crystalshoes') cs++; else other++; } }
   assert(cs>0 && cs > other*0.6, `T3b 商业街加权：水晶鞋 ${cs} vs 其他 ${other}（2000 采样，约半数）`);
-  // d1-2 不掉（TOP 分层）
+  // 仅商业街掉落（V241 DROP_ONLY）：低危险度（TOP 分层）与其他 d3+/d4 区域均不掉
   let low=0;
   for (let i=0;i<600;i++){ const d = Battle.rollDropEquip('market'); if (d && d.id==='crystalshoes') low++; }
   assert(low===0, `T3c 低危险度不掉（超市 600 采样 ${low} 次）`);
+  let oth=0;
+  for (const zid of ['factory','base','hospital']) for (let i=0;i<600;i++){ const d = Battle.rollDropEquip(zid); if (d && d.id==='crystalshoes') oth++; }
+  assert(oth===0, `T3c2 其他区域不掉水晶鞋（工厂/基地/医院 1800 采样 ${oth} 次）`);
+  assert(DATA.DROP_ONLY.includes('crystalshoes') && DATA.DROP_ONLY.includes('stunbaton'), 'T3c3 DROP_ONLY 清单 = 水晶鞋 + 电击警棍');
 
   // ===== T4 属性链 =====
   const t = Game.createChar('civilian','模特丙'); t.stamina = 9999; t.talents = []; Game.applyTalents(t); Game.recalc(t); g.chars.push(t);

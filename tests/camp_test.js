@@ -29,11 +29,14 @@ const g = Game.g;
   assert(subs.every(r=>r[1]<=3), 'T3c 副产出区间均 ≤3（其他资源偏少）');
   assert(camp.sub.med && camp.sub.med[0]===1, 'T3d 含少量药品');
 
-  // ===== T4 必掉装备 + 不出高阶 =====
+  // ===== T4 必掉装备 + 仅警棍/普通装备（V241：营地专属加权 30% 出电击警棍，其余仍无高阶） =====
   const TOP = DATA.TOP_EQUIPS;
-  const drops = Array.from({length:40}, ()=>Battle.rollDropEquip(camp));
-  assert(drops.every(d=>d && d.id), 'T4a 40 次采样均有装备掉落（100% 必掉）');
-  assert(drops.every(d=>!TOP.includes(d.id)), 'T4b 掉落池不含高阶装备（手枪/消防斧/长矛/木弓/铁锹/复合弓）');
+  const drops = Array.from({length:200}, ()=>Battle.rollDropEquip(camp));
+  assert(drops.every(d=>d && d.id), 'T4a 200 次采样均有装备掉落（100% 必掉）');
+  const baton = drops.filter(d=>d.id==='stunbaton').length;
+  const otherTOP = drops.filter(d=>TOP.includes(d.id) && d.id!=='stunbaton').length;
+  assert(otherTOP===0, 'T4b 除警棍外不掉其他高阶装备（手枪/消防斧/长矛/木弓/铁锹/复合弓）');
+  assert(baton>=40 && baton<=85, `T4c 营地专属加权：约 30% 掉电击警棍（200 次命中 ${baton}，期望≈60）`);
 
   // ===== T5 胜利结算实际掉一件入包 =====
   const bagCnt0 = (g.bagInst||[]).length;
