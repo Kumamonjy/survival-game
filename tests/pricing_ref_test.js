@@ -15,7 +15,7 @@ const g = Game.g;
   assert(R('stick')===13 && R('slingshot')===13 && R('whip')===19 && R('dagger')===19 && R('cleaver')===23 && R('nunchaku')===25, 'T2a 武器锚点 13/13/19/19/23/25（V226 金币下调材料大增）');
   assert(R('throwknife')===22, 'T2h 消耗品锚点 飞刀22（3格100%攻，强于石块10💰/50%；V226 消耗品不动）');
   assert(R('club')===29 && R('spear')===51 && R('shovel')===54 && R('fireaxe')===58, 'T2b 武器锚点 29/51/54/58（V229 高级装备金币 ×1.15）');
-  assert(R('woodshield')===45 && R('hammer')===47 && R('compoundbow')===89 && R('pistol')===104, 'T2c 武器锚点 木盾45/大铁锤47/复合弓89/手枪104（V229 高级装备金币 ×1.15）');
+  assert(R('woodshield')===45 && R('hammer')===47 && R('compoundbow')===100 && R('pistol')===104, 'T2c 武器锚点 木盾45/大铁锤47/复合弓100（V234 射程4 成本上调）/手枪104');
   assert(R('cap')===13 && R('chood')===21 && R('helmet')===35, 'T2d 头部锚点 13/21/35（V226）');
   assert(R('cloth')===31 && R('sweater')===48 && R('cshoes')===20, 'T2e 护甲/鞋子锚点 31/48/20（V226）');
   assert(R('cottonshoes')===37 && R('rainboots')===39, 'T2g 鞋子升级线锚点 棉鞋37/雨靴39（def 溢价 > hp 溢价）');

@@ -41,7 +41,7 @@ const zone = id => DATA.ZONES.find(z=>z.id===id);
 
   // ===== T3 掉落池分层：rollDropEquip 统一入口 =====
   const TOP = DATA.TOP_EQUIPS;
-  assert(TOP.length===6 && ['pistol','fireaxe','spear','bow','shovel','compoundbow'].every(id=>TOP.includes(id)), 'T3a 顶级装备集合 = 手枪/消防斧/长矛/木弓/铁锹/复合弓');
+  assert(TOP.length===7 && ['pistol','fireaxe','spear','bow','shovel','compoundbow','stunbaton'].every(id=>TOP.includes(id)), 'T3a 顶级装备集合 = 手枪/消防斧/长矛/木弓/铁锹/复合弓/电击警棍（V234）');
   // 低危区（d1 超市 / d2 医院）：大量采样不掉顶级武器、但特殊饰品任何区域均可掉落
   let lowIds = new Set();
   for (let i=0;i<600;i++){ const d = Battle.rollDropEquip('market'); if (d) lowIds.add(d.id); }

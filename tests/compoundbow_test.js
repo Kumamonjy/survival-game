@@ -11,26 +11,26 @@ g.res.gold = 500; g.res.wood = 40; g.res.metal = 30; g.res.fabric = 30;
   // ===== T1 定义 =====
   const cb = DATA.EQUIPS.compoundbow;
   assert(cb && cb.name==='复合弓' && cb.slot==='weapon' && cb.icon==='🎯', 'T1a 复合弓注册（武器槽 🎯）');
-  assert(cb.stats.atk===30 && cb.range===3, 'T1b 攻击力 +30 / 射程 3（V231 上调）');
+  assert(cb.stats.atk===30 && cb.range===4, 'T1b 攻击力 +30 / 射程 4（V234 全场唯一射程 4）');
   const sk = cb.skill;
   assert(sk && sk.name==='精准射箭' && sk.shape==='target' && sk.range===3, 'T1c 自带技能「精准射箭」3 格单体');
   assert(sk.mult===1.5 && sk.cost===20 && sk.cd===3, 'T1d 150% 伤害 / 20⚡ / CD3（V231 上调）');
-  assert(cb.desc.includes('+30') && cb.desc.includes('射程 3') && cb.desc.includes('精准射箭'), 'T1e desc 同步');
+  assert(cb.desc.includes('+30') && cb.desc.includes('射程 4') && cb.desc.includes('精准射箭'), 'T1e desc 同步');
 
   // ===== T2 配方与工坊打造（高消耗档）=====
   const rc = DATA.RECIPES.find(r=>r.id==='compoundbow');
-  assert(rc && rc.cost.gold===89 && rc.cost.wood===21 && rc.cost.fabric===13 && rc.cost.metal===16 && rc.stamina===26, 'T2a 配方 89💰+21🪵+13🧵+16⚙️ / 26⚡（V232 材料小幅上调）');
+  assert(rc && rc.cost.gold===100 && rc.cost.wood===24 && rc.cost.fabric===15 && rc.cost.metal===19 && rc.stamina===26, 'T2a 配方 100💰+24🪵+15🧵+19⚙️ / 26⚡（V234 射程 4，成本再上调）');
   const rcPistol = DATA.RECIPES.find(r=>r.id==='pistol');
   assert(rcPistol.cost.gold>rc.cost.gold, 'T2b 金币消耗低于手枪（手枪 104💰 全场最贵）');
   Game.craft('compoundbow');
   const inst = (g.bagInst||[]).find(e=>e.id==='compoundbow');
   assert(inst && inst.lv===0, 'T2b 打造入包');
 
-  // ===== T3 属性链：effAtk +30，射程 3 =====
+  // ===== T3 属性链：effAtk +30，射程 4 =====
   const s1 = Game.createChar('civilian','射手'); s1.stamina = 9999; s1.talents = []; Game.applyTalents(s1); Game.recalc(s1); g.chars.push(s1);
   Game.equipChar(s1.id, 'weapon', inst.uid);
   assert(Game.effAtk(s1)===s1.atk+30, 'T3a 装备复合弓 effAtk +30');
-  assert(Game.effRange(s1)===3, 'T3b 射程 3');
+  assert(Game.effRange(s1)===4, 'T3b 装备复合弓 effRange 4');
 
   // ===== T4 战斗：技能表含精准射箭，3 格内单体 150% =====
   Battle.b = { units:[], selected:null, terrain:Array.from({length:Battle.ROWS},()=>Array.from({length:Battle.COLS},()=>'plain')),
@@ -39,7 +39,7 @@ g.res.gold = 500; g.res.wood = 40; g.res.metal = 30; g.res.fabric = 30;
   Battle.b.units.push(u);
   u.critRate = 0; u.cds = {};
   assert(u.skills.some(s=>s.name==='精准射箭'), 'T4a 战斗技能表含精准射箭');
-  assert(u.atk===Game.effAtk(s1) && u.range===3, 'T4b 单位属性含武器加成');
+  assert(u.atk===Game.effAtk(s1) && u.range===4, 'T4b 单位属性含武器加成（V234 射程 4）');
   const foe = Battle.mkZombie('walker', 5, 8, 1); foe.hp = foe.maxHp;   // 距离恰好 3 格
   Battle.b.units.push(foe);
   u.stamina = 100;

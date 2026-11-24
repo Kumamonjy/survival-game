@@ -888,8 +888,9 @@ DATA.ZONES = [
     terrain:{ water:6, rubble:14, ruin:12, crate:5, barrel:6, iceN:9 } },
 ];
 
-/* 顶级装备分层：危险度 ≤2 的区域探险不掉落（需深入 d3+ 区域获取或工坊打造） */
-DATA.TOP_EQUIPS = ['pistol','fireaxe','spear','bow','shovel','compoundbow'];
+/* 顶级装备分层：危险度 ≤2 的区域探险不掉落（需深入 d3+ 区域获取或工坊打造）；
+   电击警棍（V234）为警用制式装备，不可打造，仅 d3+ 区域掉落 */
+DATA.TOP_EQUIPS = ['pistol','fireaxe','spear','bow','shovel','compoundbow','stunbaton'];
 
 /* 天赋：招募角色随机获得1~3个（最多3个，互不重复；1个60%/2个30%/3个10%；生命/攻击/防御/体力作用于基础值并随升级成长，射程/移速/暴击为固定加成）
    一览排序：正面在前、负面在后，组内按属性数值降序 */
@@ -947,9 +948,12 @@ DATA.EQUIPS = {
   slingshot: { id:'slingshot', name:'弹弓', slot:'weapon', icon:'🪃', stats:{atk:5}, range:2,       desc:'攻击力 +5，射程 2（远程）' },
   whip:   { id:'whip',   name:'鞭子', slot:'weapon', icon:'🪢', stats:{atk:8}, range:2,          desc:'攻击力 +8，射程 2（远程）' },
   bow:    { id:'bow',    name:'木弓', slot:'weapon', icon:'🏹', stats:{atk:10}, range:3,             desc:'攻击力 +10，射程 3（远程）' },
-  compoundbow: { id:'compoundbow', name:'复合弓', slot:'weapon', icon:'🎯', stats:{atk:30}, range:3,
+  compoundbow: { id:'compoundbow', name:'复合弓', slot:'weapon', icon:'🎯', stats:{atk:30}, range:4,
             skill:{ name:'精准射箭', desc:'消耗20体力，对 3 格内的一名敌人造成 150% 攻击力的伤害。', cost:20, cd:3, type:'attack', shape:'target', mult:1.5, range:3 },
-            desc:'攻击力 +30，射程 3（远程）；自带技能「精准射箭」：3 格内单体 150% 伤害（冷却 3 回合，消耗 20 体力）' },
+            desc:'攻击力 +30，射程 4（超远射程）；自带技能「精准射箭」：3 格内单体 150% 伤害（冷却 3 回合，消耗 20 体力）' },
+  stunbaton: { id:'stunbaton', name:'电击警棍', slot:'weapon', icon:'⚡', stats:{atk:20}, range:1,
+            skill:{ name:'电击', desc:'消耗25体力，对 1 格内的一名敌人造成 80% 攻击力的伤害并眩晕 1 回合。', cost:25, cd:3, type:'attack', shape:'target', mult:0.8, range:1, stun:{turns:1} },
+            desc:'攻击力 +20，射程 1；自带技能「电击」：1 格内单体 80% 伤害并眩晕 1 回合（冷却 3 回合，消耗 25 体力）；警用装备，不可打造，仅探险掉落' },
   spear:  { id:'spear',  name:'长矛', slot:'weapon', icon:'🔱', stats:{atk:15}, range:2,
             skill:{ name:'穿刺', desc:'消耗20体力，选择一个方向，对直线上 2 格内的所有敌人造成 100% 攻击力的伤害。', cost:20, cd:2, type:'attack', shape:'line', lineLen:2, mult:1.0 },
             desc:'攻击力 +15，射程 2（远程）；自带技能「穿刺」：直线 2 格 100% 伤害（冷却 2 回合，消耗 20 体力）' },
@@ -1043,8 +1047,8 @@ DATA.TOWERS = {
    生命 +5    ≈ 4💰        体力 +5 ≈ 3💰
    ── 价格锚点（自带技能/特殊能力另计 15~25💰 溢价）──
    武器：木棍13 → 弹弓13 → 鞭子19 → 匕首19 → 菜刀23(流血) → 双截棍25 → 棍棒29 → 木弓43(TOP) →
-        长矛51 → 木盾45(纯防御·HP50/防15·移-1/体-10) → 铁锹54 → 大铁锤47(-1移速/-10体力) → 消防斧58 → 复合弓89(TOP) →
-        手枪104(TOP 全场最贵；V229 高级装备金币 ×1.15，材料不变)
+        长矛51 → 木盾45(纯防御·HP50/防15·移-1/体-10) → 铁锹54 → 大铁锤47(-1移速/-10体力) → 消防斧58 → 复合弓100(TOP·射程4) →
+        手枪104(TOP 全场最贵；V229 高级装备金币 ×1.15，材料不变)；电击警棍：不可打造，仅 d3+ 掉落（攻20/射1/电击眩晕）
    头部：棒球帽13 → 布帽21 → 安全帽35      护甲：布衣31 → 毛衣48
    鞋子：布鞋20 → 棉鞋37 → 雨靴39（V208 补齐鞋子升级线）  饰品：护腕10 → 水瓶10 → 保温杯18
    ── 规则 ──
@@ -1068,7 +1072,8 @@ DATA.RECIPES = [
   { id:'slingshot', cost:{ gold:13, wood:7, fabric:3 }, stamina:12 },
   { id:'whip',   cost:{ gold:19, fabric:5, metal:2 }, stamina:10 },
   { id:'bow',    cost:{ gold:43, wood:18, fabric:13 }, stamina:20 },
-  { id:'compoundbow', cost:{ gold:89, wood:21, fabric:13, metal:16 }, stamina:26 },
+  /* V234 复合弓射程 3→4（全场唯一射程 4），成本再上调：100💰+24🪵+15🧵+19⚙️（材料全场最高，金币仍低于手枪 104） */
+  { id:'compoundbow', cost:{ gold:100, wood:24, fabric:15, metal:19 }, stamina:26 },
   { id:'club',   cost:{ gold:29, wood:9, metal:5 }, stamina:20 },
   { id:'dagger', cost:{ gold:19, metal:6 }, stamina:12 },
   { id:'cleaver',cost:{ gold:23, metal:7 }, stamina:14 },
