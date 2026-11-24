@@ -17,8 +17,8 @@ const g = Game.g;
   assert(R('club')===29 && R('spear')===51 && R('shovel')===54 && R('fireaxe')===58, 'T2b 武器锚点 29/51/54/58（V229 高级装备金币 ×1.15）');
   assert(R('woodshield')===45 && R('hammer')===47 && R('compoundbow')===100 && R('pistol')===104, 'T2c 武器锚点 木盾45/大铁锤47/复合弓100（V234 射程4 成本上调）/手枪104');
   assert(R('cap')===13 && R('chood')===21 && R('helmet')===35, 'T2d 头部锚点 13/21/35（V226）');
-  assert(R('cloth')===31 && R('sportvest')===42 && R('bikini')===60 && R('sweater')===48 && R('paddedcoat')===88 && R('cshoes')===20, 'T2e 护甲/鞋子锚点 布衣31/运动背心42/比基尼60(V238)/毛衣48/棉袄88/布鞋20');
-  assert(R('cottonshoes')===37 && R('rainboots')===39 && R('heels')===55 && R('sneakers')===85, 'T2g 鞋子线锚点 棉鞋37/雨靴39/高跟鞋55(V238)/运动鞋85(TOP·移+1)');
+  assert(R('cloth')===31 && R('sportvest')===42 && R('bikini')===72 && R('sweater')===48 && R('paddedcoat')===88 && R('cshoes')===20, 'T2e 护甲/鞋子锚点 布衣31/运动背心42/比基尼72(V239)/毛衣48/棉袄88/布鞋20');
+  assert(R('cottonshoes')===37 && R('rainboots')===39 && R('heels')===66 && R('sneakers')===85, 'T2g 鞋子线锚点 棉鞋37/雨靴39/高跟鞋66(V239)/运动鞋85(TOP·移+1)');
   assert(R('bracer')===10 && R('bottle')===10 && R('thermos')===18, 'T2f 饰品锚点 10/10/18（V226）');
 
   // ===== T3 权重体系一致性抽查：射程3 卖得比同级近战贵 =====

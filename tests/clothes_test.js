@@ -13,10 +13,10 @@ const g = Game.g;
 
   // ===== T2 配方 =====
   const rb = DATA.RECIPES.find(r=>r.id==='bikini'), rv = DATA.RECIPES.find(r=>r.id==='sportvest'), rc = DATA.RECIPES.find(r=>r.id==='paddedcoat');
-  assert(rb && rb.cost.gold===60 && rb.cost.fabric===6 && rb.stamina===5, 'T2a 比基尼 60💰+6🧵 / 5⚡（V238 金币↑料↓）');
+  assert(rb && rb.cost.gold===72 && rb.cost.fabric===6 && rb.stamina===5, 'T2a 比基尼 72💰+6🧵 / 5⚡（V239 金币×1.2）');
   assert(rv && rv.cost.gold===42 && rv.cost.fabric===12 && rv.stamina===12, 'T2b 运动背心 42💰+12🧵 / 12⚡');
   assert(rc && rc.cost.gold===88 && rc.cost.fabric===20 && rc.cost.metal===8 && rc.stamina===15, 'T2c 棉袄 88💰+20🧵+8⚙️ / 15⚡');
-  assert(Game.craftCost('bikini').gold===60 && Game.craftCost('paddedcoat').fabric===20, 'T2d craftCost 派生一致');
+  assert(Game.craftCost('bikini').gold===72 && Game.craftCost('paddedcoat').fabric===20, 'T2d craftCost 派生一致');
 
   // ===== T3 打造入包（护甲走工坊：需 Lv1 + 工匠当值）=====
   g.workshopLv = 1;
@@ -52,7 +52,7 @@ const g = Game.g;
   UI.wikiTab = 'equip'; UI.openWiki();
   const w = elems['wiki-content'].innerHTML;
   assert(w.includes('比基尼') && w.includes('运动背心') && w.includes('棉袄'), 'T7a 百科收录三件新护甲');
-  assert(w.includes('工坊制造 💰×60<br>🧵×6<br>5⚡') && w.includes('工坊制造 💰×88<br>🧵×20<br>⚙️×8<br>15⚡'), 'T7b 获取途径显示新配方');
+  assert(w.includes('工坊制造 💰×72<br>🧵×6<br>5⚡') && w.includes('工坊制造 💰×88<br>🧵×20<br>⚙️×8<br>15⚡'), 'T7b 获取途径显示新配方');
 
   console.log('--- done ---');
   process.exit(0);
