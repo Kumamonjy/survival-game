@@ -1039,9 +1039,9 @@ DATA.TOWERS = {
    暴击率 +1% ≈ 3~5💰（数值 <8% 无实战意义；当前仅手枪+3%、熊熊+5%）
    生命 +5    ≈ 4💰        体力 +5 ≈ 3💰
    ── 价格锚点（自带技能/特殊能力另计 15~25💰 溢价）──
-   武器：木棍13 → 弹弓13 → 鞭子19 → 匕首19 → 菜刀23(流血) → 双截棍25 → 棍棒29 → 木弓37(TOP) →
-        长矛44 → 木盾45(纯防御·HP50/防15·移-1/体-10) → 铁锹47 → 大铁锤47(-1移速/-10体力) → 消防斧50 → 复合弓77(TOP) →
-        手枪90(TOP 全场最贵，V226 金币下调但材料大增)
+   武器：木棍13 → 弹弓13 → 鞭子19 → 匕首19 → 菜刀23(流血) → 双截棍25 → 棍棒29 → 木弓43(TOP) →
+        长矛51 → 木盾45(纯防御·HP50/防15·移-1/体-10) → 铁锹54 → 大铁锤47(-1移速/-10体力) → 消防斧58 → 复合弓89(TOP) →
+        手枪104(TOP 全场最贵；V229 高级装备金币 ×1.15，材料不变)
    头部：棒球帽13 → 布帽21 → 安全帽35      护甲：布衣31 → 毛衣48
    鞋子：布鞋20 → 棉鞋37 → 雨靴39（V208 补齐鞋子升级线）  饰品：护腕10 → 水瓶10 → 保温杯18
    ── 规则 ──
@@ -1057,22 +1057,23 @@ DATA.RECIPES = [
   { id:'molotov', cost:{ gold:21, metal:2, fabric:3 }, stamina:10 },
   { id:'cigarette', cost:{ gold:8, fabric:2 }, stamina:5 },
   { id:'soup',   cost:{ gold:16, med:2, fabric:2 }, stamina:10 },
+  /* V229 高级装备（TOP_EQUIPS 六件）打造金币 ×1.15：手枪104/复合弓89/消防斧58/铁锹54/长矛51/木弓43；材料与体力不变 */
   /* V226 打造经济重平衡：装备金币约 -30%（消耗品不动），材料按类型补足——
      武器偏 🪵木+⚙️金属、护甲/鞋偏 🧵布、头部偏 ⚙️金属；金币留给招募与商店，材料靠探险采集；体力不变 */
   { id:'bracer', cost:{ gold:10, fabric:8 }, stamina:8 },
   { id:'stick',  cost:{ gold:13, wood:11 }, stamina:10 },
   { id:'slingshot', cost:{ gold:13, wood:7, fabric:3 }, stamina:12 },
   { id:'whip',   cost:{ gold:19, fabric:5, metal:2 }, stamina:10 },
-  { id:'bow',    cost:{ gold:37, wood:18, fabric:13 }, stamina:20 },
-  { id:'compoundbow', cost:{ gold:77, wood:19, fabric:11, metal:14 }, stamina:26 },
+  { id:'bow',    cost:{ gold:43, wood:18, fabric:13 }, stamina:20 },
+  { id:'compoundbow', cost:{ gold:89, wood:19, fabric:11, metal:14 }, stamina:26 },
   { id:'club',   cost:{ gold:29, wood:9, metal:5 }, stamina:20 },
   { id:'dagger', cost:{ gold:19, metal:6 }, stamina:12 },
   { id:'cleaver',cost:{ gold:23, metal:7 }, stamina:14 },
-  { id:'fireaxe',cost:{ gold:50, wood:17, metal:15 }, stamina:25 },
+  { id:'fireaxe',cost:{ gold:58, wood:17, metal:15 }, stamina:25 },
   { id:'nunchaku', cost:{ gold:25, wood:7, metal:8 }, stamina:18 },
-  { id:'spear',  cost:{ gold:44, wood:14, metal:14 }, stamina:25 },
-  { id:'pistol', cost:{ gold:90, metal:24, fabric:11 }, stamina:30 },
-  { id:'shovel', cost:{ gold:47, wood:15, metal:9 }, stamina:25 },
+  { id:'spear',  cost:{ gold:51, wood:14, metal:14 }, stamina:25 },
+  { id:'pistol', cost:{ gold:104, metal:24, fabric:11 }, stamina:30 },
+  { id:'shovel', cost:{ gold:54, wood:15, metal:9 }, stamina:25 },
   { id:'hammer', cost:{ gold:47, wood:6, metal:17 }, stamina:28 },
   { id:'woodshield', cost:{ gold:45, wood:13, fabric:5 }, stamina:18 },
   { id:'sweater', cost:{ gold:48, fabric:18 }, stamina:15 },

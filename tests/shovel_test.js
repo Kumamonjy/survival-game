@@ -18,8 +18,8 @@ g.res.gold = 800; g.res.wood = 60; g.res.metal = 60; g.res.fabric = 60;
   // ===== T2 配方与打造 =====
   const rc = REC('shovel');
   assert(rc && rc.stamina===25, 'T2a 配方体力 25⚡');
-  assert(rc.cost.gold===47 && rc.cost.wood===15 && rc.cost.metal===9, 'T2b 配方 47💰+15🪵+9⚙️（V226 金币下调材料大增）');
-  assert(CC('shovel').gold===47 && CC('shovel').wood===15 && CC('shovel').metal===9, 'T2c craftCost 派生与配方一致');
+  assert(rc.cost.gold===54 && rc.cost.wood===15 && rc.cost.metal===9, 'T2b 配方 54💰+15🪵+9⚙️（V229 高级装备金币 ×1.15）');
+  assert(CC('shovel').gold===54 && CC('shovel').wood===15 && CC('shovel').metal===9, 'T2c craftCost 派生与配方一致');
   Game.craft('shovel');
   const inst = (g.bagInst||[]).find(e=>e.id==='shovel');
   assert(inst && inst.lv===0, 'T2d 铁锹打造入包');
