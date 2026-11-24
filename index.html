@@ -2818,8 +2818,12 @@ const UI = {
   eqLvTag(inst) { return inst.lv ? ` <span style="color:var(--yellow)">+${inst.lv}</span>` : ''; },
   eqStatsStr(e, lv) {
     const m = 1 + 0.2*(lv||0);
-    const cn = { atk:'攻', hp:'血', stamina:'体', def:'防' };
-    return Object.entries(e.stats).map(([k,v])=>cn[k]+'+'+Math.round(v*m)).join('　');
+    const cn = { atk:'攻', hp:'血', stamina:'体', def:'防', move:'移', critRate:'暴击', critDmg:'暴伤' };
+    const pct = { critRate:1, critDmg:1 };
+    return Object.entries(e.stats).map(([k,v])=>{
+      const val = Math.round(v*m);
+      return cn[k] + (val>=0 ? '+'+val : val) + (pct[k]?'%':'');
+    }).join('　');
   },
   /* ---- 道具管理（消耗品）：携带 ≤3、占用背包，用技能消耗 ---- */
   openItemSlot(cid) {

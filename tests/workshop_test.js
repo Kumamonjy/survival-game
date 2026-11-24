@@ -80,6 +80,13 @@ const g = Game.g;
   Math.random = origRandom;
   assert(g9.res.fabric >= 2, `T9 超市胜利结算布料入库（+${g9.res.fabric}）`);
 
+  // ===== T10 属性摘要渲染：全部 stats 键有中文名（V234 修 undefined）=====
+  const S = UI.eqStatsStr;
+  assert(S(DATA.EQUIPS.pistol,0)==='攻+35　暴击+3%', 'T10a 手枪显示 攻+35 暴击+3%（不再 undefined）');
+  assert(S(DATA.EQUIPS.hammer,0)==='攻+28　移-1　体-10', 'T10b 大铁锤负值显示 移-1 体-10');
+  assert(S(DATA.EQUIPS.woodshield,0)==='血+50　防+15　体-10　移-1', 'T10c 木盾四属性摘要');
+  assert(S(DATA.EQUIPS.pistol,2)==='攻+49　暴击+4%', 'T10d +2 级缩放一致（暴击 3→4）');
+
   console.log('--- done ---');
   process.exit(0);
 })().catch(e=>{ console.error('TEST ERROR:', e.message); process.exit(1); });
