@@ -1,4 +1,4 @@
-/* V202 新顶级武器「复合弓」🎯：攻+25 射程3，自带技能「精准射箭」（3格单体 120%，20⚡ CD3），配方 95💰+12🪵+6🧵+8⚙️/26⚡，纳入 TOP_EQUIPS 分层 */
+/* V202/V231 新顶级武器「复合弓」🎯：攻+30 射程3，自带技能「精准射箭」（3格单体 150%，20⚡ CD3），配方 89💰+19🪵+11🧵+14⚙️/26⚡，纳入 TOP_EQUIPS 分层 */
 const { setup, assert } = require('./_helper.js');
 const { Game, Battle, UI, DATA, elems, html } = setup();
 Game.g = Game.newGame(); Game.currentSlot = 1;
@@ -11,11 +11,11 @@ g.res.gold = 500; g.res.wood = 40; g.res.metal = 30; g.res.fabric = 30;
   // ===== T1 定义 =====
   const cb = DATA.EQUIPS.compoundbow;
   assert(cb && cb.name==='复合弓' && cb.slot==='weapon' && cb.icon==='🎯', 'T1a 复合弓注册（武器槽 🎯）');
-  assert(cb.stats.atk===25 && cb.range===3, 'T1b 攻击力 +25 / 射程 3');
+  assert(cb.stats.atk===30 && cb.range===3, 'T1b 攻击力 +30 / 射程 3（V231 上调）');
   const sk = cb.skill;
   assert(sk && sk.name==='精准射箭' && sk.shape==='target' && sk.range===3, 'T1c 自带技能「精准射箭」3 格单体');
-  assert(sk.mult===1.2 && sk.cost===20 && sk.cd===3, 'T1d 120% 伤害 / 20⚡ / CD3');
-  assert(cb.desc.includes('+25') && cb.desc.includes('射程 3') && cb.desc.includes('精准射箭'), 'T1e desc 同步');
+  assert(sk.mult===1.5 && sk.cost===20 && sk.cd===3, 'T1d 150% 伤害 / 20⚡ / CD3（V231 上调）');
+  assert(cb.desc.includes('+30') && cb.desc.includes('射程 3') && cb.desc.includes('精准射箭'), 'T1e desc 同步');
 
   // ===== T2 配方与工坊打造（高消耗档）=====
   const rc = DATA.RECIPES.find(r=>r.id==='compoundbow');
@@ -26,13 +26,13 @@ g.res.gold = 500; g.res.wood = 40; g.res.metal = 30; g.res.fabric = 30;
   const inst = (g.bagInst||[]).find(e=>e.id==='compoundbow');
   assert(inst && inst.lv===0, 'T2b 打造入包');
 
-  // ===== T3 属性链：effAtk +25，射程 3 =====
+  // ===== T3 属性链：effAtk +30，射程 3 =====
   const s1 = Game.createChar('civilian','射手'); s1.stamina = 9999; s1.talents = []; Game.applyTalents(s1); Game.recalc(s1); g.chars.push(s1);
   Game.equipChar(s1.id, 'weapon', inst.uid);
-  assert(Game.effAtk(s1)===s1.atk+25, 'T3a 装备复合弓 effAtk +25');
+  assert(Game.effAtk(s1)===s1.atk+30, 'T3a 装备复合弓 effAtk +30');
   assert(Game.effRange(s1)===3, 'T3b 射程 3');
 
-  // ===== T4 战斗：技能表含精准射箭，3 格内单体 120% =====
+  // ===== T4 战斗：技能表含精准射箭，3 格内单体 150% =====
   Battle.b = { units:[], selected:null, terrain:Array.from({length:Battle.ROWS},()=>Array.from({length:Battle.COLS},()=>'plain')),
     mode:null, turn:1, phase:'player', weather:'sunny', stats:{}, log:[], logEl:null, loot:{gold:0,med:0,metal:0,food:0,fabric:0,wood:0}, ruins:{}, over:false, subtitleT:null, zLevel:1, speed:1, zone:DATA.ZONES[0], doubledReward:false };
   const u = Battle.mkAlly(s1, 5, 5);
@@ -45,8 +45,8 @@ g.res.gold = 500; g.res.wood = 40; g.res.metal = 30; g.res.fabric = 30;
   u.stamina = 100;
   const hp0 = foe.hp;
   await Battle.execSkill(u, { sk: DATA.EQUIPS.compoundbow.skill, dir:[5,8] });
-  const dmg = Math.max(1, Math.round(u.atk*1.2) - foe.def);
-  assert(foe.hp===hp0-dmg, `T4c 3 格外目标伤害 = round(atk×1.2)-防（-${dmg}）`);
+  const dmg = Math.max(1, Math.round(u.atk*1.5) - foe.def);
+  assert(foe.hp===hp0-dmg, `T4c 3 格外目标伤害 = round(atk×1.5)-防（-${dmg}）`);
   assert(u.stamina===80 && u.cds['精准射箭']===3, 'T4d 消耗 20⚡ / 进 CD 3 回合');
   assert(!u.skills.some(s=>s.name==='棍棒打击') && !u.skills.some(s=>s.name==='火力压制'), 'T4e 无误带其他武器技能');
 
