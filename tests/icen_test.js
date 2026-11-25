@@ -81,7 +81,7 @@ const g = Game.g;
 
   // ===== T7 地图配比：加油站无液氮（纯油桶图），工厂/医院液氮多，林场/营地不放 =====
   const T = id => DATA.ZONES.find(z=>z.id===id).terrain;
-  assert(!T('gas').iceN && T('gas').barrel===24, 'T7a 加油站无液氮桶（纯红油桶 24，液氮直接移除）');
+  assert(!T('gas').iceN && T('gas').barrel===20, 'T7a 加油站无液氮桶（纯红油桶 20，液氮直接移除）');
   assert(T('factory').iceN===12 && T('hospital').iceN===7 && T('factory').iceN>T('hospital').iceN, 'T7b 工厂液氮 12 / 医院 7（V221 上调；资源图液氮多）');
   assert(T('market').iceN===2 && T('base').iceN===9 && T('street').iceN===2, 'T7c 超市 2 / 军事基地 9（V221 上调）/ 商业街 2');
   assert(!T('camp').iceN && T('forest').iceN===5, 'T7d 野外营地不放液氮桶；林场 V233 起放 5 个（替换原 3 油桶）');
@@ -101,7 +101,7 @@ const g = Game.g;
   assert(m.includes('cell iceN') && m.includes('🛢️'), 'T8a 液氮桶按表 cls/icon 渲染（无滤镜=蓝色）');
   assert(m.includes('cell ice') && m.includes('❄️'), 'T8b 冰冻地形渲染 ❄️ + ice 底色');
   const gasStr = UI.terrainStr(T('gas')), facStr = UI.terrainStr(T('factory'));
-  assert(gasStr.includes('🛢️</span>24') && !gasStr.includes('🛢️4'), 'T8c 区域卡：加油站仅红桶计数、无蓝桶');
+  assert(gasStr.includes('🛢️</span>20') && !gasStr.includes('🛢️4'), 'T8c 区域卡：加油站仅红桶计数、无蓝桶');
   assert(facStr.includes('🛢️</span>10') && facStr.includes('🛢️12'), 'T8c 工厂区域卡：红桶带滤镜 span、蓝桶原色（V221 液氮 12）');
 
   // ===== T9 百科收录（地形表自动遍历 TERRAIN） =====

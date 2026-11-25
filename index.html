@@ -872,7 +872,7 @@ DATA.ZONES = [
     terrain:{ water:10, rubble:8, ruin:6, crate:8, barrel:1, iceN:2 } },
   { id:'gas',     name:'废弃加油站', icon:'⛽', danger:1, desc:'便利店收银台里还留着零钱，拆下来的木托盘堆在后院；遍地都是易爆的油桶，一点火星就会引发连环爆炸。',
     main:{gold:[12,20]}, sub:{wood:[1,3],food:[2,4]}, count:[4,5], pool:{walker:65, runner:23, bomber:12}, boss:false, dropRate:0.1, dropSlot:'weapon',
-    terrain:{ water:4, rubble:9, ruin:5, crate:7, barrel:24 } },
+    terrain:{ water:4, rubble:9, ruin:5, crate:7, barrel:20 } },
   { id:'hospital',name:'市中心医院', icon:'🏥', danger:2, desc:'药房或许还有没被搜刮的药品。',
     main:{med:[5,9]}, sub:{food:[3,6],fabric:[1,3]}, count:[5,6], pool:{walker:20, runner:30, licker:25, bomber:12, shrieker:8, witch:5}, boss:false,
     terrain:{ water:6, rubble:8, ruin:10, crate:7, barrel:2, iceN:7, toxic:4 } },
@@ -4496,8 +4496,8 @@ const Battle = {
       <div class="u-stats">
         <span>❤️<b>${u.hp}/${u.maxHp}</b></span>
         ${u.side==='ally'?`<span>⚡<b>${u.stamina}/${u.maxStamina}</b></span>`:''}
-        <span>🗡️<b>${Battle.effAtk(u)}${(u.sts&&(u.sts.strong||u.sts.weak))?'*':''}</b></span><span>🛡️<b>${u.def}</b></span>
-        <span>👟<b>${Battle.effMove(u)}${(u.sts&&u.sts.lame)?'*':''}</b></span><span>🎯<b>${Battle.effRange(u)}</b></span>
+        <span>🗡️<b>${Battle.effAtk(u)}</b>${u.sts&&u.sts.strong?'<i style="color:var(--green2);font-style:normal;font-size:11px">▲</i>':(u.sts&&u.sts.weak?'<i style="color:var(--red2);font-style:normal;font-size:11px">▼</i>':'')}</span><span>🛡️<b>${u.def}</b></span>
+        <span>👟<b>${Battle.effMove(u)}</b>${u.sts&&u.sts.lame?'<i style="color:var(--red2);font-style:normal;font-size:11px">▼</i>':''}</span><span>🎯<b>${Battle.effRange(u)}</b></span>
       </div>
       ${(u.sts&&Object.keys(u.sts).length)?`<div class="hint" style="margin-top:4px">${Object.entries(u.sts).map(([k,v])=>`<span style="color:${DATA.STATUSES[k].color};margin-right:8px">${DATA.STATUSES[k].icon} ${DATA.STATUSES[k].name} ${v.t}回合</span>`).join('')}</div>`:''}`;
   },

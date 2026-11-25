@@ -7,7 +7,7 @@ const g = Game.g;
 (async () => {
   // T1 配方数据
   const EXP = { market:{water:10,rubble:8,ruin:6,crate:8,barrel:1,iceN:2},
-    gas:{water:4,rubble:9,ruin:5,crate:7,barrel:24},
+    gas:{water:4,rubble:9,ruin:5,crate:7,barrel:20},
     hospital:{water:6,rubble:8,ruin:10,crate:7,barrel:2,iceN:7,toxic:4},
     forest:{water:6,rubble:20,ruin:8,crate:5,iceN:5},
     camp:{water:7,rubble:6,ruin:4,crate:4,barrel:10},

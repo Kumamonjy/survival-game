@@ -29,7 +29,7 @@ assert(body.includes('<th>区域</th><th>地形</th><th>丧尸构成（概率）
 assert(body.includes('width:22%') && body.includes('width:28%') && body.includes('width:50%'), 'T5f 敌情表列宽 22/28/50');
 
 // T6 地形配方
-assert(body.includes('🛢️</span>24') && body.includes('🌊6'), 'T6 地形配方（加油站油桶红化/医院积水减半）');
+assert(body.includes('🛢️</span>20') && body.includes('🌊6'), 'T6 地形配方（加油站油桶红化 20 只/医院积水减半）');
 
 // T6b 装备掉落列（概率阶梯 10/15/20/25/30/100 + 类型 + 顶级武器标注；表格可左右滚动）
 assert(body.includes('<th>装备掉落</th>') && body.includes('10% · 仅武器') && body.includes('100%</b> 必掉一件')

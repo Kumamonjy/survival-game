@@ -18,7 +18,16 @@ const mkB=(units)=>({ units, selected:units[0], terrain:Array.from({length:Battl
   assert(Battle.effAtk(z)===P(z.atk*1.2), 'T1a 强力+20%');
   Battle.applyStatus(z, 'weak', 3, 'u1');
   assert(Battle.effAtk(z)===P(P(z.atk*1.2)*0.8), 'T1b 强弱共存依序相乘');
+  // T1c 信息栏：状态修正用彩色箭头替代星号（▲增强/▼减弱）
+  const infoEl = () => elems['b-unitinfo'] ? elems['b-unitinfo'].innerHTML : '';
+  z.sts = { strong:{t:2} }; Battle.renderInfo(z);
+  assert(infoEl().includes('🗡️<b>'+Battle.effAtk(z)+'</b>') && infoEl().includes('▲') && !infoEl().includes('*'), 'T1c 强力状态攻击显示生效值+▲（无星号）');
+  z.sts = { weak:{t:2} }; Battle.renderInfo(z);
+  assert(infoEl().includes('▼') && !infoEl().includes('▲'), 'T1d 虚弱状态攻击显示▼');
   z.sts = {};
+  Battle.applyStatus(nurse, 'lame', 3, null);
+  Battle.renderInfo(nurse);
+  assert(infoEl().includes('👟<b>'+Battle.effMove(nurse)+'</b>') && infoEl().includes('▼'), 'T1e 瘸腿移速显示▼');
 
   // ===== T2 瘸腿与保底移速 =====
   Battle.applyStatus(nurse, 'lame', 3, null);
