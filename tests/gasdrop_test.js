@@ -29,7 +29,7 @@ Game.g = Game.newGame(); Game.currentSlot = 1;
   assert(Battle.rollDropEquip({id:'__test_gear', gearDrop:true, dropSlot:'weapon', danger:1}), 'T3c gearDrop 区域无视概率必掉（dropSlot 仍生效）');
 
   // ===== T4 百科同步更新 =====
-  assert(html.includes('<th>装备掉落</th>') && html.includes("?'仅武器':'全类型'") && html.includes('100%</b> 必掉一件') && html.includes('不含顶级武器') && html.includes('table-scroll'), 'T4a 百科地图页表格含装备掉落列（概率+类型+顶级武器标注，可滚动）');
+  assert(html.includes('<th>装备掉落</th>') && html.includes("?'仅武器':'全类型'") && html.includes('100%</b> 必掉一件') && html.includes('不含顶级装备') && html.includes('table-scroll'), 'T4a 百科地图页表格含装备掉落列（概率+类型+顶级装备标注，可滚动）');
   assert(html.includes('普通区域 20%、超市 15%、工厂/商业街 25%、军事基地 30%、加油站 10% 只掉武器、野外营地必掉一件'), 'T4b 玩法页掉落说明保留');
   assert(!html.includes('装备掉落分层'), 'T4c 底部探险规则不再重复掉落介绍');
 

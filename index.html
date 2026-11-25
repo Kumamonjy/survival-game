@@ -3517,7 +3517,7 @@ const UI = {
     const secSkill = `
       <div class="wiki-sec panel"><h4>⚗️ 食物消耗与专属技能</h4>
         <table class="wiki-table"><tr><th>职业</th><th>日耗食物</th><th>专属技能（冷却3回合）</th></tr>${skillRows}</table>
-        <div class="wiki-p" style="margin-top:6px">技能在战斗中使用，消耗体力并有 3 回合冷却；各技能的效果、消耗与射程已列于上表。医生、护士、厨师、猎人、军人、格斗家、科学家拥有两个职业技能。</div>
+        <div class="wiki-p" style="margin-top:6px">技能在战斗中使用，消耗体力并有 3 回合冷却；各技能的效果、消耗与射程已列于上表。${Object.values(DATA.CLASSES).filter(c=>(c.skills||[]).length>1).map(c=>c.name).join('、')}拥有两个职业技能。</div>
       </div>`;
     const secTalent = `
       <div class="wiki-sec panel"><h4>🍀 天赋一览</h4>
@@ -3567,7 +3567,7 @@ const UI = {
       <div class="wiki-sec panel"><h4>⚔️ 敌人图鉴</h4>
         <div class="table-scroll"><table class="wiki-table zom-table"><colgroup><col style="width:8%"><col style="width:6%"><col style="width:6%"><col style="width:6%"><col style="width:6%"><col style="width:6%"><col style="width:9%"><col style="width:7%"><col style="width:6%"><col style="width:21%"><col style="width:21%"></colgroup><tr><th>类型</th><th>生命</th><th>攻击</th><th>防御</th><th>移速</th><th>射程</th><th>暴击/暴伤</th><th>经验</th><th>赏金</th><th>特性</th><th>技能</th></tr>${zomRows}</table></div>
         <div class="wiki-p" style="margin-top:4px">👉 表格可<b>左右滑动</b>查看完整内容</div>
-        <div class="wiki-p" style="margin-top:6px">敌人强度与队伍实力挂钩：<b>敌人等级 = 出战角色平均等级 - 1</b>（向下取整，最低 1），每级<b>生命 / 攻击 / 防御按基础值 +10%</b>（与角色成长一致，丧尸与劫掠者通用）；「丧尸潮」额外增加 2 只并使奖励翻倍。各区域的敌人构成、数量与 Boss 见「🗺️ 地图」页。</div>
+        <div class="wiki-p" style="margin-top:6px">敌人强度与队伍实力挂钩：<b>敌人等级 = 出战角色平均等级 - 1</b>（向下取整，最低 1），每级<b>生命 / 攻击 / 防御按基础值 +10%</b>（与角色成长一致，丧尸与劫掠者通用）；「丧尸潮」额外增加 ${DATA.HORDE.extra} 只并使奖励翻倍。各区域的敌人构成、数量与 Boss 见「🗺️ 地图」页。</div>
       </div>`;
     const slotName = id => (DATA.SLOTS.find(s=>s.id===id)||{name:id}).name;
     const craftMap = {}; DATA.RECIPES.forEach(r=>{ craftMap[r.id] = UI.fmtMats(r.cost,'<br>') + `<br>${r.stamina}⚡`; });
@@ -3615,7 +3615,9 @@ const UI = {
     const secMap = (() => {
       const dropStr = z=>{
         const Z = Battle.zoneDef(z);
-        const top = Z.danger>2 ? '<span style="color:var(--yellow)">含顶级武器</span>' : '<span style="color:var(--txt2)">不含顶级武器</span>';
+        const exIds = Array.isArray(Z.exclusiveEquip) ? [Z.exclusiveEquip[0]] : (Z.exclusiveEquip ? [Z.exclusiveEquip] : []);
+        const hasTop = Z.danger > 2 || exIds.some(id => (DATA.TOP_EQUIPS||[]).includes(id));
+        const top = hasTop ? '<span style="color:var(--yellow)">含顶级装备</span>' : '<span style="color:var(--txt2)">不含顶级装备</span>';
         if (Z.gearDrop) return `<b style="color:var(--yellow)">100%</b> 必掉一件<br>${top}`;
         const rate = Math.round((Z.dropRate||0.2)*100);
         return `${rate}% · ${Z.dropSlot==='weapon'?'仅武器':'全类型'}<br>${top}`;
@@ -3642,7 +3644,7 @@ const UI = {
       return `
       <div class="wiki-sec panel"><h4>🗺️ 探险地图（${DATA.ZONES.length} 张）</h4>
         <div class="table-scroll"><table class="wiki-table zone-table"><colgroup><col style="width:32%"><col style="width:9%"><col style="width:37%"><col style="width:22%"></colgroup><tr><th>区域</th><th>危险度</th><th>产出（主要 ＋ 次要）</th><th>装备掉落</th></tr>${zRows}</table></div>
-        <div class="wiki-p" style="margin-top:6px">· 装备掉落仅在<b>胜利</b>后判定（撤离/失败不掉，尸潮守城战不掉），池内装备均等随机；特殊饰品（熊熊/兔兔）<b>任何区域</b>都有概率掉落（「仅武器」区域除外）；表格可<b>左右滑动</b>查看完整内容</div>
+        <div class="wiki-p" style="margin-top:6px">· 装备掉落仅在<b>胜利</b>后判定（撤离/失败不掉，尸潮守城战不掉）；区域专属装备<b>加权掉落</b>：商业街掉装备时约半数为水晶鞋、军事基地掉装备时约半数为电击警棍、野外营地必掉装备中约三成为电击警棍；特殊饰品（熊熊/兔兔）<b>任何区域</b>都有概率掉落（「仅武器」区域除外）；表格可<b>左右滑动</b>查看完整内容</div>
       </div>
       <div class="wiki-sec panel"><h4>🧭 敌情与地形</h4>
         <div class="table-scroll"><table class="wiki-table zone-table"><colgroup><col style="width:22%"><col style="width:28%"><col style="width:50%"></colgroup><tr><th>区域</th><th>地形</th><th>丧尸构成（概率）</th></tr>${eRows}</table></div>
@@ -3655,8 +3657,9 @@ const UI = {
         · 每局固定 1 个<b>精品物资箱</b>（地图最上方三行）：90% 双倍物资 / 10% 特殊饰品<br>
         · 地形互动：废墟可翻找 1 次、瓦砾可攻击清除并留下石头箱、油桶被攻击会爆炸且可连锁引爆<br>
         · 油桶爆炸/燃烧瓶会在<b>地面残留火焰 2 回合</b>：踩上或停留在火焰中会<b>燃烧 2 回合</b>（每回合掉生命与体力）<br>
+        · 液氮桶炸裂会在<b>地面残留冰面 2 回合</b>：踩上冰面会被<b>冰冻 1 回合</b>（无法行动）<br>
         · 毒气桶炸裂会在<b>地面残留毒气 3 回合</b>：踩上或停留在毒气中会<b>中毒 3 回合</b>（每回合损 10% 生命，可用解毒针解除）；冰面/火焰/毒气互相覆盖（后出现的覆盖先前的）<br>
-        · 丧尸等级 = <b>出战平均等级 − 1</b>（最低 1），每级生命/攻击/防御按基础值 +10%；「丧尸潮」额外 +2 只且奖励翻倍</div>
+        · 丧尸等级 = <b>出战平均等级 − 1</b>（最低 1），每级生命/攻击/防御按基础值 +10%；「丧尸潮」额外 +${DATA.HORDE.extra} 只且奖励翻倍</div>
       </div>`;
     })();
     const TABS = [
