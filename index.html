@@ -384,12 +384,15 @@ button:disabled { opacity:.45; cursor:not-allowed; }
 .b-unitinfo {
   flex-shrink:0; margin:0 10px; padding:6px 12px; border-radius:10px;
   background:linear-gradient(180deg,var(--panel2),var(--panel)); border:1px solid var(--line);
-  height:58px; overflow:hidden; position:relative; cursor:pointer;
+  height:58px; position:relative; cursor:pointer;   /* V247 高度锁死 58px：展开详情走悬浮层，地图格子尺寸/位置恒定 */
 }
-.b-unitinfo.open { height:auto; }
 .b-unitinfo:empty { visibility:hidden; }   /* V212 未选中单位时保留固定占位（visibility 而非 display:none），地图区域高度恒定、格子尺寸不再随选中/取消重算跳动 */
-.b-unitinfo .u-arrow { position:absolute; right:10px; top:13px; font-size:10px; color:var(--txt2); }
-.b-unitinfo .u-extra { display:none; margin-top:3px; }   /* V246 状态详情默认折叠，点击信息栏展开 */
+.b-unitinfo .u-arrow { position:absolute; right:10px; top:13px; font-size:10px; color:var(--txt2); z-index:41; }
+.b-unitinfo .u-extra {   /* V247 展开详情 = 悬浮层（信息栏在地图下方，故向上展开）：absolute 不占布局，展开/收起地图与按钮零位移 */
+  display:none; position:absolute; bottom:calc(100% + 4px); left:0; right:0; z-index:40;
+  background:linear-gradient(180deg,#2c3423,#222a1b); border:1px solid var(--line2); border-radius:10px;
+  padding:8px 12px; box-shadow:0 6px 18px rgba(0,0,0,.6);
+}
 .b-unitinfo.open .u-extra { display:block; }
 .b-unitinfo .u-name { display:flex; align-items:center; gap:8px; font-weight:bold; }
 .b-unitinfo .u-name .cls { font-size:11px; }
@@ -4476,7 +4479,7 @@ const Battle = {
   },
   renderInfo(u) {
     const el = document.getElementById('b-unitinfo');
-    if (!u) { el.innerHTML = ''; el.onclick = null; return; }
+    if (!u) { el.innerHTML = ''; el.onclick = null; el.classList.remove('open'); return; }   // V247 清空时同步摘除 open 类，防空栏塌缩
     /* V246 折叠信息栏：默认两行（名字+关键属性），点击展开状态详情 */
     if (Battle.infoOpen) el.classList.add('open'); else el.classList.remove('open');   // V246 折叠态切换
     el.onclick = ()=>{ Battle.infoOpen = !Battle.infoOpen; Battle.renderInfo(u); };
