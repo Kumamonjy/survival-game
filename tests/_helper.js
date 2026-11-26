@@ -16,7 +16,7 @@ function setup() {
   function mkEl() {
     return { innerHTML:'', textContent:'', style:{ setProperty(){}, cssText:'' }, disabled:false,
       scrollTop:0, scrollLeft:0, offsetWidth:36, offsetHeight:36, offsetLeft:0, offsetTop:0, value:'', dataset:{}, children:[], className:'',
-      classList:{ s:new Set(), add(c){this.s.add(c);}, remove(c){this.s.delete(c);}, contains(c){return this.s.has(c);}, toggle(){} },
+      classList:{ s:new Set(), add(c){this.s.add(c);}, remove(c){this.s.delete(c);}, contains(c){return this.s.has(c);}, toggle(c,force){ const has=this.s.has(c); if(force===undefined){ has?this.s.delete(c):this.s.add(c); } else { force?this.s.add(c):this.s.delete(c); } } },
       setAttribute(){}, removeAttribute(){}, appendChild(c){this.children.push(c);return c;}, remove(){},
       addEventListener(){}, focus(){}, blur(){},
       querySelector(){return null;}, querySelectorAll(){return [];},

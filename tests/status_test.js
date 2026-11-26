@@ -29,6 +29,19 @@ const mkB=(units)=>({ units, selected:units[0], terrain:Array.from({length:Battl
   Battle.renderInfo(nurse);
   assert(infoEl().includes('👟<b>'+Battle.effMove(nurse)+'</b>') && infoEl().includes('▼'), 'T1e 瘸腿移速显示▼');
 
+  // T1f-i 折叠信息栏：默认两行（状态详情收进 u-extra），点击展开/收起
+  const ui = elems['b-unitinfo'];
+  Battle.infoOpen = false; Battle.renderInfo(z);
+  assert(ui.classList.contains('open')===false && ui.innerHTML.includes('u-extra') && ui.innerHTML.includes('▸ 展开详情'), 'T1f 默认折叠：u-extra 隐藏+展开提示');
+  assert(ui.innerHTML.includes('✅ 无异常状态'), 'T1f-b 无状态时展开区显示占位说明');
+  ui.onclick();
+  assert(ui.classList.contains('open') && ui.innerHTML.includes('▾ 收起'), 'T1g 点击展开（open 态+收起提示）');
+  ui.onclick();
+  assert(ui.classList.contains('open')===false && ui.innerHTML.includes('▸ 展开详情'), 'T1h 再点收起');
+  z.sts = { burn:{t:3}, poison:{t:2} }; Battle.infoOpen = true; Battle.renderInfo(z);
+  assert(ui.innerHTML.includes('燃烧 3回合') && ui.innerHTML.includes('中毒 2回合'), 'T1i 展开后显示状态详情（图标+名称+回合）');
+  z.sts = {}; Battle.infoOpen = false;
+
   // ===== T2 瘸腿与保底移速 =====
   Battle.applyStatus(nurse, 'lame', 3, null);
   assert(Battle.effMove(nurse)===2, 'T2a 瘸腿-1');

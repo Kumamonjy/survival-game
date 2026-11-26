@@ -384,9 +384,13 @@ button:disabled { opacity:.45; cursor:not-allowed; }
 .b-unitinfo {
   flex-shrink:0; margin:0 10px; padding:6px 12px; border-radius:10px;
   background:linear-gradient(180deg,var(--panel2),var(--panel)); border:1px solid var(--line);
-  height:58px; overflow:hidden;
+  height:58px; overflow:hidden; position:relative; cursor:pointer;
 }
+.b-unitinfo.open { height:auto; }
 .b-unitinfo:empty { visibility:hidden; }   /* V212 未选中单位时保留固定占位（visibility 而非 display:none），地图区域高度恒定、格子尺寸不再随选中/取消重算跳动 */
+.b-unitinfo .u-arrow { position:absolute; right:10px; top:13px; font-size:10px; color:var(--txt2); }
+.b-unitinfo .u-extra { display:none; margin-top:3px; }   /* V246 状态详情默认折叠，点击信息栏展开 */
+.b-unitinfo.open .u-extra { display:block; }
 .b-unitinfo .u-name { display:flex; align-items:center; gap:8px; font-weight:bold; }
 .b-unitinfo .u-name .cls { font-size:11px; }
 .b-unitinfo .u-stats { display:flex; gap:10px; flex-wrap:wrap; font-size:12px; color:var(--txt2); margin-top:3px; }
@@ -4056,6 +4060,7 @@ const Battle = {
     const team = UI.teamSelected.map(id=>g.chars.find(c=>c.id===id)).filter(Boolean);
     if (!team.length) { UI.toast('请先选择出战成员'); return; }
     const Z = Battle.zoneDef(zone);
+    Battle.infoOpen = false;   // V246 每场战斗信息栏默认折叠
 
     // 出战消耗体力
     team.forEach(c=>{ c.stamina = Math.max(0, c.stamina - 15); });
@@ -4471,7 +4476,11 @@ const Battle = {
   },
   renderInfo(u) {
     const el = document.getElementById('b-unitinfo');
-    if (!u) { el.innerHTML = ''; return; }
+    if (!u) { el.innerHTML = ''; el.onclick = null; return; }
+    /* V246 折叠信息栏：默认两行（名字+关键属性），点击展开状态详情 */
+    if (Battle.infoOpen) el.classList.add('open'); else el.classList.remove('open');   // V246 折叠态切换
+    el.onclick = ()=>{ Battle.infoOpen = !Battle.infoOpen; Battle.renderInfo(u); };
+    const arrow = `<div class="u-arrow">${Battle.infoOpen?'▾ 收起':'▸ 展开详情'}</div>`;
     const skillBtn = document.getElementById('btn-skill');
     skillBtn.textContent = '技能';
     /* 防御工事：自动作战，不提供操作指令 */
@@ -4481,25 +4490,28 @@ const Battle = {
         const cd = (u.cds && u.cds[sk.name]) || 0;
         return `<span class="tag ${cd>0?'red':'green'}">${sk.name}${cd>0?` 冷却 ${cd} 回合`:' 就绪'}</span>`;
       }).join(' ');
-      el.innerHTML = `<div class="u-name">${u.icon} <b>${u.name}</b> <span class="tag yellow">防御工事 Lv.${u.level}</span><span class="tag blue">🏰 自动开火</span></div>
+      el.innerHTML = arrow + `<div class="u-name" style="padding-right:72px">${u.icon} <b>${u.name}</b> <span class="tag yellow">防御工事 Lv.${u.level}</span><span class="tag blue">🏰 自动开火</span></div>
         <div class="u-stats">
           <span>❤️<b>${u.hp}/${u.maxHp}</b></span>
           <span>🗡️<b>${Battle.effAtk(u)}</b></span><span>🛡️<b>${u.def}</b></span>
           <span>🚫<b>不可移动</b></span><span>🎯<b>${Battle.effRange(u)}</b></span>
         </div>
-        <div class="hint" style="margin-top:4px">无需体力、无需操作；每回合结束后自动攻击射程内最近的敌人。${cdTags?`<br>${cdTags}`:''}</div>`;
+        <div class="u-extra"><div class="hint" style="margin-top:4px">无需体力、无需操作；每回合结束后自动攻击射程内最近的敌人。${cdTags?`<br>${cdTags}`:''}</div></div>`;
       return;
     }
     skillBtn.disabled = !(u.side==='ally' && Battle.unitSkills(u).length);
     const acted = u.side==='ally' ? (u.hasAttacked ? (u.hasMoved ? ' <span class="tag">行动完毕</span>' : ' <span class="tag yellow">已攻击 · 还可移动</span>') : '') : '';   // 敌方不显示行动标签（丧尸无此概念，残留标记会误导）
-    el.innerHTML = `<div class="u-name">${u.icon} <b>${u.name}</b> <span class="tag ${u.side==='enemy'?'red':''}">${u.clsTag} Lv.${u.level}</span>${u.isDefending?'<span class="tag yellow">💤 休息中</span>':''}${acted}</div>
+    const stsHtml = (u.sts && Object.keys(u.sts).length)
+      ? Object.entries(u.sts).map(([k,v])=>`<span style="color:${DATA.STATUSES[k].color};margin-right:8px">${DATA.STATUSES[k].icon} ${DATA.STATUSES[k].name} ${v.t}回合</span>`).join('')
+      : '✅ 无异常状态';
+    el.innerHTML = arrow + `<div class="u-name" style="padding-right:72px">${u.icon} <b>${u.name}</b> <span class="tag ${u.side==='enemy'?'red':''}">${u.clsTag} Lv.${u.level}</span>${u.isDefending?'<span class="tag yellow">💤 休息中</span>':''}${acted}</div>
       <div class="u-stats">
         <span>❤️<b>${u.hp}/${u.maxHp}</b></span>
         ${u.side==='ally'?`<span>⚡<b>${u.stamina}/${u.maxStamina}</b></span>`:''}
         <span>🗡️<b>${Battle.effAtk(u)}</b>${u.sts&&u.sts.strong?'<i style="color:var(--green2);font-style:normal;font-size:11px">▲</i>':(u.sts&&u.sts.weak?'<i style="color:var(--red2);font-style:normal;font-size:11px">▼</i>':'')}</span><span>🛡️<b>${u.def}</b></span>
         <span>👟<b>${Battle.effMove(u)}</b>${u.sts&&u.sts.lame?'<i style="color:var(--red2);font-style:normal;font-size:11px">▼</i>':''}</span><span>🎯<b>${Battle.effRange(u)}</b></span>
       </div>
-      ${(u.sts&&Object.keys(u.sts).length)?`<div class="hint" style="margin-top:4px">${Object.entries(u.sts).map(([k,v])=>`<span style="color:${DATA.STATUSES[k].color};margin-right:8px">${DATA.STATUSES[k].icon} ${DATA.STATUSES[k].name} ${v.t}回合</span>`).join('')}</div>`:''}`;
+      <div class="u-extra"><div class="hint" style="margin-top:4px">${stsHtml}</div></div>`;
   },
 
   /* ---------- 日志与字幕 ---------- */
