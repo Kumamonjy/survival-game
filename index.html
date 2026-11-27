@@ -1229,23 +1229,27 @@ DATA.KITCHEN = {
   buildCost:100, upgradeCost:160, maxLv:5,
   out:lv=>lv*4,            // 每级产出 4/8/12/16/20
   workCost:50,             // 当值厨师每天消耗的体力
+  desc:'指派厨师当值（每天 -50⚡，体力不足停产），每日按等级产出 4/8/12/16/20 份食物；还可在厨房烤面包（1🍞 + 10⚡ → 面包）。食物是每日晚餐的硬需求，不够吃全员掉状态，通常第一个建。',
 };
 DATA.DORM = {
   name:'寝室', icon:'🛏️',
   buildCost:80, upgradeCost:140, maxLv:5,
   regenAmt:50,             // 床位成员每天额外恢复的体力与生命
+  desc:'为成员分配床位，入住者每天额外恢复 50⚡ 与 50❤️（与晚饭叠加，重伤者睡满一夜自愈）。床位不影响出战资格，换人随时免费。体力是探险与生产的全局货币，寝室性价比极高。',
 };
 DATA.GYM = {
   name:'健身房', icon:'🏋️',
   buildCost:90, upgradeCost:150, maxLv:5,
   expAmt:40,               // 训练位成员每天获得的经验
   staminaCost:50,          // 训练每天消耗的体力
+  desc:'指派成员训练（每天 -50⚡ → +40 经验），不出门探险也能稳定升级，训练位数量随等级提升。',
 };
 DATA.FARM = {
   name:'农场', icon:'🌾',
   buildCost:90, upgradeCost:150, maxLv:5,
   out:lv=>lv*2,            // 每级产出 2/4/6/8/10
   workCost:50,             // 农场当值每天消耗的体力
+  desc:'任意职业当值（每天 -50⚡），每日按等级产出 2/4/6/8/10 份食物，产出低于厨房但不受职业限制；不影响当值者出战。',
 };
 DATA.VISITOR = {
   buyPrice: 2.5,  // 回收单价（金币/份）：玩家卖资源给商人
@@ -1256,10 +1260,12 @@ DATA.VISITOR = {
 DATA.LAB = {
   name:'实验室', icon:'🧪',
   buildCost:110, upgradeCost:180, maxLv:5,   // 每级生产体力 -2（最低 5）
+  desc:'科学家当值可生产解毒针（中毒免疫的核心）等消耗品。每升 1 级，生产消耗体力 -2⚡（最低 5⚡）。',
 };
 DATA.HOSPITAL = {
   name:'医院', icon:'🏥',
   buildCost:100, upgradeCost:170, maxLv:5,   // 每级生产体力 -2（最低 5）
+  desc:'医生或护士当值可生产绷带、止痛药、急救丸——探险续航与治愈重伤的物资来源。每升 1 级，生产消耗体力 -2⚡（最低 5⚡）。',
 };
 
 /* 建筑统一配置：Game.buildBuilding / Game.upgradeBuilding 数据驱动入口 */
@@ -3496,8 +3502,12 @@ const UI = {
           { icon:'🏥', d:DATA.HOSPITAL, out:'生产绷带/止痛药/急救丸', note:'医生或护士当值；每级生产体力 -2⚡（最低 5⚡）' },
           { icon:'🧪', d:DATA.LAB, out:'生产解毒针/止痛药/急救丸', note:'科学家当值；每级生产体力 -2⚡（最低 5⚡）' },
           { icon:'🏭', d:DATA.WORKSHOP, out:'打造装备与消耗品', note:`工匠当值（不限职业）；每级材料 -10%；打造耗体力 ${Math.min(...DATA.RECIPES.map(r=>r.stamina))}⚡~${Math.max(...DATA.RECIPES.map(r=>r.stamina))}⚡` },
-        ].map(({icon,d,out,note})=>`<tr><td><b>${icon} ${d.name}</b></td><td>建造 ${d.buildCost}｜升级 ${[1,2,3,4].map(l=>Game.upCost(d,l)).join('/')}</td><td>${out}</td><td>${note}</td></tr>`).join('')}</table>
+        ].map(({icon,d,out,note})=>`<tr><td><b>${icon} ${d.name}</b></td><td>建造 ${d.buildCost}｜升级 ${[1,2,3,4].map(l=>Game.upCost(d,l)).join('/')}｜上限 Lv.${d.maxLv}</td><td>${out}</td><td>${note}</td></tr>`).join('')}</table>
         <div class="wiki-p" style="margin-top:6px">建筑产出于每日过夜结算；换人/撤职随时免费。升级费用随当前等级递增：基准价 ×(1+0.5×当前等级)。装备详情见「🧰 装备」页。</div>
+        <div class="wiki-p" style="margin-top:6px"><b>建筑详情</b>（随配置同步）：<br>${[
+          { icon:'🍳', d:DATA.KITCHEN }, { icon:'🛏️', d:DATA.DORM }, { icon:'🏋️', d:DATA.GYM }, { icon:'🌾', d:DATA.FARM },
+          { icon:'🏥', d:DATA.HOSPITAL }, { icon:'🧪', d:DATA.LAB }, { icon:'🏭', d:DATA.WORKSHOP },
+        ].map(({icon,d})=>`· ${icon} <b>${d.name}</b>：${d.desc||'（暂无介绍）'}`).join('<br>')}</div>
       </div>`;
     const secTower = `
       <div class="wiki-sec panel"><h4>🏰 防御工事</h4>
@@ -3510,6 +3520,7 @@ const UI = {
             <td>${T.skill?`技能「${T.skill.name}」：直线 ${T.skill.lineLen} 格内所有敌人受到 100% 攻击力伤害，冷却 ${T.skill.cd} 回合；`:'每回合自动攻击射程内最近的敌人；'}无体力、不可移动</td></tr>`;
         }).join('')}
         </table>
+        <div class="wiki-p" style="margin-top:6px"><b>工事详情</b>（随配置同步）：${['arrow','ballista'].map(k=>`${DATA.TOWERS[k].desc}`).join('')}</div>
         <div class="wiki-p" style="margin-top:6px">每类最多建造 <b>1 座</b>，可升级至 Lv.5（每级生命/攻击 +10%，基准价 ×(1+0.5×当前等级)）。建成后需在「职务」中<b>指派一名操作员</b>：指派要求体力 ≥15⚡，<b>每次参战再消耗操作员 15⚡</b>，且操作员<b>不可出战</b>（重伤或阵亡时工事无法参战）。参战时<b>不占出战位</b>：外出探索时随机部署在战场<b>底部两行</b>的空位，玩家行动结束后自动开火，弩塔在直线可命中 ≥2 名敌人时会优先施放「穿射」。工事没有体力限制；被摧毁只在本场消失，下次探索自动重建，也不会造成角色重伤。</div>
       </div>`;
     const secSave = `
