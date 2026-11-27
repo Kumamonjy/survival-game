@@ -49,7 +49,7 @@ const Z = id => DATA.ZONES.find(z=>z.id===id);
   const bosses = Battle.b.units.filter(u=>u.zombieType==='behemoth');
   assert(bosses.length===1, 'T4a 军事基地恰好 1 只暴君');
   const types = new Set(Battle.b.units.filter(u=>u.side==='enemy').map(u=>u.zombieType));
-  assert([...types].every(t=>['brute','licker','runner','savage','bomber','gasbag','behemoth','shrieker','witch','sting','raider_mug','raider_thug','raider_snatcher','raider_drunk','raider_gunner'].includes(t)), 'T4b 类型均在基地池内');
+  assert([...types].every(t=>['brute','licker','runner','savage','bomber','gasbag','behemoth','shrieker','witch','sting','raider_mug','raider_thug','raider_snatcher','raider_drunk','raider_gunner','raider_axe'].includes(t)), 'T4b 类型均在基地池内');
 
   // ===== T5 丧尸潮预警 A/B 已删除（V223）：hordeWarning 不再影响数量 =====
   g.hordeWarning = true;

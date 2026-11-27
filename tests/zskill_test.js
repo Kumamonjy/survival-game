@@ -96,6 +96,24 @@ const mkAllyAt = (cls,name,r,c) => { const ch = Game.createChar(cls,name,false);
   assert(a5.sts.root && a5.sts.root.t===1, 'T8c 目标陷入禁锢 1 回合');
   assert(li.cds['长舌捆绑']===3, 'T8d 长舌捆绑 CD3');
 
+  // ---- T15 期望伤害评估（V249）：AI 选行动用确定性期望值，暴击只在真实结算时掷 ----
+  const ed = Battle.mkZombie('sting', 1, 1, 1);   // 攻70 暴10% 暴伤180%
+  const dummy = mkAllyAt('soldier','测', 1, 3);
+  dummy.def = 10; dummy.sts = {};
+  const base = Math.max(1, Math.round(70*1.2 - 10));          // 技能 1.2x 基础 74
+  const expExpect = Math.round(base * (1 + 0.10*(1.8-1)));    // 暴击期望系数 1.08
+  assert(Battle.expectedDamage(ed, dummy, 1.2)===expExpect, `T15a 期望伤害=基础×暴击期望系数（${Battle.expectedDamage(ed, dummy, 1.2)}=${base}×1.08）`);
+  dummy.isDefending = true;
+  assert(Battle.expectedDamage(ed, dummy, 1)===32, `T15b 休息目标减半×暴击期望（${Battle.expectedDamage(ed, dummy, 1)} = 30×1.08）`);
+  dummy.isDefending = false;
+  // 评分确定性：高暴击率下重复评估 30 次，普攻评分恒定（旧逻辑掷骰必然波动）
+  ed.critRate = 50; ed.cds = {};
+  const aT = mkAllyAt('soldier','甲', 1, 2);
+  freshBattle([aT], [ed]);
+  let vals = new Set();
+  for (let i=0;i<30;i++){ const p = Battle.aiPlanZombie(ed, [aT]); vals.add(p.val); }
+  assert(vals.size===1, `T15c AI 评分确定性：30 次评估同一行动值恒定（${[...vals].join('/')}）`);
+
   // ---- T9 behemoth 毁灭重击（射程2）----
   const a7 = mkAllyAt('soldier','辛', 5, 7);
   const be = Battle.mkZombie('behemoth', 5, 5, 1);

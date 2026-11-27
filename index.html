@@ -4883,6 +4883,15 @@ const Battle = {
     if (def.isDefending) dmg = Math.max(1, Math.round(dmg*0.5));
     return { dmg, crit };
   },
+  /* 期望伤害（AI 专用 V249）：与 calcDamage 同构（防御/休息减半一致），但暴击不掷骰、按期望系数折算
+     期望系数 = 1 + 暴击率×(暴伤/100 − 1)。AI 选行动必须用确定性数值比较，否则一次坏骰会让 AI 放弃更优技能 */
+  expectedDamage(att, def, mult=1) {
+    const effDef = Math.round(def.def || 0);
+    let base = Math.max(1, Math.round((Battle.effAtk(att)*(mult||1)) - effDef));
+    if (def.isDefending) base = Math.max(1, Math.round(base*0.5));
+    const critMul = att.critRate>0 ? 1 + att.critRate/100*(att.critDmg/100 - 1) : 1;
+    return Math.max(1, Math.round(base*critMul));
+  },
 
   /* ---------- 战斗状态系统 ---------- */
   /* 施加状态：持续时间由技能传入（同名刷新时长，不同状态可共存） */
@@ -5726,7 +5735,7 @@ const Battle = {
      aiPlanZombie：枚举「可达移动位（含原地） × [普攻 + 冷却完毕的主动技能]」，统一价值通道择优：
        召唤技能 ≈ 9000+（几乎必放，受 满血/冷却/空位/场上上限 约束）；
        治疗技能 = Σ min(治疗量, 缺血量)（缺血 >50% 的目标价值翻倍，重伤优先）；
-       攻击技能/普攻 = calcDamage 伤害期望（AOE/直线枚举最优落点与方向）。
+       攻击技能/普攻 = expectedDamage 伤害期望（V249 确定性评估：暴击按期望系数折算不掷骰，AOE/直线枚举最优落点与方向）。
      敌方无体力值限制：技能只进冷却（paySkillCost 对丧尸不扣体力）。
      打不着任何人 → aiChase 追击（地形距离场最短路），到位后原地复检一次。 */
   aiPlanZombie(u, foes, stayOnly) {
@@ -5744,7 +5753,7 @@ const Battle = {
       const or=u.row, oc=u.col; u.row=r; u.col=c;   // sangshi 式临时换位评估
       // 普攻
       let bt=null, bd=0;
-      foes.forEach(a=>{ if (Battle.manhattan(u,a)<=Battle.effRange(u)) { const rr=Battle.calcDamage(u,a); if (rr.dmg>bd){bd=rr.dmg;bt=a;} } });
+      foes.forEach(a=>{ if (Battle.manhattan(u,a)<=Battle.effRange(u)) { const rr=Battle.expectedDamage(u,a); if (rr>bd){bd=rr;bt=a;} } });   // V249 期望伤害评估，不再掷骰
       if (bt) consider(bd, r, c, {type:'basic', target:bt});
       // 主动技能
       for (const sk of skills) {
@@ -5790,7 +5799,7 @@ const Battle = {
   },
   /* 攻击技能伤害评估：按形状求「从当前位置施放」的最优总伤害（target/ring1 取最优单体；sweep 以自身为中心；aoe 枚举落点；line/sweep2 枚举四方向） */
   aiSkillDamage(u, sk, foes) {
-    const dmgOf = t => Battle.calcDamage(u, t, sk.mult||1).dmg;
+    const dmgOf = t => Battle.expectedDamage(u, t, sk.mult||1);   // V249 期望伤害评估，不再掷骰
     const foesAt = cells => cells.map(([r,c])=>Battle.unitAt(r,c)).filter(t=>t&&t.side!==u.side&&t.hp>0);
     if (sk.shape==='target' || sk.shape==='ring1') {
       let bt=null, bd=0;
