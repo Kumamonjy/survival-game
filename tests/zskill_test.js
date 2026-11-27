@@ -18,7 +18,7 @@ const mkAllyAt = (cls,name,r,c) => { const ch = Game.createChar(cls,name,false);
   // ---- T1 数据定义 ----
   const BR = DATA.ZOMBIES.brute, LI = DATA.ZOMBIES.licker, SA = DATA.ZOMBIES.savage, BE = DATA.ZOMBIES.behemoth, WI = DATA.ZOMBIES.witch;
   assert(BR.skills && BR.skills[0].name==='腐臭横扫' && BR.skills[0].shape==='sweep' && BR.skills[0].cd===4, 'T1a 肥胖丧尸「腐臭横扫」sweep CD4');
-  assert(LI.skills && LI.skills[0].name==='长舌鞭击' && LI.skills[0].shape==='line' && LI.skills[0].lineLen===3, 'T1b 长舌丧尸「长舌鞭击」line3');
+  assert(LI.skills && LI.skills[0].name==='长舌捆绑' && LI.skills[0].shape==='target' && LI.skills[0].mult===1.2 && LI.skills[0].range===3 && LI.skills[0].root && LI.skills[0].root.turns===1, 'T1b 长舌丧尸「长舌捆绑」单体1.2x射程3+禁锢1回合');
   assert(SA.skills && SA.skills[0].name==='狂暴撕咬' && SA.skills[0].mult===1.6 && SA.skills[0].selfStrong===2, 'T1c 凶猛丧尸「狂暴撕咬」1.6x+强力');
   assert(BE.skills && BE.skills[0].name==='毁灭重击' && BE.skills[0].mult===1.8 && BE.skills[0].range===2, 'T1d 暴君「毁灭重击」1.8x 射程2');
   assert(WI && WI.name==='腐化医者' && WI.icon==='🧪' && WI.base.maxHp===180 && WI.base.atk===25 && WI.base.move===2
@@ -84,15 +84,17 @@ const mkAllyAt = (cls,name,r,c) => { const ch = Game.createChar(cls,name,false);
   assert(a3.hp<a3.maxHp && a4.hp<a4.maxHp, 'T7b 横扫命中上下两名玩家');
   assert(br.cds['腐臭横扫']===4, 'T7c 腐臭横扫 CD4');
 
-  // ---- T8 licker 长舌鞭击（直线双目标）----
+  // ---- T8 licker 长舌捆绑（单目标 + 禁锢1回合）----
   const a5 = mkAllyAt('soldier','己', 5, 3);
   const a6 = mkAllyAt('soldier','庚', 5, 4);
   const li = Battle.mkZombie('licker', 5, 2, 1);
   freshBattle([a5, a6], [li]);
   plan = Battle.aiPlanZombie(li, Battle.b.units.filter(x=>x.side==='ally'&&x.hp>0));
-  assert(plan && plan.act.type==='skill' && plan.act.sk.name==='长舌鞭击', 'T8a licker 选直线鞭击（贯穿2人总伤最高）');
+  assert(plan && plan.act.type==='skill' && plan.act.sk.name==='长舌捆绑', 'T8a licker 选长舌捆绑（1.2x+禁锢价值 > 普攻）');
   await Battle.zombieAct(li);
-  assert(a5.hp<a5.maxHp && a6.hp<a6.maxHp, 'T8b 直线贯穿命中两名玩家');
+  assert(a5.hp<a5.maxHp && a6.hp===a6.maxHp, 'T8b 单目标命中：仅 1 人受伤（旧直线双伤已废）');
+  assert(a5.sts.root && a5.sts.root.t===1, 'T8c 目标陷入禁锢 1 回合');
+  assert(li.cds['长舌捆绑']===3, 'T8d 长舌捆绑 CD3');
 
   // ---- T9 behemoth 毁灭重击（射程2）----
   const a7 = mkAllyAt('soldier','辛', 5, 7);

@@ -819,9 +819,9 @@ DATA.ZOMBIES = {
   brute:   { name:'肥胖丧尸', icon:'🧌', desc:'臃肿膨胀的变异体，皮糙肉厚，是移动的肉盾。会释放腐臭横扫，波及周围所有敌人。',
              base:{ maxHp:300, atk:40, def:20, range:1, move:2, critRate:5, critDmg:150 }, exp:14, gold:[3,5], weight:20,
              skills:[{ name:'腐臭横扫', desc:'对周围 1 格内（上下左右四向）的所有敌人各造成 110% 攻击力的伤害。', cost:0, cd:4, type:'attack', shape:'sweep', area:1, mult:1.1 }] },
-  licker:  { name:'长舌丧尸', icon:'👅', desc:'舌头肌肉化的猎手，可以从远处突袭猎物。长舌能像鞭子一样抽穿一条直线。',
+  licker:  { name:'长舌丧尸', icon:'👅', desc:'舌头肌肉化的猎手，可以从远处突袭猎物。长舌能缠住猎物，令其动弹不得。',
              base:{ maxHp:220, atk:40, def:5, range:3, move:3, critRate:5, critDmg:150 }, exp:14, gold:[3,4], weight:15,
-             skills:[{ name:'长舌鞭击', desc:'选择一个方向，贯穿直线上 3 格内的所有敌人，各造成 90% 攻击力的伤害。', cost:0, cd:3, type:'attack', shape:'line', lineLen:3, mult:0.9 }] },
+             skills:[{ name:'长舌捆绑', desc:'选择 3 格范围内的一名敌人，造成 120% 攻击力的伤害，并使其陷入禁锢状态持续 1 回合（无法移动，仍可攻击 / 技能 / 休息）。', cost:0, cd:3, type:'attack', shape:'target', mult:1.2, range:3, root:{turns:1} }] },
   savage:  { name:'凶猛丧尸', icon:'🦍', desc:'肌肉极度发达的变异体，凶残嗜血，攻击性极强。狂暴撕咬后会陷入亢奋状态。',
              base:{ maxHp:250, atk:55, def:10, range:1, move:4, critRate:5, critDmg:150 }, exp:20, gold:[4,6], weight:12,
              skills:[{ name:'狂暴撕咬', desc:'对 1 格内一名敌人造成 160% 攻击力的伤害，并使自身进入「强力」状态持续 2 回合（攻击力 +20%）。', cost:0, cd:3, type:'attack', shape:'target', mult:1.6, range:1, selfStrong:2 }] },
@@ -5796,7 +5796,11 @@ const Battle = {
       let bt=null, bd=0;
       foes.forEach(t=>{
         const d = sk.shape==='ring1' ? Math.max(Math.abs(t.row-u.row),Math.abs(t.col-u.col)) : Battle.manhattan(u,t);
-        if (d <= (sk.shape==='ring1' ? 1 : (sk.range||1))) { const v=dmgOf(t); if (v>bd){bd=v;bt=t;} }
+        if (d <= (sk.shape==='ring1' ? 1 : (sk.range||1))) {
+          const rootBonus = sk.root ? Math.round((t.atk||0)*0.5) : 0;   // V248 禁锢期望价值计入评估（约半次目标攻击）
+          const v = dmgOf(t) + rootBonus;
+          if (v>bd){bd=v;bt=t;}
+        }
       });
       return bt ? {shape:sk.shape, target:bt, total:bd} : null;
     }
