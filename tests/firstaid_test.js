@@ -14,17 +14,17 @@ function mkDuty(cls, name){ const c = Game.createChar(cls, name); c.stamina = 99
   // T2 双通道配置
   const P = DATA.PRODUCE.firstaid;
   assert(Array.isArray(P.building) && P.building.includes('hospitalLv') && P.building.includes('labLv'), 'T2a 医院/实验室双通道');
-  assert(P.stamina===15 && P.mats.med===2 && P.mats.gold===20, 'T2b 配方 15⚡ + 2💊 + 20💰');
+  assert(P.stamina===15 && P.mats.med===2 && P.mats.gold===10, 'T2b 配方 15⚡ + 2💊 + 10💰');
 
   // T3 医院通道生产 + canProduce 统一判定
   g.hospitalLv = 1; g.res.med = 10; g.res.gold = 100;
   const doc = mkDuty('doctor','杜医');
   Game.assignHospital(doc.id);
   const chk = Game.canProduce('firstaid');
-  assert(chk.ok && chk.worker===doc && chk.mats.med===2 && chk.mats.gold===20, 'T3a canProduce 统一判定通过（含执行材料与当值者）');
+  assert(chk.ok && chk.worker===doc && chk.mats.med===2 && chk.mats.gold===10, 'T3a canProduce 统一判定通过（含执行材料与当值者）');
   Game.makeFirstaid();
   assert((g.bagInst||[]).some(e=>e.id==='firstaid'), 'T3b 医院通道生产入包');
-  assert(g.res.med===8 && g.res.gold===80 && doc.stamina===9984, 'T3c 扣 2💊+20💰 + 15⚡');
+  assert(g.res.med===8 && g.res.gold===90 && doc.stamina===9984, 'T3c 扣 2💊+10💰 + 15⚡');
 
   // T4 canProduce 拦截原因（材料不足路径）
   g.res.med = 0;

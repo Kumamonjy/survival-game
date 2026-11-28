@@ -47,7 +47,7 @@ assert(!DATA.CLASSES.thief.desc.includes('全场最快') && !DATA.CLASSES.scout.
 
 // T7 生产配方由 DATA 生成（绷带实为 2🧵）
 assert(eh.includes('医院生产：10⚡<br>2🧵<br>1💊'), 'T7a 绷带配方与 DATA 一致（逐资源一行）');
-assert(eh.includes('实验室生产：15⚡<br>1⚙️<br>3💊<br>15💰'), 'T7b 解毒针配方与 DATA 一致（逐资源一行）');
+assert(eh.includes('实验室生产：15⚡<br>1⚙️<br>3💊<br>8💰'), 'T7b 解毒针配方与 DATA 一致（逐资源一行）');
 
 // T8 资源用途与获取途径
 assert(html.includes('工坊打造/装备升级'), 'T8a 金属用途补充工坊');

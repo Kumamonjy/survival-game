@@ -1136,9 +1136,9 @@ DATA.PRODUCE = {
     okMsg:c=>`🥖 ${c.name} 烤了 1 个面包放入背包（剩 ${c.stamina}⚡）`,
   },
   antidote: {
-    building:'labLv', duty:'labChef', stamina:15, mats:{ gold:15, metal:1, med:3 },
+    building:'labLv', duty:'labChef', stamina:15, mats:{ gold:8, metal:1, med:3 },
     noDuty:'⚠️ 请先在「职务指派」中安排科学家当值', action:'生产', action2:'生产解毒针',
-    lackMsg:'🧪 材料不足：生产 1 支解毒针需要 15💰 + 1⚙️金属 + 3💊药物',
+    lackMsg:'🧪 材料不足：生产 1 支解毒针需要 8💰 + 1⚙️金属 + 3💊药物',
     okMsg:c=>`💉 ${c.name} 制成了 1 支解毒针放入背包（剩 ${c.stamina}⚡）`,
   },
   bandage: {
@@ -1148,17 +1148,17 @@ DATA.PRODUCE = {
     okMsg:c=>`🩹 ${c.name} 制成了 1 卷绷带放入背包（剩 ${c.stamina}⚡）`,
   },
   painkiller: {
-    building:['hospitalLv','labLv'], duty:['hospitalDoc','labChef'], stamina:10, mats:{ med:2, gold:10 },
+    building:['hospitalLv','labLv'], duty:['hospitalDoc','labChef'], stamina:10, mats:{ med:2, gold:5 },
     noDuty:'⚠️ 需在医院指派医生/护士当值，或在实验室指派科学家当值', action:'生产止痛药', action2:'生产止痛药',
     buildToast:'需要先建造医院或实验室',
-    lackMsg:'💊 材料不足：生产 1 粒止痛药需要 2💊药物 + 10💰金币',
+    lackMsg:'💊 材料不足：生产 1 粒止痛药需要 2💊药物 + 5💰金币',
     okMsg:c=>`💊 ${c.name} 制成了 1 粒止痛药放入背包（剩 ${c.stamina}⚡）`,
   },
   firstaid: {
-    building:['hospitalLv','labLv'], duty:['hospitalDoc','labChef'], stamina:15, mats:{ med:2, gold:20 },
+    building:['hospitalLv','labLv'], duty:['hospitalDoc','labChef'], stamina:15, mats:{ med:2, gold:10 },
     noDuty:'⚠️ 需在医院指派医生/护士当值，或在实验室指派科学家当值', action:'生产急救丸', action2:'生产急救丸',
     buildToast:'需要先建造医院或实验室',
-    lackMsg:'⛑️ 材料不足：生产 1 枚急救丸需要 2💊药物 + 20💰金币',
+    lackMsg:'⛑️ 材料不足：生产 1 枚急救丸需要 2💊药物 + 10💰金币',
     okMsg:c=>`⛑️ ${c.name} 制成了 1 枚急救丸放入背包（剩 ${c.stamina}⚡）`,
   },
 };
@@ -1966,6 +1966,11 @@ const Game = {
   },
   /* 升级费用随等级缓和递增：Lv.1→2 收 1.5 倍基准价，之后每级 +0.5 倍（Lv.4→5 为 3 倍） */
   upCost(D, lv) { return Math.round(D.upgradeCost * (1 + 0.3 * Math.max(1, lv))); },   // V251 递增系数 0.5→0.3（用户反馈升级价过高）
+  /* 材料对象 → 文案（V252）：生产按钮/当值弹层统一走此函数，改 DATA.PRODUCE.mats 后所有界面自动同步 */
+  matsStr(m) {
+    const IC = { gold:'💰', wood:'🪵', metal:'⚙️', fabric:'🧵', med:'💊', food:'🍞' };
+    return Object.entries(m||{}).map(([k,v])=>v+(IC[k]||k)).join(' + ');
+  },
   upgradeBuilding(key) {
     const g = Game.g, C = BUILD_CONFIG[key], D = C.data();
     if (g[C.lv] <= 0 || g[C.lv] >= D.maxLv) return;
@@ -2504,7 +2509,7 @@ const UI = {
         staminaCost:K.workCost, fullTag:null, assignLabel:'指派',
         assignCall:c=>`Game.assignKitchen('${c.id}')` },
       { built: g.labLv > 0,
-        title:`🧪 实验室当值（生产解毒针：${Game.produceStamina(DATA.PRODUCE.antidote,'labLv')}⚡ + 15💰 + 1⚙️ + 3💊 → 背包）`,
+        title:`🧪 实验室当值（生产解毒针：${Game.produceStamina(DATA.PRODUCE.antidote,'labLv')}⚡ + ${Game.matsStr(DATA.PRODUCE.antidote.mats)} → 背包）`,
         occupants: occOf(g.labChef),
         occBadge:()=>'<span class="tag blue">实验员</span>',
         occSub:o=>`⚡ ${o.stamina}/${Game.effSt(o)}（体力 &lt;${Game.produceStamina(DATA.PRODUCE.antidote,'labLv')} 时无法生产，不影响出战）`,
@@ -2526,7 +2531,7 @@ const UI = {
         staminaCost:0, fullTag:null, assignLabel:'指派',
         assignCall:c=>`Game.assignWorkshop('${c.id}')` },
       { built: g.hospitalLv > 0,
-        title:`🏥 医院当值（生产绷带：${Game.produceStamina(DATA.PRODUCE.bandage,'hospitalLv')}⚡ + 2🧵 + 1💊 → 背包）`,
+        title:`🏥 医院当值（生产绷带：${Game.produceStamina(DATA.PRODUCE.bandage,'hospitalLv')}⚡ + ${Game.matsStr(DATA.PRODUCE.bandage.mats)} → 背包）`,
         occupants: occOf(g.hospitalDoc),
         occBadge:()=>'<span class="tag blue">医务员</span>',
         occSub:o=>`⚡ ${o.stamina}/${Game.effSt(o)}（体力 &lt;${Game.produceStamina(DATA.PRODUCE.bandage,'hospitalLv')} 时无法生产，不影响出战）`,
@@ -2685,9 +2690,9 @@ const UI = {
           const sPain = Game.produceStamina(DATA.PRODUCE.painkiller, 'labLv');
           const sAid = Game.produceStamina(DATA.PRODUCE.firstaid, 'labLv');
           labBody = `<div class="row" style="margin-top:10px;flex-wrap:wrap">
-          <button class="btn primary" ${chkAnt.ok?'':'disabled'} title="${chkAnt.why||''}" onclick="Game.makeAntidote()">💉 生产解毒针（${sAnt}⚡ + 15💰 + 1⚙️ + 3💊）</button>
-          <button class="btn primary" ${chkPain.ok?'':'disabled'} title="${chkPain.why||''}" onclick="Game.makePainkiller()">💊 生产止痛药（${sPain}⚡ + 2💊 + 10💰）</button>
-          <button class="btn primary" ${chkAid.ok?'':'disabled'} title="${chkAid.why||''}" onclick="Game.makeFirstaid()">⛑️ 生产急救丸（${sAid}⚡ + 2💊 + 20💰）</button>
+          <button class="btn primary" ${chkAnt.ok?'':'disabled'} title="${chkAnt.why||''}" onclick="Game.makeAntidote()">💉 生产解毒针（${sAnt}⚡ + ${Game.matsStr(DATA.PRODUCE.antidote.mats)}）</button>
+          <button class="btn primary" ${chkPain.ok?'':'disabled'} title="${chkPain.why||''}" onclick="Game.makePainkiller()">💊 生产止痛药（${sPain}⚡ + ${Game.matsStr(DATA.PRODUCE.painkiller.mats)}）</button>
+          <button class="btn primary" ${chkAid.ok?'':'disabled'} title="${chkAid.why||''}" onclick="Game.makeFirstaid()">⛑️ 生产急救丸（${sAid}⚡ + ${Game.matsStr(DATA.PRODUCE.firstaid.mats)}）</button>
           ${(!chkAnt.ok||!chkPain.ok||!chkAid.ok)?`<span style="color:var(--red2);font-size:12px">${chkAnt.why||chkPain.why||chkAid.why}</span>`:''}
         </div>`
             + upRow(g.labLv, L, "Game.upgradeBuilding('lab')", `<span class="tag yellow">生产体力 ${sAid}⚡</span>`)
@@ -2711,9 +2716,9 @@ const UI = {
           const sPain = Game.produceStamina(DATA.PRODUCE.painkiller, 'hospitalLv');
           const sAid = Game.produceStamina(DATA.PRODUCE.firstaid, 'hospitalLv');
           hospBody = `<div class="row" style="margin-top:10px;flex-wrap:wrap">
-          <button class="btn primary" ${chkBan.ok?'':'disabled'} title="${chkBan.why||''}" onclick="Game.makeBandage()">🩹 生产绷带（${sBan}⚡ + 2🧵 + 1💊）</button>
-          <button class="btn primary" ${chkPain.ok?'':'disabled'} title="${chkPain.why||''}" onclick="Game.makePainkiller()">💊 生产止痛药（${sPain}⚡ + 2💊 + 10💰）</button>
-          <button class="btn primary" ${chkAid.ok?'':'disabled'} title="${chkAid.why||''}" onclick="Game.makeFirstaid()">⛑️ 生产急救丸（${sAid}⚡ + 2💊 + 20💰）</button>
+          <button class="btn primary" ${chkBan.ok?'':'disabled'} title="${chkBan.why||''}" onclick="Game.makeBandage()">🩹 生产绷带（${sBan}⚡ + ${Game.matsStr(DATA.PRODUCE.bandage.mats)}）</button>
+          <button class="btn primary" ${chkPain.ok?'':'disabled'} title="${chkPain.why||''}" onclick="Game.makePainkiller()">💊 生产止痛药（${sPain}⚡ + ${Game.matsStr(DATA.PRODUCE.painkiller.mats)}）</button>
+          <button class="btn primary" ${chkAid.ok?'':'disabled'} title="${chkAid.why||''}" onclick="Game.makeFirstaid()">⛑️ 生产急救丸（${sAid}⚡ + ${Game.matsStr(DATA.PRODUCE.firstaid.mats)}）</button>
           ${(!chkBan.ok||!chkPain.ok||!chkAid.ok)?`<span style="color:var(--red2);font-size:12px">${chkBan.why||chkPain.why||chkAid.why}</span>`:''}
         </div>`
             + upRow(g.hospitalLv, H, "Game.upgradeBuilding('hospital')", `<span class="tag yellow">生产体力 ${sAid}⚡</span>`)

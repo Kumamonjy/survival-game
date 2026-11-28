@@ -14,7 +14,7 @@ function mkDuty(cls, name){ const c = Game.createChar(cls, name); c.stamina = 99
   // T2 双通道配置
   const P = DATA.PRODUCE.painkiller;
   assert(Array.isArray(P.building) && P.building.includes('hospitalLv') && P.building.includes('labLv'), 'T2a 医院或实验室双通道');
-  assert(P.stamina===10 && P.mats.med===2 && P.mats.gold===10, 'T2b 配方 10⚡ + 2💊 + 10💰');
+  assert(P.stamina===10 && P.mats.med===2 && P.mats.gold===5, 'T2b 配方 10⚡ + 2💊 + 5💰');
 
   // T3 医院（第一通道）生产
   g.hospitalLv = 1; g.res.med = 10; g.res.gold = 100;
@@ -22,7 +22,7 @@ function mkDuty(cls, name){ const c = Game.createChar(cls, name); c.stamina = 99
   Game.assignHospital(doc.id);
   Game.makePainkiller();
   assert((g.bagInst||[]).some(e=>e.id==='painkiller'), 'T3a 医院通道生产入包');
-  assert(g.res.med===8 && g.res.gold===90 && doc.stamina===9989, 'T3b 扣 2💊+10💰 + 10⚡');
+  assert(g.res.med===8 && g.res.gold===95 && doc.stamina===9989, 'T3b 扣 2💊+5💰 + 10⚡');
 
   // T4 实验室（第二通道）：撤医院当值、拆医院用实验室
   g.hospitalLv = 0; g.hospitalDoc = null;
@@ -31,7 +31,7 @@ function mkDuty(cls, name){ const c = Game.createChar(cls, name); c.stamina = 99
   Game.assignLab(sci.id);
   Game.makePainkiller();
   assert((g.bagInst||[]).filter(e=>e.id==='painkiller').length===2, 'T4a 实验室通道生产入包');
-  assert(g.res.med===8 && g.res.gold===90, 'T4b 实验室通道同配方扣料');
+  assert(g.res.med===8 && g.res.gold===95, 'T4b 实验室通道同配方扣料');
 
   // T5 战斗使用：flatHeal 40
   Battle.b = { units:[], selected:null, terrain:Array.from({length:Battle.ROWS},()=>Array.from({length:Battle.COLS},()=>'plain')),

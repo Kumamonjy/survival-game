@@ -53,7 +53,7 @@ function mkB(units){
   const gold0 = g.res.gold, metal0 = g.res.metal, med0 = g.res.med, st0 = sci.stamina;
   Game.makeAntidote();
   const antiInBag = g.bagInst.filter(x=>x.id==='antidote').length;
-  assert(g.res.gold===gold0-15 && g.res.metal===metal0-1 && g.res.med===med0-3 && sci.stamina===st0-15, 'T5a 扣除 15⚡+15💰+1⚙️+3💊');
+  assert(g.res.gold===gold0-8 && g.res.metal===metal0-1 && g.res.med===med0-3 && sci.stamina===st0-15, 'T5a 扣除 15⚡+8💰+1⚙️+3💊');
   assert(antiInBag===1, 'T5b 背包 +1 解毒针');
 
   // ===== T6 生产反路径 =====
