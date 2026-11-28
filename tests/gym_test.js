@@ -19,7 +19,7 @@ const [s1, s2] = g.chars;
   assert(g.gymLv===1, 'T2b 金币不足升级被拒');
   g.res.gold = 300;
   Game.upgradeGym();
-  assert(g.gymLv===2 && g.res.gold===75, 'T2c 升级到 Lv.2 扣 1.5×150=225');
+  assert(g.gymLv===2 && g.res.gold===105, 'T2c 升级到 Lv.2 扣 1.3×150=195');
 
   // ===== T3 指派校验 =====
   s1.stamina = 100; s1.injured = false;

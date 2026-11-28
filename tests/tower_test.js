@@ -38,10 +38,10 @@ const mkB = (units) => ({ units, selected:units[0], terrain:mkTerrain(), mode:nu
 
   // ===== T3 升级：金币递增、上限 5 =====
   const c1 = Game.upCost({ upgradeCost:T.arrow.upgradeCost }, 1);
-  assert(c1===180, 'T3a 箭塔 Lv1→2 升级费 180（120×1.5）');
+  assert(c1===156, 'T3a 箭塔 Lv1→2 升级费 156（120×1.3）');
   const before = g.res.gold;
   Game.upTower('arrow');
-  assert(g.towerArrowLv===2 && g.res.gold===before-180, 'T3b 升级扣费并提升等级');
+  assert(g.towerArrowLv===2 && g.res.gold===before-156, 'T3b 升级扣费并提升等级');
   g.towerArrowLv = T.arrow.maxLv;
   Game.upTower('arrow');
   assert(g.towerArrowLv===T.arrow.maxLv, 'T3c 达到 Lv.5 后不再升级');

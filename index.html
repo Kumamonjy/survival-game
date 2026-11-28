@@ -1965,7 +1965,7 @@ const Game = {
     UI.renderBuild(); Game.renderHome();
   },
   /* 升级费用随等级缓和递增：Lv.1→2 收 1.5 倍基准价，之后每级 +0.5 倍（Lv.4→5 为 3 倍） */
-  upCost(D, lv) { return Math.round(D.upgradeCost * (1 + 0.5 * Math.max(1, lv))); },
+  upCost(D, lv) { return Math.round(D.upgradeCost * (1 + 0.3 * Math.max(1, lv))); },   // V251 递增系数 0.5→0.3（用户反馈升级价过高）
   upgradeBuilding(key) {
     const g = Game.g, C = BUILD_CONFIG[key], D = C.data();
     if (g[C.lv] <= 0 || g[C.lv] >= D.maxLv) return;
@@ -3503,7 +3503,7 @@ const UI = {
           { icon:'🧪', d:DATA.LAB, out:'生产解毒针/止痛药/急救丸', note:'科学家当值；每级生产体力 -2⚡（最低 5⚡）' },
           { icon:'🏭', d:DATA.WORKSHOP, out:'打造装备与消耗品', note:`工匠当值（不限职业）；每级材料 -10%；打造耗体力 ${Math.min(...DATA.RECIPES.map(r=>r.stamina))}⚡~${Math.max(...DATA.RECIPES.map(r=>r.stamina))}⚡` },
         ].map(({icon,d,out,note})=>`<tr><td><b>${icon} ${d.name}</b></td><td>建造 ${d.buildCost}｜升级 ${[1,2,3,4].map(l=>Game.upCost(d,l)).join('/')}｜上限 Lv.${d.maxLv}</td><td>${out}</td><td>${note}</td></tr>`).join('')}</table>
-        <div class="wiki-p" style="margin-top:6px">建筑产出于每日过夜结算；换人/撤职随时免费。升级费用随当前等级递增：基准价 ×(1+0.5×当前等级)。装备详情见「🧰 装备」页。</div>
+        <div class="wiki-p" style="margin-top:6px">建筑产出于每日过夜结算；换人/撤职随时免费。升级费用随当前等级递增：基准价 ×(1+0.3×当前等级)。装备详情见「🧰 装备」页。</div>
         <div class="wiki-p" style="margin-top:6px"><b>建筑详情</b>（随配置同步）：<br>${[
           { icon:'🍳', d:DATA.KITCHEN }, { icon:'🛏️', d:DATA.DORM }, { icon:'🏋️', d:DATA.GYM }, { icon:'🌾', d:DATA.FARM },
           { icon:'🏥', d:DATA.HOSPITAL }, { icon:'🧪', d:DATA.LAB }, { icon:'🏭', d:DATA.WORKSHOP },

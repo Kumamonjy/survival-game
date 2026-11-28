@@ -16,9 +16,9 @@ const { UI, DATA, elems, Game, html } = setup();
   const body = elems['wiki-content'].innerHTML;
   // 建造价直读
   assert(body.includes('建造 100｜') && body.includes('建造 130｜'), 'T2a 厨房 100 / 工坊 130 建造价直读');
-  // 升级价 = Game.upCost 同函数（厨房 160 → ×1.5/×2/×2.5/×3）
+  // 升级价 = Game.upCost 同函数（厨房 160 → ×1.3/×1.6/×1.9/×2.2，V251 系数 0.3）
   const kitchenUp = [1,2,3,4].map(l=>Game.upCost(DATA.KITCHEN,l)).join('/');
-  assert(kitchenUp==='240/320/400/480' && body.includes(`升级 ${kitchenUp}`), `T2b 厨房升级价与 upCost 一致（${kitchenUp}）`);
+  assert(kitchenUp==='208/256/304/352' && body.includes(`升级 ${kitchenUp}`), `T2b 厨房升级价与 upCost 一致（${kitchenUp}）`);
   const wsUp = [1,2,3,4].map(l=>Game.upCost(DATA.WORKSHOP,l)).join('/');
   assert(body.includes(`升级 ${wsUp}`), `T2c 工坊升级价与 upCost 一致（${wsUp}）`);
   // 上限直读
@@ -40,7 +40,7 @@ const { UI, DATA, elems, Game, html } = setup();
   assert(body.includes('固定自动射击') && body.includes(DATA.TOWERS.ballista.desc.slice(0,12)), 'T4c 塔详情=TOWERS.desc 直读');
 
   // ===== T5 旧断言不回归：表格结构与公式说明保留 =====
-  assert(body.includes('基准价 ×(1+0.5×当前等级)'), 'T5 升级公式说明保留');
+  assert(body.includes('基准价 ×(1+0.3×当前等级)'), 'T5 升级公式说明保留');
 
   console.log('--- done ---');
   process.exit(0);

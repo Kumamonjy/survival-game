@@ -19,7 +19,7 @@ const [s1, s2] = g.chars;
   assert(g.dormLv===1, 'T2b 金币不足升级被拒');
   g.res.gold = 500;
   Game.upgradeDorm();
-  assert(g.dormLv===2 && g.res.gold===290, 'T2c 升级到 Lv.2 扣 1.5×140=210');
+  assert(g.dormLv===2 && g.res.gold===318, 'T2c 升级到 Lv.2 扣 1.3×140=182');
 
   // ===== T3 床位分配 =====
   Game.assignBed(s1.id);

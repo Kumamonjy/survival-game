@@ -16,7 +16,7 @@ const [s1, s2] = g.chars;
   Game.buildFarm();
   assert(g.farmLv===1 && g.res.gold===310, 'T2a 建造扣 90 金币');
   Game.upgradeFarm();
-  assert(g.farmLv===2 && g.res.gold===85, 'T2b 升级扣 1.5×150=225 金币到 Lv.2');
+  assert(g.farmLv===2 && g.res.gold===115, 'T2b 升级扣 1.3×150=195 金币到 Lv.2');
   Game.upgradeFarm();   // 金币不足
   assert(g.farmLv===2, 'T2c 金币不足不升级');
 
